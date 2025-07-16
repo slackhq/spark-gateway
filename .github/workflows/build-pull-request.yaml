@@ -20,5 +20,4 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v6
         with:
-          push: true
           tags: ${{ env.REPOSITORY }}:${{ env.PR_NUMBER }}
