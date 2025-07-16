@@ -11,7 +11,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Setup Helm
-        uses: actions/setup-helm@v4.3.0
+        uses: Azure/setup-helm@v4.3.0
 
       - name: Install helm unittest
         run: |
