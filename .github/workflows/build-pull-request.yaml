@@ -8,7 +8,7 @@ env:
   PR_NUMBER: ${{ github.event.number }}
 
 jobs:
-  docker:
+  build-pull-request:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout

@@ -10,7 +10,7 @@ env:
   TAG: latest
 
 jobs:
-  docker:
+  build-main:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
