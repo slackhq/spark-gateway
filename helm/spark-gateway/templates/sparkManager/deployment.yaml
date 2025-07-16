@@ -1,0 +1,113 @@
+# Copyright (c) 2025, Salesforce, Inc.
+# SPDX-License-Identifier: Apache-2
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+{{- range .Values.config.clusters }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "spark-gateway.sparkManager.name" $ }}-{{ required "config.clusters[].name is required!" .name }}
+  labels:
+    {{- include "spark-gateway.sparkManager.labels" $ | nindent 4 }}
+    target-cluster: {{ .name }}
+spec:
+  replicas: {{ $.Values.sparkManager.replicaCount }}
+  revisionHistoryLimit: {{ $.Values.revisionHistoryLimit }}
+  selector:
+    matchLabels:
+      {{- include "spark-gateway.sparkManager.selectorLabels" $ | nindent 6 }}
+      target-cluster: {{ .name }}
+  template:
+    metadata:
+      {{- with $.Values.sparkManager.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "spark-gateway.sparkManager.selectorLabels" $ | nindent 8 }}
+        target-cluster: {{ .name }}
+        {{- with $.Values.sparkManager.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      {{- with $.Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "spark-gateway.sparkManager.serviceAccountName" $ }}
+      securityContext:
+        {{- toYaml $.Values.sparkManager.podSecurityContext | nindent 8 }}
+      containers:
+      - name: sparkmanager
+        image: {{ $.Values.image.repository }}:{{ $.Values.image.tag }}
+        imagePullPolicy: {{ $.Values.image.pullPolicy }}
+        command: ["/sparkManager"]
+        args:
+        - --conf=/etc/spark-gateway/spark-gateway.yaml
+        - --cluster={{ .name }}
+        ports:
+          - name: http
+            containerPort: {{ $.Values.sparkManager.service.port }}
+            protocol: TCP
+          - name: metrics
+            containerPort: {{ $.Values.config.sparkManager.metricsServer.port }}
+            protocol: TCP
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: {{ $.Values.sparkManager.service.port }}
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: {{ $.Values.sparkManager.service.port }}
+        resources:
+          {{- toYaml $.Values.sparkManager.resources | nindent 12 }}
+        securityContext:
+          {{- toYaml $.Values.sparkManager.securityContext | nindent 12 }}
+        volumeMounts:
+          - name: spark-gateway-config
+            mountPath: /etc/spark-gateway/
+            readOnly: true
+        {{ if or $.Values.sparkManager.multiClusterRouting.certificateAuthority.externalSecret.create (ne $.Values.sparkManager.multiClusterRouting.certificateAuthority.existingSecretName "") }}
+          - name: kube-api-certificate-authority
+            mountPath: {{ $.Values.sparkManager.multiClusterRouting.certificateAuthority.mountPath }}
+            readOnly: true
+        {{- end }}
+        {{ if $.Values.config.sparkManager.database.enable }}
+        env:
+          {{- include "spark-gateway.database.passwordEnvVars" $ | indent 10 }}
+        {{- end}}
+      volumes:
+        - name: spark-gateway-config
+          configMap:
+            name: {{ include "spark-gateway.configMapName" $ }}
+      {{ if or $.Values.sparkManager.multiClusterRouting.certificateAuthority.externalSecret.create (ne $.Values.sparkManager.multiClusterRouting.certificateAuthority.existingSecretName "") }}
+        - name: kube-api-certificate-authority
+          secret:
+            secretName: {{ include "spark-gateway.sparkManager.certificateAuthority.secretName" $ }}
+      {{- end }}
+      {{- with $.Values.sparkManager.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with $.Values.sparkManager.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with $.Values.sparkManager.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+---
+{{- end }}

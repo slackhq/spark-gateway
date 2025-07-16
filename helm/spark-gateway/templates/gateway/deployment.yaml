@@ -1,0 +1,119 @@
+# Copyright (c) 2025, Salesforce, Inc.
+# SPDX-License-Identifier: Apache-2
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+{{ include "ServiceTokenAuthMiddlewareValidator" . }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "spark-gateway.gateway.name" . }}
+  labels:
+    {{- include "spark-gateway.gateway.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.gateway.replicas }}
+  revisionHistoryLimit: {{ .Values.revisionHistoryLimit }}
+  selector:
+    matchLabels:
+      {{- include "spark-gateway.gateway.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.gateway.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "spark-gateway.gateway.selectorLabels" . | nindent 8 }}
+        {{- with .Values.gateway.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "spark-gateway.gateway.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.gateway.podSecurityContext | nindent 8 }}
+      {{- if and .Values.gateway.serviceAuth.enabled (gt (len .Values.gateway.serviceAuth.serviceNames) 0) }}
+      initContainers:
+      - name: init-service-auth-config
+        image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        command: [ "sh", "-c"]
+        args:
+          - |
+            {{- range .Values.gateway.serviceAuth.serviceNames }}
+            echo "{{ . }}: $(cat /etc/secrets/{{ . }})" >> /conf/service-auth-config.yaml
+            {{- end }}
+        volumeMounts:
+          - name: spark-gateway-service-auth-config
+            mountPath: "/etc/secrets"
+          - name: confdir
+            mountPath: "/conf"
+      {{- end }}
+      containers:
+      - name: gateway
+        image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        command: ["/gateway"]
+        args:
+          - --conf=/etc/spark-gateway/spark-gateway.yaml
+          - --spark-manager-hostname-template={{ include "spark-gateway.sparkManager.name" . }}-{{ printf "{{.clusterName}}" }}-svc.{{.Release.Namespace}}.svc.cluster.local
+        ports:
+          - name: http
+            containerPort: {{ .Values.gateway.service.port }}
+            protocol: TCP
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: {{ .Values.gateway.service.port }}
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: {{ .Values.gateway.service.port }}
+        resources:
+          {{- toYaml .Values.gateway.resources | nindent 12 }}
+        securityContext:
+          {{- toYaml .Values.gateway.securityContext | nindent 12 }}
+        volumeMounts:
+          - name: spark-gateway-config
+            mountPath: /etc/spark-gateway/
+            readOnly: true
+          {{- if .Values.gateway.serviceAuth.enabled }}
+          - name: confdir
+            mountPath: "/conf"
+          {{- end }}
+      volumes:
+        - name: spark-gateway-config
+          configMap:
+            name: {{ include "spark-gateway.configMapName" . }}
+        {{- if .Values.gateway.serviceAuth.enabled }}
+        - name: spark-gateway-service-auth-config
+          secret:
+            secretName: {{ include "spark-gateway.gateway.ServiceAuthSecretName" . }}
+        - name: confdir
+          emptyDir: {}
+        {{- end }}
+      {{- with .Values.gateway.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.gateway.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.gateway.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

@@ -1,0 +1,210 @@
+# Copyright (c) 2025, Salesforce, Inc.
+# SPDX-License-Identifier: Apache-2
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# Values for all environments of spark-gateway
+
+image:
+  repository: spark-gateway
+  tag: latest
+
+pullPolicy: IfNotPresent
+imagePullSecrets: []
+
+revisionHistoryLimit: 2
+
+# Gateway API configs
+config:
+  clusters: # TODO: Add a note about not changing the ID or else Gateway will lose track of jobs with the older id.
+    - name: "minikube"
+      id: "minikube"
+      masterURL: kubernetes.default.svc.cluster.local
+      routingWeight: 1
+      namespaces:
+        - name: default
+          id: default
+          routingWeight: 1
+      certificateAuthorityB64File: "incluster"
+
+  clusterRouter:
+    type: weightBased
+    # If clusterRouter.type route fails due to internal error, the fallbackType will be used.
+    # 'random' or 'weightBasedRandom' are recommended types for their simplicity and reliability.
+    fallbackType: weightBasedRandom
+    dimension: cluster
+    prometheusQuery:
+      # Metric should be a gauge, avoid using counter metrics
+      metric: spark_application_count
+      # AdditionalLabels is for adding static labels to metrics queries.
+      # IE, if using cluster dimension, 'additionalLabel: {"namespace":""}' could be added to ignore all namespace specific metrics
+      #    additionalLabels:
+      #      "some-static-label-key" : "some-static-label-value"
+
+  defaultLogLines: 100
+
+  selectorKey: "spark-gateway/owned"
+  selectorValue: "true"
+
+  sparkManagerPort: &sparkManagerPort "8081"
+
+  gateway:
+    gatewayApiVersion: v2
+    gatewayPort: &gatewayPort "8080"
+
+    middleware:
+      - type: RegexBasicAuthAllowMiddleware
+        conf:
+          allow:
+            - gateway-user
+
+    statusUrlTemplates:
+      sparkUI: "{{.Status.DriverInfo.WebUIIngressAddress}}"
+      sparkHistoryUI: ""
+      logsUI: ""
+
+  sparkManager:
+    clusterAuthType: serviceaccount
+
+    # database credentials are set via databaseCredentials map
+    database:
+      enable: false
+      databaseName: "postgres"
+      hostname: ""
+      port: 5432
+      # DB_USERNAME env var is used if not present
+      username: "gateway"
+      # DB_PASSWORD env var is used if not present
+      # password:
+
+    metricsServer:
+      endpoint: "/metrics"
+      port: "9090"
+
+# Install postgresql Helm chart
+postgresql:
+  create: false
+
+# Database credentials
+databaseCredentials:
+  externalSecret:
+    create: false
+    secretStoreName: ""
+    secretStorePath: ""
+    passwordProperty: ""
+
+  # Kube Secret created outside of this Helm chart
+  existingSecret:
+    name: ""
+    passwordKey: ""
+
+# Gateway deploy configs
+gateway:
+  replicas: 1
+  podDisruptionBudget:
+    enable: false
+    maxUnavailable: 1
+    minAvailable: 1
+
+  resources:
+    requests:
+      memory: "2G"
+      cpu: "0.5"
+    limits:
+      memory: "2G"
+      cpu: "0.5"
+
+  serviceAccount:
+    create: true
+    name: ""
+    annotations: {}
+
+  podSecurityContext: {}
+  securityContext: {}
+
+  service:
+    type: ClusterIP
+    port: *gatewayPort
+    nodePort: ""
+
+  serviceAuth:
+    enabled: false
+    externalSecret:
+      create: false
+      secretStoreName: ""
+      secretStorePath: ""
+    # existingSecretName is only used if externalSecret.create is false
+    existingSecretName: ""
+    serviceNames: []
+
+  podAnnotations: {}
+
+  podLabels: {}
+
+  nodeSelector: {}
+  affinity: {}
+  tolerations: {}
+
+# SparkManager deploy configs
+sparkManager:
+  replicas: 1
+
+  resources:
+    requests:
+      memory: "2G"
+      cpu: "0.5"
+    limits:
+      memory: "2G"
+      cpu: "0.5"
+
+  podAnnotations: {}
+  podLabels: {}
+
+  serviceAccount:
+    create: true
+    name: ""
+    annotations: {}
+
+  podSecurityContext: {}
+  securityContext: {}
+
+  service:
+    type: ClusterIP
+    port: *sparkManagerPort
+
+  nodeSelector: {}
+  affinity: {}
+  tolerations: {}
+
+  rbac:
+    create: true
+    annotations: {}
+
+  # Helm charts will mount the secret with CA data to the SparkManager pods and programmatically update the
+  # certificateAuthorityB64File field in config.clusters list for each cluster if unset.
+  multiClusterRouting:
+    certificateAuthority:
+      # Either existingSecretName can be set or externalSecret.create can be set
+      # Stored secret in vault must contain key value pairs in format: <clusterName> => <Base64 encoded cluster Certificate Authority>
+      externalSecret:
+        create: false
+        secretStoreName: ""
+        secretStorePath: ""
+
+      # Kube Secret created outside of this Helm chart
+      # Existing secret must contain key value pairs in format: <clusterName> => <Base64 encoded cluster Certificate Authority>
+      existingSecretName: ""
+
+      # Path where the secret containing CA should be mounted on the pod.
+      # Helm will configure this path for certificateAuthorityB64File value for each cluster in Spark Gateway config.
+      mountPath: /etc/kube-api-certificate-authority
