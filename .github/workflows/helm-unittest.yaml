@@ -1,0 +1,24 @@
+name: Helm Unit Tests
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+
+jobs:
+  helm-unittest:
+    runs-on: [ self-hosted ]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Helm
+        uses: actions/setup-helm@v4.3.0
+
+      - name: Install helm unittest
+        run: |
+          if [ -z "$(helm plugin list | grep unittest)" ]; then
+            echo "Installing helm unittest plugin"
+            helm plugin install https://github.com/helm-unittest/helm-unittest.git
+          fi
+
+      - name: Run helm unittest
+        run: helm unittest -f 'tests/**/*.yaml' ./helm/spark-gateway
