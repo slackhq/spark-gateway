@@ -55,8 +55,8 @@ config:
 
     statusUrlTemplates:
       sparkUI: "{{.Status.DriverInfo.WebUIIngressAddress}}"
-      sparkHistoryUI: "sparkhistory.domain.com"
-      logsUI: "logs.domain.com"
+      sparkHistoryUI: "sparkhistory.domain.com/history/{{.Status.SparkApplicationID}}/jobs"
+      logsUI: "logs.domain.com/'host:{{.ObjectMeta.Name}}-driver'"
 
   sparkManager:
     clusterAuthType: serviceaccount

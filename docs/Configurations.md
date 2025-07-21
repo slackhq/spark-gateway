@@ -158,6 +158,9 @@ middleware:
 
 #### `statusUrlTemplates`
 Templates for generating status URLs. Any field from [`v1beta2.SparkApplication`](https://github.com/kubeflow/spark-operator/blob/920772e065394006529f659513182ea7a8f873d2/docs/api-docs.md#sparkoperator.k8s.io/v1beta2.SparkApplication) can be used for templating.
+See [SparkApplication API Docs](https://github.com/kubeflow/spark-operator/blob/master/docs/api-docs.md#sparkoperator.k8s.io/v1beta2.SparkApplication)
+and the [SparkApplication struct](https://github.com/kubeflow/spark-operator/blob/3128c7f157d9da00f5b9401a161a9353bcad5cad/api/v1beta2/sparkapplication_types.go#L187)
+for reference.
 
 ```yaml
 statusUrlTemplates:
