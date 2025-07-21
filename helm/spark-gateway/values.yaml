@@ -3,6 +3,7 @@
 image:
   repository: spark-gateway
   tag: latest
+  pullPolicy: IfNotPresent
 
 pullPolicy: IfNotPresent
 imagePullSecrets: []
@@ -11,17 +12,16 @@ revisionHistoryLimit: 2
 
 # Gateway API configs
 config:
-  clusters: # TODO: Add a note about not changing the ID or else Gateway will lose track of jobs with the older id.
-    - name: "minikube"
-      id: "minikube"
+  clusters:
+    - name: default
+      id: dflt
       masterURL: kubernetes.default.svc.cluster.local
       routingWeight: 1
       namespaces:
         - name: default
-          id: default
+          id: dflt
           routingWeight: 1
-      certificateAuthorityB64File: "incluster"
-
+      certificateAuthorityB64File: incluster
   clusterRouter:
     type: weightBased
     # If clusterRouter.type route fails due to internal error, the fallbackType will be used.
@@ -55,8 +55,8 @@ config:
 
     statusUrlTemplates:
       sparkUI: "{{.Status.DriverInfo.WebUIIngressAddress}}"
-      sparkHistoryUI: ""
-      logsUI: ""
+      sparkHistoryUI: "sparkhistory.domain.com"
+      logsUI: "logs.domain.com"
 
   sparkManager:
     clusterAuthType: serviceaccount

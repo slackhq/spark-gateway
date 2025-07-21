@@ -28,6 +28,9 @@ Each cluster in the `clusters` list has the following attributes:
 - Set to a file path containing the base64 encoded certificate authority (typically mounted to pod via K8s Secret).
   Use this option if Spark Gateway is deployed on a different K8s cluster than where the SparkApplications are submitted.
 
+> Note: It is not recommended to change a cluster's `id` once jobs are deployed to that cluster. If the `id` is updated,
+> Gateway will lose track of jobs that were submitted using the older `id`.
+
 #### Namespace Configuration
 Each namespace in a cluster has:
 - `name` - The Kubernetes namespace name

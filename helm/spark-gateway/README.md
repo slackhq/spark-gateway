@@ -1,13 +1,8 @@
 # spark-gateway Helm Chart
 
-## Manual Deploy
+## Deploy
 ```shell
-# Manual Deployments
-helm upgrade \
-  --install \
-  --kube-context k8s-cluster \
-  --namespace spark-gateway \
-  spark-gateway .
+helm upgrade --install spark-gateway .
 ```
 
 ## Development
@@ -15,8 +10,5 @@ helm upgrade \
 ### Debug
 ```shell
 # See rendered k8s resources
-helm template \
-  --kube-context k8s-cluster \
-  --namespace spark-gateway \
-  spark-gateway .
+helm template spark-gateway .
 ```
