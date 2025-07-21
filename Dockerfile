@@ -1,4 +1,4 @@
-FROM golang:1.24.2 as build
+FROM golang:1.24.2 AS build
 
 ENV GOOS=linux \
     GOARCH=amd64 \
@@ -19,7 +19,7 @@ RUN go build -o /sparkManager ./cmd/sparkManager/
 # build tests
 RUN go build -o /tests ./cmd/tests/
 
-FROM golang:1.24.2 as runner
+FROM golang:1.24.2 AS runner
 RUN apt update && apt upgrade -y
 
 COPY --from=build /gateway /gateway
