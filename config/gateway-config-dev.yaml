@@ -1,0 +1,75 @@
+clusters:
+  - name: minikube
+    id: dflt
+    masterURL: kubernetes.default.svc.cluster.local
+    routingWeight: 1
+    namespaces:
+      - name: default
+        id: dflt
+        routingWeight: 1
+    certificateAuthorityB64File: incluster
+
+clusterRouter:
+  type: weightBased
+  # If clusterRouter.type route fails due to internal error, the fallbackType will be used.
+  # 'random' or 'weightBasedRandom' are recommended types for their simplicity and reliability.
+  fallbackType: weightBasedRandom
+  dimension: cluster
+  prometheusQuery:
+    # Metric should be a gauge, avoid using counter metrics
+    metric: spark_application_count
+    # AdditionalLabels is for adding static labels to metrics queries.
+    # IE, if using cluster dimension, 'additionalLabel: {"namespace":""}' could be added to ignore all namespace specific metrics
+    #    additionalLabels:
+    #      "some-static-label-key" : "some-static-label-value"
+
+defaultLogLines: 100
+
+selectorKey: "spark-gateway/owned"
+selectorValue: "true"
+
+sparkManagerPort: "8081"
+
+gateway:
+  gatewayApiVersion: v1
+  gatewayPort: "8080"
+
+  middleware:
+    - type: RegexBasicAuthAllowMiddleware
+      conf:
+        allow:
+          - gateway-user
+
+  statusUrlTemplates:
+    sparkUI: "{{.Status.DriverInfo.WebUIIngressAddress}}"
+    sparkHistoryUI: "sparkhistory.domain.com/history/{{.Status.SparkApplicationID}}/jobs"
+    logsUI: "logs.domain.com/'host:{{.ObjectMeta.Name}}-driver'"
+
+sparkManager:
+  clusterAuthType: kubeconfig
+
+  # database credentials are set via databaseCredentials map
+  database:
+    enable: false
+    databaseName: "postgres"
+    hostname: "localhost"
+    port: 5432
+    # DB_USERNAME env var is used if not present
+    username: "postgres"
+    # DB_PASSWORD env var is used if not present
+    # password: ""
+
+  metricsServer:
+    endpoint: "/metrics"
+    port: "9090"
+
+# DebugPorts allows developers to set ports for different SparkManagers to avoid port collision. By default, all
+# SparkManagers use the same port set by sparkManagerPort config. It is useful when trying to run multiple
+# SparkManagers locally for development.
+# debugPorts:
+#   cluster1:
+#     sparkManagerPort: "8085"
+#     metricsPort: "9095"
+#   cluster2:
+#     sparkManagerPort: "8086"
+#     metricsPort: "9096"

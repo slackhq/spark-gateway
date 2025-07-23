@@ -118,6 +118,46 @@ Spark Gateway uses a YAML configuration file that can be passed to both `gateway
 
 ## 🛠️ Development
 
+### Instal Go and Dependencies
+
+1. **Install Go:**
+   - Download and install Go from the [official website](https://go.dev/dl/).
+   - Verify installation:
+     ```bash
+     go version
+     ```
+
+2. **Install project dependencies:**
+   - Run the following command in the project root to download all Go module dependencies:
+     ```bash
+     go mod tidy
+     ```
+
+### Running Gateway and SparkManager Locally
+
+You can run both Gateway and SparkManager locally for development and testing.
+
+#### 1. Run SparkManager
+
+```bash
+go run cmd/sparkManager/main.go --conf ./config/gateway-config-dev.yaml --cluster minikube
+```
+- The `--cluster` flag for SparkManager should match a cluster defined in your config.
+
+#### 2. Run Gateway
+Open a new terminal:
+```bash
+go run cmd/gateway/main.go --conf ./config/gateway-config-dev.yaml
+```
+
+#### 3. Test Local Deployment
+Open a new terminal:
+```bash
+curl -X GET -H "Content-Type: application/json" \
+  --user gateway-user:pass \
+  "127.0.0.1:8080/v1/applications?cluster=minikube"
+```
+
 ### 🗄️ sqlc
 This project uses sqlc to generate Go code that presents type-safe interfaces to sql queries. The application code calls
 the sqlc generated methods.
