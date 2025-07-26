@@ -9,7 +9,7 @@ on:
   pull_request:
 
 jobs:
-  unittests:
+  tests:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -19,20 +19,10 @@ jobs:
         with:
           go-version: "1.24"
 
-      - name: Run Tests
+      - name: Run Unit Tests
         run: go test -v ./...
 
-  swagger-docs:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Go
-        uses: actions/setup-go@v4
-        with:
-          go-version: "1.24"
-
-      - name: Generate and Check diff
+      - name: Generate Swagger Docs and Check Diff
         run: |
           go install github.com/swaggo/swag/cmd/swag@v1.6.0
           SWAG_INIT_CMD="swag init -d ./internal/gateway/application/handler/ -o ./docs/swagger -g handler.go --parseDependency"
