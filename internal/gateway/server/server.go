@@ -115,7 +115,12 @@ func NewGateway(ctx context.Context, sgConfig *cfg.SparkGatewayConfig, sparkMana
 	healthService := health.NewHealthService()
 
 	// Handlers
-	appHandler := handler.NewApplicationHandler(appService, sgConfig.DefaultLogLines)
+	appHandler := handler.NewApplicationHandler(
+		appService,
+		sgConfig.DefaultLogLines,
+		sgConfig.GatewayConfig.EnableSwaggerUI,
+	)
+	
 	healthHandler := health.NewHealthHandler(healthService)
 
 	/// Authed
@@ -146,8 +151,10 @@ func NewGateway(ctx context.Context, sgConfig *cfg.SparkGatewayConfig, sparkMana
 
 	}
 
-	// IsAuthed goes after to ensure a User exists for future work to be accurately attributed
-	mwHandlerChain = append(mwHandlerChain, middleware.IsAuthed)
+	if len(sgConfig.GatewayConfig.Middleware) > 0 {
+		// IsAuthed goes after to ensure a User exists for future work to be accurately attributed
+		mwHandlerChain = append(mwHandlerChain, middleware.IsAuthed)
+	}
 
 	/// Register unversioned handlers
 	rootGroup := ginRouter.Group("")
@@ -156,6 +163,14 @@ func NewGateway(ctx context.Context, sgConfig *cfg.SparkGatewayConfig, sparkMana
 	/// Register versioned handlers
 	versionGroup := ginRouter.Group(fmt.Sprintf("/%s", sgConfig.GatewayConfig.GatewayApiVersion), mwHandlerChain...)
 	appHandler.RegisterRoutes(versionGroup)
+
+	// After all routes are registered
+	routes := ginRouter.Routes()
+	klog.Infof("=== Registered Routes ===")
+	for _, route := range routes {
+		klog.Infof("%s %s\n", route.Method, route.Path)
+	}
+	klog.Infof("========================")
 
 	server := http.Server{
 		Addr:    fmt.Sprintf(":%s", sgConfig.GatewayConfig.GatewayPort),

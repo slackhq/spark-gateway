@@ -34,16 +34,24 @@ gateway:
   gatewayApiVersion: v1
   gatewayPort: "8080"
 
-  middleware:
-    - type: RegexBasicAuthAllowMiddleware
-      conf:
-        allow:
-          - gateway-user
+#  middleware:
+#    - type: RegexBasicAuthAllowMiddleware
+#      conf:
+#        allow:
+#          - userA
+#          - userB
+#    - type: RegexBasicDenyAllowMiddleware
+#      conf:
+#        allow:
+#          - userC
+#          - userD
 
   statusUrlTemplates:
     sparkUI: "{{.Status.DriverInfo.WebUIIngressAddress}}"
     sparkHistoryUI: "sparkhistory.domain.com/history/{{.Status.SparkApplicationID}}/jobs"
     logsUI: "logs.domain.com/'host:{{.ObjectMeta.Name}}-driver'"
+
+  enableSwaggerUI: true
 
 sparkManager:
   clusterAuthType: kubeconfig

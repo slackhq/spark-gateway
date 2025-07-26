@@ -123,8 +123,8 @@ Defines the port used by the Gateway server.
 
 #### `middleware`
 List of middleware to apply to Gateway requests. Available middleware types:
-- `RegexBasicAuthAllowMiddleware` - Allow requests based on regex patterns
-- `RegexBasicAuthDenyMiddleware` - Deny requests based on regex patterns
+- `RegexBasicAuthAllowMiddleware` - Checks the user from the Authorization header against the list of regex patterns specified in its configuration. The request is allowed only if the user matches at least one pattern; otherwise, it is denied.
+- `RegexBasicAuthDenyMiddleware` - Checks the user from the Authorization header against the list of regex patterns specified in its configuration. If the user matches any of these patterns, the request is denied.
 - `HeaderAuthMiddleware` - Authenticate based on HTTP headers
 - `ServiceTokenAuthMiddleware` - Authenticate using service tokens
 
