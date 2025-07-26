@@ -19,7 +19,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	gin2 "github.com/slackhq/spark-gateway/pkg/gin"
 	"net/http"
 
 	sparkClientSet "github.com/kubeflow/spark-operator/v2/pkg/client/clientset/versioned"
@@ -39,6 +38,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/slackhq/spark-gateway/pkg/config"
+	"github.com/slackhq/spark-gateway/pkg/http/health"
 )
 
 type SparkManager struct {
@@ -105,12 +105,12 @@ func NewSparkManager(ctx context.Context, sgConfig *config.SparkGatewayConfig, c
 	// Initialize services
 	sparkApplicationService := service.NewSparkApplicationService(sparkAppRepo, database, *kubeCluster)
 	metricsService := metrics.NewService(metricsRepo, kubeCluster)
-	healthService := gin2.NewHealthService()
+	healthService := health.NewHealthService()
 
 	// Init handlers
 	sparkAppHandler := handler.NewSparkApplicationHandler(sparkApplicationService, sgConfig.DefaultLogLines)
 	metricsServer := metrics.NewHandler(metricsService, sgConfig.SparkManagerConfig.MetricsServer)
-	healthHandler := gin2.NewHealthHandler(healthService)
+	healthHandler := health.NewHealthHandler(healthService)
 
 	// Register routes
 	rootGroup := ginRouter.Group("")
