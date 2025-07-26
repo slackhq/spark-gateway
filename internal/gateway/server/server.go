@@ -120,7 +120,7 @@ func NewGateway(ctx context.Context, sgConfig *cfg.SparkGatewayConfig, sparkMana
 		sgConfig.DefaultLogLines,
 		sgConfig.GatewayConfig.EnableSwaggerUI,
 	)
-	
+
 	healthHandler := health.NewHealthHandler(healthService)
 
 	/// Authed
@@ -164,13 +164,12 @@ func NewGateway(ctx context.Context, sgConfig *cfg.SparkGatewayConfig, sparkMana
 	versionGroup := ginRouter.Group(fmt.Sprintf("/%s", sgConfig.GatewayConfig.GatewayApiVersion), mwHandlerChain...)
 	appHandler.RegisterRoutes(versionGroup)
 
-	// After all routes are registered
+	// Log the routes after all routes are registered
 	routes := ginRouter.Routes()
-	klog.Infof("=== Registered Routes ===")
+	klog.Infof("Registered Routes:")
 	for _, route := range routes {
 		klog.Infof("%s %s\n", route.Method, route.Path)
 	}
-	klog.Infof("========================")
 
 	server := http.Server{
 		Addr:    fmt.Sprintf(":%s", sgConfig.GatewayConfig.GatewayPort),

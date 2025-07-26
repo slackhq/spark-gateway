@@ -1,0 +1,45 @@
+# This workflow will build a golang project
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-go
+
+name: Run Spark Gateway Continuous Integration Tests
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+
+jobs:
+  unittests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: "1.24"
+
+      - name: Run Tests
+        run: go test -v ./...
+
+  swagger-docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: "1.24"
+
+      - name: Generate and Check diff
+        run: |
+          go install github.com/swaggo/swag/cmd/swag@v1.6.0
+          SWAG_INIT_CMD="swag init -d ./internal/gateway/application/handler/ -o ./docs/swagger -g handler.go --parseDependency"
+          eval "$SWAG_INIT_CMD"
+          
+          # Check diff
+          if [[ -n $(git status --porcelain) ]]; then
+            echo "Swagger Docs diff detected. Regenerate docs by running:"
+            echo "${$SWAG_INIT_CMD}"
+          fi
