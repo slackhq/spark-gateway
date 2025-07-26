@@ -97,7 +97,7 @@ func (h ApplicationHandler) RegisterRoutes(rg *gin.RouterGroup) {
 // @Security BasicAuth
 // @Param cluster query string true "Cluster name"
 // @Param namespace query string false "Namespace (optional)"
-// @Success 200 {array} metav1.ObjectMeta "List of SparkApplication metadata"
+// @Success 200 {array} metav1.ObjectMeta /"List of SparkApplication' metadata/"
 // @Router / [get]
 func (h ApplicationHandler) List(c *gin.Context) {
 
@@ -127,7 +127,7 @@ func (h ApplicationHandler) List(c *gin.Context) {
 // @Produce json
 // @Security BasicAuth
 // @Param gatewayId path string true "SparkApplication Name"
-// @Success 200 {object} model.GatewayApplication "SparkApplication resource"
+// @Success 200 {object} model.GatewayApplication /"SparkApplication resource/"
 // @Router /{gatewayId} [get]
 func (h ApplicationHandler) Get(c *gin.Context) {
 
@@ -149,7 +149,7 @@ func (h ApplicationHandler) Get(c *gin.Context) {
 // @Produce json
 // @Security BasicAuth
 // @Param gatewayId path string true "SparkApplication Name"
-// @Success 200 {object} v1beta2.SparkApplicationStatus "SparkApplication status"
+// @Success 200 {object} v1beta2.SparkApplicationStatus \"SparkApplication status\"
 // @Router /{gatewayId}/status [get]
 func (h ApplicationHandler) Status(c *gin.Context) {
 
@@ -172,7 +172,7 @@ func (h ApplicationHandler) Status(c *gin.Context) {
 // @Security BasicAuth
 // @Param gatewayId path string true "SparkApplication Name"
 // @Param lines query int false "Number of log lines to retrieve (default: 100)"
-// @Success 200 {string} string "Driver logs"
+// @Success 200 {string} string \"Driver logs\"
 // @Router /{gatewayId}/logs [get]
 func (h ApplicationHandler) Logs(c *gin.Context) {
 
@@ -204,7 +204,7 @@ func (h ApplicationHandler) Logs(c *gin.Context) {
 // @Produce json
 // @Security BasicAuth
 // @Param SparkApplication body v1beta2.SparkApplication true "v1beta2.SparkApplication resource"
-// @Success 201 {object} model.GatewayApplication "SparkApplication Created"
+// @Success 201 {object} model.GatewayApplication \"SparkApplication Created\"
 // @Router / [post]
 func (h ApplicationHandler) Create(c *gin.Context) {
 
@@ -238,7 +238,7 @@ func (h ApplicationHandler) Create(c *gin.Context) {
 // @Produce json
 // @Security BasicAuth
 // @Param gatewayId path string true "SparkApplication Name"
-// @Success 200 {object} map[string]string "Application deleted: {'status': 'success'}"
+// @Success 200 {object} map[string]string \"Application deleted: {'status': 'success'}\"
 // @Router /{gatewayId} [delete]
 func (h ApplicationHandler) Delete(c *gin.Context) {
 
