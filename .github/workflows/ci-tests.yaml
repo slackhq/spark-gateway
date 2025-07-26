@@ -24,6 +24,8 @@ jobs:
 
       - name: Generate Swagger Docs and Check Diff
         run: |
+          set -eux
+          
           go install github.com/swaggo/swag/cmd/swag@v1.6.0
           SWAG_INIT_CMD="swag init -d ./internal/gateway/application/handler/ -o ./docs/swagger -g handler.go --parseDependency"
           eval "$SWAG_INIT_CMD"
