@@ -47,16 +47,15 @@ config:
     gatewayApiVersion: v1
     gatewayPort: &gatewayPort "8080"
 
-#    middleware:
-#      - type: RegexBasicAuthAllowMiddleware
-#        conf:
-#          allow:
-#            - gateway-user
+    middleware: []
 
     statusUrlTemplates:
       sparkUI: "{{.Status.DriverInfo.WebUIIngressAddress}}"
       sparkHistoryUI: "sparkhistory.domain.com/history/{{.Status.SparkApplicationID}}/jobs"
       logsUI: "logs.domain.com/'host:{{.ObjectMeta.Name}}-driver'"
+
+    # Disable in Production
+    enableSwaggerUI: true
 
   sparkManager:
     clusterAuthType: serviceaccount
