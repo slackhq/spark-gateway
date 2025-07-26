@@ -178,7 +178,10 @@ func (r WeightBasedRouter) GetCluster(ctx context.Context, namespace string) (*m
 func chooseClusterID(metricsMap map[string]*metric, totalMetric float64) string {
 	maxDiff := -math.MaxFloat64
 	var chosenClusterId string
-	for c, m := range metricsMap {
+	clusterIDs := GetOrderedKeys(metricsMap)
+
+	for _, clusterID := range clusterIDs {
+		m := metricsMap[clusterID]
 		if totalMetric > 0 {
 			m.MetricRatio = m.Metric / totalMetric
 		} else {
@@ -187,7 +190,7 @@ func chooseClusterID(metricsMap map[string]*metric, totalMetric float64) string 
 		m.RatioDiff = m.WeightRatio - m.MetricRatio
 		if m.RatioDiff > maxDiff {
 			maxDiff = m.RatioDiff
-			chosenClusterId = c
+			chosenClusterId = clusterID
 		}
 	}
 
