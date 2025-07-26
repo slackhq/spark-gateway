@@ -199,6 +199,7 @@ func (h ApplicationHandler) Logs(c *gin.Context) {
 // CreateSparkApplication godoc
 // @Summary Submit a new SparkApplication
 // @Description Submits the provided SparkApplication to the given namespace.
+// @Tags Applications
 // @Accept json
 // @Produce json
 // @Security BasicAuth
@@ -254,7 +255,7 @@ func (h ApplicationHandler) Delete(c *gin.Context) {
 func RegisterSwaggerDocs(rg *gin.RouterGroup) {
 	swaggerDocs.SwaggerInfo.BasePath = "/v1/applications"
 
-	rg.GET("/docs/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+	rg.GET("/docs/*any", ginSwagger.WrapHandler(swaggerFiles.Handler, ginSwagger.DefaultModelsExpandDepth(-1)))
 	rg.GET("/docs", func(ctx *gin.Context) {
 		ctx.Redirect(http.StatusMovedPermanently, "/v1/docs/index.html")
 	})

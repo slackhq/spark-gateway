@@ -77,6 +77,9 @@ const docTemplate = `{
                 "produces": [
                     "application/json"
                 ],
+                "tags": [
+                    "Applications"
+                ],
                 "summary": "Submit a new SparkApplication",
                 "parameters": [
                     {

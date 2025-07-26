@@ -6381,6 +6381,8 @@ paths:
       security:
       - BasicAuth: []
       summary: Submit a new SparkApplication
+      tags:
+      - Applications
   /{gatewayId}:
     delete:
       consumes:
