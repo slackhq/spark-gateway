@@ -89,7 +89,7 @@ func (h ApplicationHandler) RegisterRoutes(rg *gin.RouterGroup) {
 }
 
 // ListSparkApplications godoc
-// @Summary List SparkApplications' metadata
+// @Summary List SparkApplications
 // @Description Lists SparkApplications metadata in the specified cluster. Optionally filter by namespace.
 // @Tags Applications
 // @Accept json
