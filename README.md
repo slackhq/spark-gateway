@@ -173,6 +173,16 @@ sqlc generate
 
 To generate mocks, run `go generate`.
 
+### Swagger Docs
+[gin-swagger](https://github.com/swaggo/gin-swagger/tree/master) gin middleware is used to automatically generate 
+RESTful API documentation with Swagger 2.0.
+
+Generate docs
+```bash
+go install github.com/swaggo/swag/cmd/swag@latest
+swag init -d ./internal/gateway/application/handler/ -g handler.go -o ./docs/swagger --parseDependency --parseInternal
+```
+
 ### 🐘 Local Postgres Database
 For local testing, Spark-Gateway will need access to a Postgres database.
 
