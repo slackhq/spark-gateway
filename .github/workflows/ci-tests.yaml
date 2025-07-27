@@ -24,7 +24,7 @@ jobs:
 
       - name: Generate Swagger Docs and Check Diff
         run: |
-          set -eux
+          set -eu
           
           go install github.com/swaggo/swag/cmd/swag@latest
           SWAG_INIT_CMD="swag init -d ./internal/gateway/application/handler/ -g handler.go -o ./docs/swagger --parseDependency --parseInternal"
@@ -33,5 +33,5 @@ jobs:
           # Check diff
           if [[ -n $(git status --porcelain) ]]; then
             echo "Swagger Docs diff detected. Regenerate docs by running:"
-            echo "${$SWAG_INIT_CMD}"
+            echo "${SWAG_INIT_CMD}"
           fi
