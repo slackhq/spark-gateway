@@ -32,7 +32,7 @@ jobs:
           
           # Check diff
           if [[ -n $(git status --porcelain) ]]; then
-            echo "Swagger Docs diff detected. Regenerate docs by running:"
-            echo "${SWAG_INIT_CMD}"
+            echo "Error: Swagger Docs diff detected."
+            echo "Regenerate docs by running: ${SWAG_INIT_CMD}"
             exit 1
           fi
