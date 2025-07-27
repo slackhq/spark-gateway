@@ -97,7 +97,7 @@ func (h ApplicationHandler) RegisterRoutes(rg *gin.RouterGroup) {
 // @Security BasicAuth
 // @Param cluster query string true "Cluster name"
 // @Param namespace query string false "Namespace (optional)"
-// @Success 200 {array} metav1.ObjectMeta \"List of SparkApplication metadata\"
+// @Success 200 {array} metav1.ObjectMeta "List of SparkApplication metadata"
 // @Router / [get]
 func (h ApplicationHandler) List(c *gin.Context) {
 

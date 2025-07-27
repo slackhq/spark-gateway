@@ -26,7 +26,7 @@ const docTemplate = `{
                         "BasicAuth": []
                     }
                 ],
-                "description": "Lists SparkApplications' metadata in the specified cluster. Optionally filter by namespace.",
+                "description": "Lists SparkApplications metadata in the specified cluster. Optionally filter by namespace.",
                 "consumes": [
                     "application/json"
                 ],
@@ -54,7 +54,7 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "List of SparkApplications' metadata",
+                        "description": "List of SparkApplication metadata",
                         "schema": {
                             "type": "array",
                             "items": {

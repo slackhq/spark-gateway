@@ -6334,7 +6334,7 @@ paths:
     get:
       consumes:
       - application/json
-      description: Lists SparkApplications' metadata in the specified cluster. Optionally
+      description: Lists SparkApplications metadata in the specified cluster. Optionally
         filter by namespace.
       parameters:
       - description: Cluster name
@@ -6350,7 +6350,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: List of SparkApplications' metadata
+          description: List of SparkApplication metadata
           schema:
             items:
               $ref: '#/definitions/v1.ObjectMeta'
