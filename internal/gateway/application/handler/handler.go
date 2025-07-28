@@ -246,7 +246,9 @@ func (h ApplicationHandler) Delete(c *gin.Context) {
 func RegisterSwaggerDocs(rg *gin.RouterGroup) {
 	swaggerDocs.SwaggerInfo.BasePath = "/v1/applications"
 
+	// Swagger UI on /swagger/index.html
 	rg.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler, ginSwagger.DefaultModelsExpandDepth(-1)))
+	// Redirect /doc and /docs/ to /swagger/index.html
 	rg.GET("/docs", func(ctx *gin.Context) {
 		ctx.Redirect(http.StatusMovedPermanently, "/swagger/index.html")
 	})
