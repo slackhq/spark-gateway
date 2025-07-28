@@ -23,7 +23,7 @@ project and using native Go Kubernetes client libraries.
 Spark-Gateway includes a REST API documentation with Swagger 2.0 running alongside the API.
 
 * **API**: `http://127.0.0.1:8080/v1/applications`
-* **API Docs UI**: `http://127.0.0.1:8080/v1/docs/`
+* **API Docs UI**: `http://127.0.0.1:8080/docs/`
 
 ---
 
