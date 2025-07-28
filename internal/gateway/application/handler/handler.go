@@ -36,6 +36,7 @@ import (
 //	@title			Spark Gateway
 //	@version		1.0
 //	@description	REST API for managing SparkApplication resources across multiple clusters
+//	@securityDefinitions.basic	BasicAuth
 
 //  @license.name	Apache 2.0
 //  @license.url	http://www.apache.org/licenses/LICENSE-2.0.html
@@ -54,15 +55,10 @@ type GatewayApplicationService interface {
 type ApplicationHandler struct {
 	service         GatewayApplicationService
 	defaultLogLines int
-	enableSwaggerUI bool
 }
 
-func NewApplicationHandler(service GatewayApplicationService, defaultLogLines int, enableSwaggerUI bool) *ApplicationHandler {
-	return &ApplicationHandler{
-		service:         service,
-		defaultLogLines: defaultLogLines,
-		enableSwaggerUI: enableSwaggerUI,
-	}
+func NewApplicationHandler(service GatewayApplicationService, defaultLogLines int) *ApplicationHandler {
+	return &ApplicationHandler{service: service, defaultLogLines: defaultLogLines}
 }
 
 func (h ApplicationHandler) RegisterRoutes(rg *gin.RouterGroup) {
@@ -80,11 +76,6 @@ func (h ApplicationHandler) RegisterRoutes(rg *gin.RouterGroup) {
 		appGroup.GET("/:gatewayId/status", h.Status)
 		appGroup.GET("/:gatewayId/logs", h.Logs)
 
-	}
-
-	// Swagger UI
-	if h.enableSwaggerUI {
-		RegisterSwaggerDocs(rg)
 	}
 }
 
@@ -257,7 +248,7 @@ func RegisterSwaggerDocs(rg *gin.RouterGroup) {
 
 	rg.GET("/docs/*any", ginSwagger.WrapHandler(swaggerFiles.Handler, ginSwagger.DefaultModelsExpandDepth(-1)))
 	rg.GET("/docs", func(ctx *gin.Context) {
-		ctx.Redirect(http.StatusMovedPermanently, "/v1/docs/index.html")
+		ctx.Redirect(http.StatusMovedPermanently, "/docs/index.html")
 	})
 
 }

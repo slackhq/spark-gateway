@@ -47,7 +47,11 @@ config:
     gatewayApiVersion: v1
     gatewayPort: &gatewayPort "8080"
 
-    middleware: []
+    middleware:
+      - type: RegexBasicAuthAllowMiddleware
+        conf:
+          allow:
+            - gateway-user
 
     statusUrlTemplates:
       sparkUI: "{{.Status.DriverInfo.WebUIIngressAddress}}"

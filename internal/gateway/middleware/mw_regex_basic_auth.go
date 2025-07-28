@@ -146,14 +146,14 @@ func (r *RegexBasicAuthAllowMiddleware) Handler(c *gin.Context) {
 		authUser, err := r.GetUserFromAuthHeader(authHeader)
 
 		if err != nil {
-			c.AbortWithError(http.StatusBadRequest, fmt.Errorf("invalid Authorization token: %w", err))
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "invalid Authorization header"})
 			return
 		}
 
 		if allowUser := r.AllowUsername(authUser); allowUser {
 			c.Set("user", authUser)
 		} else {
-			c.AbortWithError(http.StatusForbidden, errors.New("user is unauthorized"))
+			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "user is unauthorized"})
 		}
 	}
 
@@ -227,12 +227,12 @@ func (r *RegexBasicAuthDenyMiddleware) Handler(c *gin.Context) {
 	if authHeader := c.GetHeader("Authorization"); authHeader != "" {
 		authUser, err := r.GetUserFromAuthHeader(authHeader)
 		if err != nil {
-			c.AbortWithError(http.StatusUnauthorized, fmt.Errorf("invalid Authorization token: %w", err))
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "invalid Authorization header"})
 			return
 		}
 
 		if denyUser := r.DenyUsername(authUser); denyUser {
-			c.AbortWithError(http.StatusForbidden, errors.New("user is unauthorized"))
+			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "user is unauthorized"})
 		}
 
 	}

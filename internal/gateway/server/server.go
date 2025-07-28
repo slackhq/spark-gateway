@@ -115,11 +115,7 @@ func NewGateway(ctx context.Context, sgConfig *cfg.SparkGatewayConfig, sparkMana
 	healthService := health.NewHealthService()
 
 	// Handlers
-	appHandler := handler.NewApplicationHandler(
-		appService,
-		sgConfig.DefaultLogLines,
-		sgConfig.GatewayConfig.EnableSwaggerUI,
-	)
+	appHandler := handler.NewApplicationHandler(appService, sgConfig.DefaultLogLines)
 
 	healthHandler := health.NewHealthHandler(healthService)
 
@@ -151,14 +147,17 @@ func NewGateway(ctx context.Context, sgConfig *cfg.SparkGatewayConfig, sparkMana
 
 	}
 
-	if len(sgConfig.GatewayConfig.Middleware) > 0 {
-		// IsAuthed goes after to ensure a User exists for future work to be accurately attributed
-		mwHandlerChain = append(mwHandlerChain, middleware.IsAuthed)
-	}
+	// IsAuthed goes after to ensure a User exists for future work to be accurately attributed
+	mwHandlerChain = append(mwHandlerChain, middleware.IsAuthed)
 
 	/// Register unversioned handlers
 	rootGroup := ginRouter.Group("")
 	healthHandler.RegisterRoutes(rootGroup)
+
+	// Swagger UI
+	if sgConfig.GatewayConfig.EnableSwaggerUI {
+		handler.RegisterSwaggerDocs(rootGroup)
+	}
 
 	/// Register versioned handlers
 	versionGroup := ginRouter.Group(fmt.Sprintf("/%s", sgConfig.GatewayConfig.GatewayApiVersion), mwHandlerChain...)

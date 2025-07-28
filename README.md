@@ -18,6 +18,15 @@ project and using native Go Kubernetes client libraries.
 
 ---
 
+## API Docs UI
+
+Spark-Gateway includes a REST API documentation with Swagger 2.0 running alongside the API.
+
+* **API**: `http://127.0.0.1:8080/v1/applications`
+* **API Docs UI**: `http://127.0.0.1:8080/v1/docs/`
+
+---
+
 ## Getting Started
 
 ### Prerequisites
@@ -50,12 +59,12 @@ helm upgrade --install \
 
 ### 3. Manage SparkApplication via REST endpoints
 
-Submit a SparkApplication in json format: `yq -o=json . spark-pi-python.yaml > spark-pi-python.json`
+Submit a SparkApplication ([example](https://github.com/kubeflow/spark-operator/blob/master/examples/spark-pi-python.yaml)) 
+in json format: `yq -o=json . spark-pi-python.yaml > spark-pi-python.json`
 
 #### Create SparkApplication
 ```bash
 curl -X POST -H "Content-Type: application/json" \
-  --user gateway-user:pass \
   --data-binary @spark-pi-python.json \
   "127.0.0.1:8080/v1/applications"
 ```

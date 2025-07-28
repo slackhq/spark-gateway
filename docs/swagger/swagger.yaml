@@ -6481,4 +6481,7 @@ paths:
       summary: Get SparkApplication status
       tags:
       - Applications
+securityDefinitions:
+  BasicAuth:
+    type: basic
 swagger: "2.0"

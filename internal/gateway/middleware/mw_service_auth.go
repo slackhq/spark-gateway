@@ -16,7 +16,6 @@
 package middleware
 
 import (
-	"errors"
 	"fmt"
 	"net/http"
 
@@ -117,7 +116,7 @@ func (s *ServiceTokenAuthMiddleware) Handler(c *gin.Context) {
 
 	// If user set but no token, we refuse
 	if serviceToken == "" {
-		c.AbortWithError(http.StatusUnauthorized, errors.New("X-Spark-Gateway-Token is not set"))
+		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "X-Spark-Gateway-Token is not set"})
 	}
 
 	// Check if service is authorized
@@ -127,11 +126,11 @@ func (s *ServiceTokenAuthMiddleware) Handler(c *gin.Context) {
 			c.Next()
 			return
 		} else {
-			c.AbortWithError(http.StatusUnauthorized, fmt.Errorf("service %s not authorized: Invalid token", serviceName))
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": fmt.Sprintf("service %s not authorized: Invalid token", serviceName)})
 			return
 		}
 	} else {
-		c.AbortWithError(http.StatusForbidden, fmt.Errorf("service %s not authorized", serviceName))
+		c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": fmt.Sprintf("service %s not authorized", serviceName)})
 		return
 	}
 
