@@ -107,7 +107,7 @@ func TestApplicationHandlerGet(t *testing.T) {
 		GetFunc: func(ctx context.Context, gatewayId string) (*model.GatewayApplication, error) {
 			return retApp, nil
 		},
-	}, 100, true)
+	}, 100)
 
 	handler.RegisterRoutes(root)
 
@@ -130,7 +130,7 @@ func TestApplicationHandlerGetError(t *testing.T) {
 		GetFunc: func(ctx context.Context, gatewayId string) (*model.GatewayApplication, error) {
 			return &model.GatewayApplication{}, gatewayerrors.NewNotFound(errors.New("error getting SparkApplication 'clusterid-testid'"))
 		},
-	}, 100, true)
+	}, 100)
 
 	handler.RegisterRoutes(root)
 
@@ -160,7 +160,7 @@ func TestApplicationHandlerStatus(t *testing.T) {
 		StatusFunc: func(ctx context.Context, gatewayId string) (*v1beta2.SparkApplicationStatus, error) {
 			return retResp, nil
 		},
-	}, 100, true)
+	}, 100)
 
 	handler.RegisterRoutes(root)
 
@@ -183,7 +183,7 @@ func TestApplicationHandlerStatusError(t *testing.T) {
 		StatusFunc: func(ctx context.Context, gatewayId string) (*v1beta2.SparkApplicationStatus, error) {
 			return &v1beta2.SparkApplicationStatus{}, gatewayerrors.NewNotFound(errors.New("error getting SparkApplication 'clusterid-testid'"))
 		},
-	}, 100, true)
+	}, 100)
 
 	handler.RegisterRoutes(root)
 
@@ -222,7 +222,7 @@ func TestApplicationHandlerCreate(t *testing.T) {
 		CreateFunc: func(ctx context.Context, application *v1beta2.SparkApplication, user string) (*model.GatewayApplication, error) {
 			return retApp, nil
 		},
-	}, 100, true)
+	}, 100)
 
 	handler.RegisterRoutes(root)
 
@@ -253,7 +253,7 @@ func TestApplicationHandlerCreateBadRequest(t *testing.T) {
 		CreateFunc: func(ctx context.Context, application *v1beta2.SparkApplication, user string) (*model.GatewayApplication, error) {
 			return nil, nil
 		},
-	}, 100, false)
+	}, 100)
 
 	handler.RegisterRoutes(root)
 
@@ -281,7 +281,7 @@ func TestApplicationHandlerCreateAlreadyExists(t *testing.T) {
 		CreateFunc: func(ctx context.Context, application *v1beta2.SparkApplication, user string) (*model.GatewayApplication, error) {
 			return nil, gatewayerrors.NewAlreadyExists(errors.New("resource.group \"test\" already exists"))
 		},
-	}, 100, false)
+	}, 100)
 
 	handler.RegisterRoutes(root)
 
@@ -313,7 +313,7 @@ func TestApplicationHandlerDelete(t *testing.T) {
 		DeleteFunc: func(ctx context.Context, gatewayId string) error {
 			return nil
 		},
-	}, 100, false)
+	}, 100)
 
 	handler.RegisterRoutes(root)
 
@@ -339,7 +339,7 @@ func TestApplicationHandlerDeleteError(t *testing.T) {
 		DeleteFunc: func(ctx context.Context, gatewayId string) error {
 			return gatewayerrors.NewNotFound(errors.New("error getting SparkApplication 'clusterid-testid'"))
 		},
-	}, 100, false)
+	}, 100)
 
 	handler.RegisterRoutes(root)
 
