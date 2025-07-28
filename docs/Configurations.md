@@ -169,6 +169,11 @@ statusUrlTemplates:
   logsUI: "https://kibana.example.com/app/discover#/?_g=(filters:!(),refreshInterval:(pause:!t,value:0),time:(from:now-1d,to:now))&_a=(interval:auto,query:(language:lucene,query:'host:%20%22{{.ObjectMeta.Name}}-driver%22'),sort:!(!('@timestamp',desc)))"
 ```
 
+#### `enableSwaggerUI`
+Enables Swagger UI for REST API Docs. The UI will be accessible at `/docs` endpoint.
+
+Example: `enableSwaggerUI: true`
+
 ## SparkManager Configuration
 
 ### `sparkManager`
