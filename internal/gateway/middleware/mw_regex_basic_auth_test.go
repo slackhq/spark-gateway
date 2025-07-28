@@ -124,7 +124,7 @@ var allowAuthHandlerTests = []struct {
 	{
 		test:           "Bad token",
 		authHeader:     "bad",
-		expectedStatus: 400,
+		expectedStatus: 401,
 	},
 	{
 		test:           "Empty conf",
