@@ -59,10 +59,6 @@ func GenUUIDv7() (string, error) {
 
 func NewGateway(ctx context.Context, sgConfig *cfg.SparkGatewayConfig, sparkManagerHostnameTemplate string) (*GatewayServer, error) {
 
-	if sgConfig.Mode != "local" {
-		gin.SetMode(gin.ReleaseMode)
-	}
-
 	ginRouter := gin.Default()
 
 	//Repos
@@ -156,7 +152,7 @@ func NewGateway(ctx context.Context, sgConfig *cfg.SparkGatewayConfig, sparkMana
 
 	// Swagger UI
 	if sgConfig.GatewayConfig.EnableSwaggerUI {
-		handler.RegisterSwaggerDocs(rootGroup)
+		handler.RegisterSwaggerDocs(rootGroup, sgConfig.GatewayConfig.GatewayApiVersion)
 	}
 
 	/// Register versioned handlers

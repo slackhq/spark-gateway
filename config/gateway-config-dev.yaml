@@ -70,6 +70,9 @@ sparkManager:
     endpoint: "/metrics"
     port: "9090"
 
+# Gin logs additional debug information
+mode: debug
+
 # DebugPorts allows developers to set ports for different SparkManagers to avoid port collision. By default, all
 # SparkManagers use the same port set by sparkManagerPort config. It is useful when trying to run multiple
 # SparkManagers locally for development.
