@@ -59,10 +59,6 @@ func GenUUIDv7() (string, error) {
 
 func NewGateway(ctx context.Context, sgConfig *cfg.SparkGatewayConfig, sparkManagerHostnameTemplate string) (*GatewayServer, error) {
 
-	if sgConfig.Mode != "local" {
-		gin.SetMode(gin.ReleaseMode)
-	}
-
 	ginRouter := gin.Default()
 
 	//Repos
@@ -116,6 +112,7 @@ func NewGateway(ctx context.Context, sgConfig *cfg.SparkGatewayConfig, sparkMana
 
 	// Handlers
 	appHandler := handler.NewApplicationHandler(appService, sgConfig.DefaultLogLines)
+
 	healthHandler := health.NewHealthHandler(healthService)
 
 	/// Authed
@@ -153,9 +150,21 @@ func NewGateway(ctx context.Context, sgConfig *cfg.SparkGatewayConfig, sparkMana
 	rootGroup := ginRouter.Group("")
 	healthHandler.RegisterRoutes(rootGroup)
 
+	// Swagger UI
+	if sgConfig.GatewayConfig.EnableSwaggerUI {
+		handler.RegisterSwaggerDocs(rootGroup, sgConfig.GatewayConfig.GatewayApiVersion)
+	}
+
 	/// Register versioned handlers
 	versionGroup := ginRouter.Group(fmt.Sprintf("/%s", sgConfig.GatewayConfig.GatewayApiVersion), mwHandlerChain...)
 	appHandler.RegisterRoutes(versionGroup)
+
+	// Log the routes after all routes are registered
+	routes := ginRouter.Routes()
+	klog.Infof("Registered Routes:")
+	for _, route := range routes {
+		klog.Infof("%s %s\n", route.Method, route.Path)
+	}
 
 	server := http.Server{
 		Addr:    fmt.Sprintf(":%s", sgConfig.GatewayConfig.GatewayPort),

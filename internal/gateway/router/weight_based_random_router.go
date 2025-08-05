@@ -18,13 +18,11 @@ package router
 import (
 	"context"
 	"fmt"
-	"math/rand"
-	"sort"
-
 	"github.com/slackhq/spark-gateway/internal/gateway/cluster"
 	cfgPkg "github.com/slackhq/spark-gateway/pkg/config"
 	"github.com/slackhq/spark-gateway/pkg/gatewayerrors"
 	"github.com/slackhq/spark-gateway/pkg/model"
+	"math/rand"
 )
 
 type WeightBasedRandomRouter struct {
@@ -111,7 +109,7 @@ func (r WeightBasedRandomRouter) GetCluster(ctx context.Context, namespace strin
 
 func chooseClusterIDRandom(weightsMap map[string]*metric, randomInt int) string {
 	var chosenClusterId string
-	clusterIDs := getOrderedKeys(weightsMap)
+	clusterIDs := GetOrderedKeys(weightsMap)
 	weightCount := 0
 	for _, id := range clusterIDs {
 		if randomInt >= weightCount && randomInt < (weightCount+int(weightsMap[id].Weight)) {
@@ -121,13 +119,4 @@ func chooseClusterIDRandom(weightsMap map[string]*metric, randomInt int) string 
 		weightCount += int(weightsMap[id].Weight)
 	}
 	return chosenClusterId
-}
-
-func getOrderedKeys(weightsMap map[string]*metric) []string {
-	keys := make([]string, 0, len(weightsMap))
-	for k := range weightsMap {
-		keys = append(keys, k)
-	}
-	sort.Strings(keys)
-	return keys
 }

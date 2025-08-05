@@ -129,6 +129,7 @@ type GatewayConfig struct {
 	GatewayPort        string                   `koanf:"gatewayPort"`
 	Middleware         []MiddlewareDefinition   `koanf:"middleware"`
 	StatusUrlTemplates model.StatusUrlTemplates `koanf:"statusUrlTemplates"`
+	EnableSwaggerUI    bool                     `koanf:"enableSwaggerUI"`
 }
 
 func (g *GatewayConfig) Key() string {

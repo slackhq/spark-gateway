@@ -39,11 +39,18 @@ gateway:
       conf:
         allow:
           - gateway-user
+#    - type: RegexBasicDenyAllowMiddleware
+#      conf:
+#        allow:
+#          - userA
+#          - userB
 
   statusUrlTemplates:
     sparkUI: "{{.Status.DriverInfo.WebUIIngressAddress}}"
     sparkHistoryUI: "sparkhistory.domain.com/history/{{.Status.SparkApplicationID}}/jobs"
     logsUI: "logs.domain.com/'host:{{.ObjectMeta.Name}}-driver'"
+
+  enableSwaggerUI: true
 
 sparkManager:
   clusterAuthType: kubeconfig
@@ -62,6 +69,9 @@ sparkManager:
   metricsServer:
     endpoint: "/metrics"
     port: "9090"
+
+# Gin logs additional debug information
+mode: debug
 
 # DebugPorts allows developers to set ports for different SparkManagers to avoid port collision. By default, all
 # SparkManagers use the same port set by sparkManagerPort config. It is useful when trying to run multiple

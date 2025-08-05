@@ -123,8 +123,8 @@ Defines the port used by the Gateway server.
 
 #### `middleware`
 List of middleware to apply to Gateway requests. Available middleware types:
-- `RegexBasicAuthAllowMiddleware` - Allow requests based on regex patterns
-- `RegexBasicAuthDenyMiddleware` - Deny requests based on regex patterns
+- `RegexBasicAuthAllowMiddleware` - Checks the user from the Authorization header against the list of regex patterns specified in its configuration. The request is allowed only if the user matches at least one pattern; otherwise, it is denied.
+- `RegexBasicAuthDenyMiddleware` - Checks the user from the Authorization header against the list of regex patterns specified in its configuration. If the user matches any of these patterns, the request is denied.
 - `HeaderAuthMiddleware` - Authenticate based on HTTP headers
 - `ServiceTokenAuthMiddleware` - Authenticate using service tokens
 
@@ -168,6 +168,11 @@ statusUrlTemplates:
   sparkHistoryUI: "https://spark-history-{{.ObjectMeta.Namespace}}.example.com/history/{{.Status.SparkApplicationID}}/jobs"
   logsUI: "https://kibana.example.com/app/discover#/?_g=(filters:!(),refreshInterval:(pause:!t,value:0),time:(from:now-1d,to:now))&_a=(interval:auto,query:(language:lucene,query:'host:%20%22{{.ObjectMeta.Name}}-driver%22'),sort:!(!('@timestamp',desc)))"
 ```
+
+#### `enableSwaggerUI`
+Enables Swagger UI for REST API Docs. The UI will be accessible at `/docs` endpoint.
+
+Example: `enableSwaggerUI: true`
 
 ## SparkManager Configuration
 

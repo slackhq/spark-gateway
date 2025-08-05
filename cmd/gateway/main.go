@@ -85,7 +85,7 @@ func main() {
 
 	ctx := util.SetupSignalHandler()
 
-	if sgConfig.Mode != "local" {
+	if sgConfig.Mode != "debug" {
 		gin.SetMode(gin.ReleaseMode)
 	}
 

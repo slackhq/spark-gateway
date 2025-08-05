@@ -18,6 +18,10 @@ package handler
 import (
 	"context"
 	"errors"
+	"fmt"
+	swaggerDocs "github.com/slackhq/spark-gateway/docs/swagger"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 	"net/http"
 	"strconv"
 
@@ -28,6 +32,17 @@ import (
 	"github.com/slackhq/spark-gateway/pkg/model"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
+
+//  Swagger General	API Info
+//	@title			Spark Gateway
+//	@version		1.0
+//	@description	REST API for managing SparkApplication resources across multiple clusters
+//	@securityDefinitions.basic	BasicAuth
+
+//  @license.name	Apache 2.0
+//  @license.url	http://www.apache.org/licenses/LICENSE-2.0.html
+
+const sparkApplicationPathName = "applications"
 
 //go:generate moq -rm  -out mockgatewayapplicationservice.go . GatewayApplicationService
 
@@ -51,7 +66,7 @@ func NewApplicationHandler(service GatewayApplicationService, defaultLogLines in
 
 func (h ApplicationHandler) RegisterRoutes(rg *gin.RouterGroup) {
 
-	appGroup := rg.Group("/applications")
+	appGroup := rg.Group(fmt.Sprintf("/%s", sparkApplicationPathName))
 	appGroup.Use(pkgHttp.ApplicationErrorHandler)
 	{
 
@@ -67,6 +82,17 @@ func (h ApplicationHandler) RegisterRoutes(rg *gin.RouterGroup) {
 	}
 }
 
+// ListSparkApplications godoc
+// @Summary List SparkApplications
+// @Description Lists SparkApplications metadata in the specified cluster. Optionally filter by namespace.
+// @Tags Applications
+// @Accept json
+// @Produce json
+// @Security BasicAuth
+// @Param cluster query string true "Cluster name"
+// @Param namespace query string false "Namespace (optional)"
+// @Success 200 {array} metav1.ObjectMeta "List of SparkApplication metadata"
+// @Router / [get]
 func (h ApplicationHandler) List(c *gin.Context) {
 
 	cluster := c.Query("cluster")
@@ -87,6 +113,16 @@ func (h ApplicationHandler) List(c *gin.Context) {
 	c.JSON(http.StatusOK, applications)
 }
 
+// GetSparkApplication godoc
+// @Summary Get a SparkApplication
+// @Description Retrieves the full SparkApplication resource by ID.
+// @Tags Applications
+// @Accept json
+// @Produce json
+// @Security BasicAuth
+// @Param gatewayId path string true "SparkApplication Name"
+// @Success 200 {object} model.GatewayApplication "SparkApplication resource"
+// @Router /{gatewayId} [get]
 func (h ApplicationHandler) Get(c *gin.Context) {
 
 	application, err := h.service.Get(c, c.Param("gatewayId"))
@@ -99,6 +135,16 @@ func (h ApplicationHandler) Get(c *gin.Context) {
 	c.JSON(http.StatusOK, application)
 }
 
+// GetSparkApplicationStatus godoc
+// @Summary Get SparkApplication status
+// @Description Retrieves only the status field of a SparkApplication.
+// @Tags Applications
+// @Accept json
+// @Produce json
+// @Security BasicAuth
+// @Param gatewayId path string true "SparkApplication Name"
+// @Success 200 {object} v1beta2.SparkApplicationStatus "SparkApplication status"
+// @Router /{gatewayId}/status [get]
 func (h ApplicationHandler) Status(c *gin.Context) {
 
 	appStatus, err := h.service.Status(c, c.Param("gatewayId"))
@@ -111,6 +157,17 @@ func (h ApplicationHandler) Status(c *gin.Context) {
 	c.JSON(http.StatusOK, appStatus)
 }
 
+// GetSparkApplicationLogs godoc
+// @Summary Get driver logs of a SparkApplication
+// @Description Retrieves the last N lines of driver logs for the specified SparkApplication. Defaults to the last 100 lines.
+// @Tags Applications
+// @Accept json
+// @Produce plain
+// @Security BasicAuth
+// @Param gatewayId path string true "SparkApplication Name"
+// @Param lines query int false "Number of log lines to retrieve (default: 100)"
+// @Success 200 {string} string "Driver logs"
+// @Router /{gatewayId}/logs [get]
 func (h ApplicationHandler) Logs(c *gin.Context) {
 
 	tailLines := h.defaultLogLines
@@ -133,6 +190,16 @@ func (h ApplicationHandler) Logs(c *gin.Context) {
 	c.JSON(http.StatusOK, logString)
 }
 
+// CreateSparkApplication godoc
+// @Summary Submit a new SparkApplication
+// @Description Submits the provided SparkApplication to the given namespace.
+// @Tags Applications
+// @Accept json
+// @Produce json
+// @Security BasicAuth
+// @Param SparkApplication body v1beta2.SparkApplication true "v1beta2.SparkApplication resource"
+// @Success 201 {object} model.GatewayApplication "SparkApplication Created"
+// @Router / [post]
 func (h ApplicationHandler) Create(c *gin.Context) {
 
 	var app v1beta2.SparkApplication
@@ -157,6 +224,16 @@ func (h ApplicationHandler) Create(c *gin.Context) {
 	c.JSON(http.StatusCreated, application)
 }
 
+// DeleteSparkApplication godoc
+// @Summary Delete a SparkApplication
+// @Description Deletes the specified SparkApplication
+// @Tags Applications
+// @Accept json
+// @Produce json
+// @Security BasicAuth
+// @Param gatewayId path string true "SparkApplication Name"
+// @Success 200 {object} map[string]string "Application deleted: {'status': 'success'}"
+// @Router /{gatewayId} [delete]
 func (h ApplicationHandler) Delete(c *gin.Context) {
 
 	err := h.service.Delete(c, c.Param("gatewayId"))
@@ -167,4 +244,16 @@ func (h ApplicationHandler) Delete(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"status": "success"})
+}
+
+func RegisterSwaggerDocs(rg *gin.RouterGroup, gatewayApiVersion string) {
+	swaggerDocs.SwaggerInfo.BasePath = fmt.Sprintf("/%s/%s", gatewayApiVersion, sparkApplicationPathName)
+
+	// Swagger UI on /swagger/index.html
+	rg.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler, ginSwagger.DefaultModelsExpandDepth(-1)))
+	// Redirect /doc and /docs/ to /swagger/index.html
+	rg.GET("/docs", func(ctx *gin.Context) {
+		ctx.Redirect(http.StatusMovedPermanently, "/swagger/index.html")
+	})
+
 }

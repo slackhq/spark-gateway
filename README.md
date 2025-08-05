@@ -1,6 +1,6 @@
 # Spark Gateway
 
-**Spark Gateway** is a load balancer and a routing gateway for submitting [SparkApplication](https://www.kubeflow.org/docs/components/spark-operator/user-guide/using-sparkapplication/) resources to one or more multiple Kubernetes clusters.
+**Spark Gateway** is a load balancer and a routing gateway for submitting [SparkApplication](https://www.kubeflow.org/docs/components/spark-operator/user-guide/using-sparkapplication/) resources to one or more Kubernetes clusters.
 
 Originally inspired by Apple's [Batch Processing Gateway](https://github.com/apple/batch-processing-gateway), Spark
 Gateway's implementation is written in Go, directly integrating with the Go based [kubeflow/spark-operator](https://github.com/kubeflow/spark-operator)
@@ -8,7 +8,7 @@ project and using native Go Kubernetes client libraries.
 
 ---
 
-## ✨ Features
+## Features
 - 🔌 REST API endpoints to manage [`SparkApplication`](https://github.com/kubeflow/spark-operator/blob/master/docs/api-docs.md) resources
 - 🌐 Submission to multiple Kubernetes clusters using a single client
 - 🚀 Enables zero downtime deployments and upgrades of Spark-on-k8s infrastructure
@@ -18,7 +18,16 @@ project and using native Go Kubernetes client libraries.
 
 ---
 
-## 🚀 Getting Started
+## API Docs UI
+
+Spark-Gateway includes a REST API documentation with Swagger 2.0 running alongside the API.
+
+* **API**: `http://127.0.0.1:8080/v1/applications`
+* **API Docs UI**: `http://127.0.0.1:8080/docs`
+
+---
+
+## Getting Started
 
 ### Prerequisites
 - **Docker** - [Docker Desktop](https://docs.docker.com/desktop/)
@@ -50,12 +59,12 @@ helm upgrade --install \
 
 ### 3. Manage SparkApplication via REST endpoints
 
-Submit a SparkApplication in json format: `yq -o=json . spark-pi-python.yaml > spark-pi-python.json`
+Submit a SparkApplication ([example](https://github.com/kubeflow/spark-operator/blob/master/examples/spark-pi-python.yaml)) 
+in json format: `yq -o=json . spark-pi-python.yaml > spark-pi-python.json`
 
 #### Create SparkApplication
 ```bash
 curl -X POST -H "Content-Type: application/json" \
-  --user gateway-user:pass \
   --data-binary @spark-pi-python.json \
   "127.0.0.1:8080/v1/applications"
 ```
@@ -114,11 +123,11 @@ curl -X DELETE -H "Content-Type: application/json" \
 
 # Configuration
 
-Spark Gateway uses a YAML configuration file that can be passed to both `gateway` and `sparkManager` processes via the `--conf` flag. For detailed configuration options and examples, see [Configuration Documentation](./docs/Configuration.md).
+Spark Gateway uses a YAML configuration file that can be passed to both `gateway` and `sparkManager` processes via the `--conf` flag. For detailed configuration options and examples, see [Configuration Documentation](./docs/Configurations.md).
 
-## 🛠️ Development
+## Development
 
-### Instal Go and Dependencies
+### Install Go and Dependencies
 
 1. **Install Go:**
    - Download and install Go from the [official website](https://go.dev/dl/).
@@ -158,7 +167,7 @@ curl -X GET -H "Content-Type: application/json" \
   "127.0.0.1:8080/v1/applications?cluster=minikube"
 ```
 
-### 🗄️ sqlc
+### sqlc
 This project uses sqlc to generate Go code that presents type-safe interfaces to sql queries. The application code calls
 the sqlc generated methods.
 
@@ -168,10 +177,20 @@ go install github.com/sqlc-dev/sqlc/cmd/sqlc@latest
 sqlc generate
 ```
 
-### 🎭 Moq
+### Moq
 [matryer/moq](https://github.com/matryer/moq) project is used to generate mock interfaces.
 
 To generate mocks, run `go generate`.
+
+### Swagger Docs
+[gin-swagger](https://github.com/swaggo/gin-swagger/tree/master) gin middleware is used to automatically generate 
+RESTful API documentation with Swagger 2.0.
+
+Generate docs
+```bash
+go install github.com/swaggo/swag/cmd/swag@latest
+swag init -d ./internal/gateway/application/handler/ -g handler.go -o ./docs/swagger --parseDependency --parseInternal
+```
 
 ### 🐘 Local Postgres Database
 For local testing, Spark-Gateway will need access to a Postgres database.

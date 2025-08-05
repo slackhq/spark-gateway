@@ -54,10 +54,6 @@ func NewSparkManager(ctx context.Context, sgConfig *config.SparkGatewayConfig, c
 		return nil, fmt.Errorf("%s cluster information not found in config file", cluster)
 	}
 
-	if sgConfig.Mode != "local" {
-		gin.SetMode(gin.ReleaseMode)
-	}
-
 	// Creates a gin router with default middleware:
 	// logger and recovery (crash-free) middleware
 	ginRouter := gin.Default()

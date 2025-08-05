@@ -71,7 +71,7 @@ func main() {
 	ctx := util.SetupSignalHandler()
 	klog.Infof("staring sparkManager server for %s kube cluster\n", *cluster)
 
-	if sgConfig.Mode != "local" {
+	if sgConfig.Mode != "debug" {
 		gin.SetMode(gin.ReleaseMode)
 	}
 

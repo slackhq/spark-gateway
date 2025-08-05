@@ -58,6 +58,8 @@ config:
       sparkHistoryUI: "sparkhistory.domain.com/history/{{.Status.SparkApplicationID}}/jobs"
       logsUI: "logs.domain.com/'host:{{.ObjectMeta.Name}}-driver'"
 
+    enableSwaggerUI: true
+
   sparkManager:
     clusterAuthType: serviceaccount
 
