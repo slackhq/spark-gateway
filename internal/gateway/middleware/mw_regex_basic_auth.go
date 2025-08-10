@@ -121,7 +121,11 @@ func (r *RegexBasicAuthAllowMiddleware) Handler(c *gin.Context) {
 func (r *RegexBasicAuthAllowMiddleware) AllowUsername(username string) bool {
 
 	for _, allowRegex := range r.Conf.Allow {
-		allowRe := regexp.MustCompile(allowRegex)
+		allowRe, err := regexp.Compile(allowRegex)
+
+		if err != nil {
+			return false
+		}
 
 		if allowMatch := allowRe.MatchString(username); allowMatch {
 			return true
@@ -202,7 +206,10 @@ func (r *RegexBasicAuthDenyMiddleware) DenyUsername(username string) bool {
 
 	// check deny regexes first
 	for _, denyRegex := range r.Conf.Deny {
-		denyRe := regexp.MustCompile(denyRegex)
+		denyRe, err := regexp.Compile(denyRegex)
+		if err != nil {
+			return false
+		}
 
 		if denyMatch := denyRe.MatchString(username); denyMatch {
 			return true
