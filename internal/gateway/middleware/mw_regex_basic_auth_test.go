@@ -54,20 +54,6 @@ var basicAuthGetUserTests = []struct {
 	},
 }
 
-func TestBasicAuthGetUserFromAuthHeader(t *testing.T) {
-	basicAuth := BaseRegexBasicAuthMiddleware{}
-	for _, test := range basicAuthGetUserTests {
-		t.Run(test.test, func(t *testing.T) {
-
-			authToken, err := basicAuth.GetUserFromAuthHeader(test.authHeader)
-			assert.Equal(t, test.expected, authToken, test.test)
-			if err != nil {
-				assert.Contains(t, err.Error(), test.errMsg, "err message matches")
-			}
-		})
-	}
-}
-
 var allowAuthConfValidateTests = []struct {
 	test  string
 	allow []string

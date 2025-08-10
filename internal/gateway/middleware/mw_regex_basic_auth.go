@@ -26,45 +26,8 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// BaseRegexBasicAuthMiddleware matches the Basic Authorization token against an
-// list of regexes
-type BaseRegexBasicAuthMiddleware struct {
-	Conf BaseRegexBasicAuthMiddlewareConf
-}
-
-type BaseRegexBasicAuthMiddlewareConf struct{}
-
-func (bc *BaseRegexBasicAuthMiddlewareConf) Name() string {
-	return "BaseRegexBasicAuthMiddlewareConf"
-}
-
-func (b *BaseRegexBasicAuthMiddlewareConf) Validate() error {
-	return nil
-}
-
-func NewBaseRegexBasicAuthMiddleware() GatewayMiddleware {
-	return &BaseRegexBasicAuthMiddleware{}
-}
-
-func (b *BaseRegexBasicAuthMiddleware) Config(conf MiddlewareConfMap) error {
-	var mwConf BaseRegexBasicAuthMiddlewareConf
-
-	if err := LoadMiddlewareConf(&mwConf, conf); err != nil {
-		return fmt.Errorf("error loading %s config: %w", mwConf.Name(), err)
-	}
-	b.Conf = mwConf
-
-	return nil
-}
-
-func (b *BaseRegexBasicAuthMiddleware) Handler(c *gin.Context) {}
-
-func (b *BaseRegexBasicAuthMiddleware) Name() string {
-	return "BaseRegexBasicAuthMiddleware"
-}
-
 // GetUserFromAuthHeader ensures a valid Basic authorization header and returns the decoded username.
-func (b *BaseRegexBasicAuthMiddleware) GetUserFromAuthHeader(authHeader string) (string, error) {
+func GetUserFromAuthHeader(authHeader string) (string, error) {
 	authToken := strings.Split(authHeader, "Basic ")
 
 	if len(authToken) != 2 {
@@ -86,18 +49,11 @@ func (b *BaseRegexBasicAuthMiddleware) GetUserFromAuthHeader(authHeader string) 
 	return userPass[0], nil
 }
 
-// Auth will use the regexes defined in BaseRegexBasicAuthMiddlewareConf to determine
-// whether a user is authorized or not.
-func (b *BaseRegexBasicAuthMiddleware) AuthUsername(username string) bool {
-	return false
-}
-
 // RegexBasicAuthAllowMiddleware matches the Basic Authorization token against an
 // allow list of regexes. Will set the context `user` key if the passed
 // basic auth satisfies the allow/deny list criteria. If auth header is missing,
 // the request is denied.
 type RegexBasicAuthAllowMiddleware struct {
-	*BaseRegexBasicAuthMiddleware
 	Conf RegexBasicAuthAllowMiddlewareConf
 }
 
@@ -143,7 +99,7 @@ func (r *RegexBasicAuthAllowMiddleware) Config(conf MiddlewareConfMap) error {
 func (r *RegexBasicAuthAllowMiddleware) Handler(c *gin.Context) {
 
 	if authHeader := c.GetHeader("Authorization"); authHeader != "" {
-		authUser, err := r.GetUserFromAuthHeader(authHeader)
+		authUser, err := GetUserFromAuthHeader(authHeader)
 
 		if err != nil {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "invalid Authorization header"})
@@ -179,7 +135,6 @@ func (r *RegexBasicAuthAllowMiddleware) AllowUsername(username string) bool {
 // RegexBasicAuthDenyMiddleware matches the Basic Authorization token against an
 // deny list of regexes. If a match is found, the request is denied.
 type RegexBasicAuthDenyMiddleware struct {
-	*BaseRegexBasicAuthMiddleware
 	Conf RegexBasicAuthDenyMiddlewareConf
 }
 
@@ -225,7 +180,7 @@ func (r *RegexBasicAuthDenyMiddleware) Config(conf MiddlewareConfMap) error {
 func (r *RegexBasicAuthDenyMiddleware) Handler(c *gin.Context) {
 
 	if authHeader := c.GetHeader("Authorization"); authHeader != "" {
-		authUser, err := r.GetUserFromAuthHeader(authHeader)
+		authUser, err := GetUserFromAuthHeader(authHeader)
 		if err != nil {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "invalid Authorization header"})
 			return
