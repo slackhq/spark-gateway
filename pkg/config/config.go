@@ -76,20 +76,6 @@ type UnmarshalableConfig interface {
 	Key() string
 }
 
-type BaseConfig struct{}
-
-func (b *BaseConfig) Unmarshal(k *koanf.Koanf) error {
-	if err := k.Unmarshal(b.Key(), b); err != nil {
-		return fmt.Errorf("error unmarshaling config [%s]: %w", b.Key(), err)
-	}
-
-	return nil
-}
-
-func (b *BaseConfig) Key() string {
-	return "base"
-}
-
 func ConfigUnmarshal(path string, conf UnmarshalableConfig) error {
 	k := koanf.New(".")
 
@@ -124,7 +110,6 @@ type MiddlewareDefinition struct {
 }
 
 type GatewayConfig struct {
-	*BaseConfig
 	GatewayApiVersion  string                   `koanf:"gatewayApiVersion"`
 	GatewayPort        string                   `koanf:"gatewayPort"`
 	Middleware         []MiddlewareDefinition   `koanf:"middleware"`
@@ -142,7 +127,6 @@ type MetricsServer struct {
 }
 
 type SparkManagerConfig struct {
-	*BaseConfig
 	ClusterAuthType string        `koanf:"clusterAuthType"`
 	Database        Database      `koanf:"database"`
 	MetricsServer   MetricsServer `koanf:"metricsServer"`
@@ -187,7 +171,6 @@ type DebugPort struct {
 }
 
 type SparkGatewayConfig struct {
-	*BaseConfig
 	KubeClusters       []model.KubeCluster  `koanf:"clusters"`
 	ClusterRouter      ClusterRouter        `koanf:"clusterRouter"`
 	DefaultLogLines    int                  `koanf:"defaultLogLines"`
