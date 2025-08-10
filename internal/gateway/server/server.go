@@ -128,10 +128,7 @@ func NewGateway(ctx context.Context, sgConfig *cfg.SparkGatewayConfig, sparkMana
 		}
 
 		klog.Infof("Initializing middleware [%s]", mwDef.Type)
-		mwImpl := mwNew()
-
-		// Set config
-		err := mwImpl.Config(mwDef.Conf)
+		mwImpl, err := mwNew(mwDef.Conf)
 
 		if err != nil {
 			return nil, fmt.Errorf("error configuring middleware [%s]: %w", mwDef.Type, err)
