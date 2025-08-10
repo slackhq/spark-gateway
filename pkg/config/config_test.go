@@ -25,7 +25,6 @@ import (
 )
 
 type testConfig struct {
-	*BaseConfig
 	Name string `koanf:"name"`
 	Port int    `koanf:"port"`
 }
