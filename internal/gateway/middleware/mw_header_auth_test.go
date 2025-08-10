@@ -122,10 +122,10 @@ var handlerValidTests = []struct {
 				Validation: ".*",
 			},
 		},
-		reqHeader:   "Header",
-		headerVal:   "headerUser",
+		reqHeader:    "Header",
+		headerVal:    "headerUser",
 		expectedUser: "headerUser",
-		expectedSig: "AB",
+		expectedSig:  "AB",
 	},
 	{
 		test: "No user, invalid header",
@@ -146,9 +146,7 @@ func TestHeaderAuthMiddleware(t *testing.T) {
 	for _, test := range handlerValidTests {
 
 		mw := HeaderAuthMiddleware{
-			Conf: HeaderAuthMiddlewareConf{
-				Headers: test.authHeaders,
-			},
+			Headers: test.authHeaders,
 		}
 
 		t.Run(test.test, func(t *testing.T) {
