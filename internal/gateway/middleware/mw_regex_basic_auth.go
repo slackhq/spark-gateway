@@ -49,14 +49,6 @@ func GetUserFromAuthHeader(authHeader string) (string, error) {
 	return userPass[0], nil
 }
 
-// RegexBasicAuthAllowMiddleware matches the Basic Authorization token against an
-// allow list of regexes. Will set the context `user` key if the passed
-// basic auth satisfies the allow/deny list criteria. If auth header is missing,
-// the request is denied.
-type RegexBasicAuthAllowMiddleware struct {
-	Conf RegexBasicAuthAllowMiddlewareConf
-}
-
 type RegexBasicAuthAllowMiddlewareConf struct {
 	Allow []string `koanf:"allow"`
 }
@@ -76,24 +68,29 @@ func (r *RegexBasicAuthAllowMiddlewareConf) Validate() error {
 	return nil
 }
 
-func NewRegexBasicAuthAllowMiddleware() GatewayMiddleware {
-	return &RegexBasicAuthAllowMiddleware{}
+// RegexBasicAuthAllowMiddleware matches the Basic Authorization token against an
+// allow list of regexes. Will set the context `user` key if the passed
+// basic auth satisfies the allow/deny list criteria. If auth header is missing,
+// the request is denied.
+type RegexBasicAuthAllowMiddleware struct {
+	AllowRegexes []*regexp.Regexp
 }
 
-func (b *RegexBasicAuthAllowMiddleware) Name() string {
-	return "RegexBasicAuthAllowMiddleware"
-}
+func NewRegexBasicAuthAllowMiddleware(confMap MiddlewareConfMap) (GatewayMiddleware, error) {
 
-func (r *RegexBasicAuthAllowMiddleware) Config(conf MiddlewareConfMap) error {
 	var mwConf RegexBasicAuthAllowMiddlewareConf
-
-	if err := LoadMiddlewareConf(&mwConf, conf); err != nil {
-		return fmt.Errorf("error loading %s config: %w", mwConf.Name(), err)
+	if err := LoadMiddlewareConf(&mwConf, confMap); err != nil {
+		return nil, fmt.Errorf("error creating RegexBasicAuthAllowMiddleware: %w", err)
 	}
 
-	r.Conf = mwConf
+	// can use MustCompile because of Validate call earlier in LoadMiddlewareConf
+	allowRegexes := []*regexp.Regexp{}
+	for _, allowRegexString := range mwConf.Allow {
+		allowRegex := regexp.MustCompile(allowRegexString)
+		allowRegexes = append(allowRegexes, allowRegex)
+	}
 
-	return nil
+	return &RegexBasicAuthAllowMiddleware{AllowRegexes: allowRegexes}, nil
 }
 
 func (r *RegexBasicAuthAllowMiddleware) Handler(c *gin.Context) {
@@ -120,26 +117,14 @@ func (r *RegexBasicAuthAllowMiddleware) Handler(c *gin.Context) {
 // whether a user is authorized or not.
 func (r *RegexBasicAuthAllowMiddleware) AllowUsername(username string) bool {
 
-	for _, allowRegex := range r.Conf.Allow {
-		allowRe, err := regexp.Compile(allowRegex)
-
-		if err != nil {
-			return false
-		}
-
-		if allowMatch := allowRe.MatchString(username); allowMatch {
+	for _, allowRegex := range r.AllowRegexes {
+		if allowMatch := allowRegex.MatchString(username); allowMatch {
 			return true
 		}
 	}
 
 	return false
 
-}
-
-// RegexBasicAuthDenyMiddleware matches the Basic Authorization token against an
-// deny list of regexes. If a match is found, the request is denied.
-type RegexBasicAuthDenyMiddleware struct {
-	Conf RegexBasicAuthDenyMiddlewareConf
 }
 
 type RegexBasicAuthDenyMiddlewareConf struct {
@@ -161,24 +146,31 @@ func (r *RegexBasicAuthDenyMiddlewareConf) Validate() error {
 	return nil
 }
 
-func NewRegexBasicAuthDenyMiddleware() GatewayMiddleware {
-	return &RegexBasicAuthDenyMiddleware{}
+// RegexBasicAuthDenyMiddleware matches the Basic Authorization token against an
+// deny list of regexes. If a match is found, the request is denied.
+type RegexBasicAuthDenyMiddleware struct {
+	DenyRegexes []*regexp.Regexp
+}
+
+func NewRegexBasicAuthDenyMiddleware(confMap MiddlewareConfMap) (GatewayMiddleware, error) {
+
+	var mwConf RegexBasicAuthDenyMiddlewareConf
+	if err := LoadMiddlewareConf(&mwConf, confMap); err != nil {
+		return nil, fmt.Errorf("error creating RegexBasicAuthDenyMiddleware: %w", err)
+	}
+
+	// can use MustCompile because of Validate call earlier in LoadMiddlewareConf
+	denyRegexes := []*regexp.Regexp{}
+	for _, denyRegexString := range mwConf.Deny {
+		denyRegex := regexp.MustCompile(denyRegexString)
+		denyRegexes = append(denyRegexes, denyRegex)
+	}
+
+	return &RegexBasicAuthDenyMiddleware{DenyRegexes: denyRegexes}, nil
 }
 
 func (r *RegexBasicAuthDenyMiddleware) Name() string {
 	return "RegexBasicAuthDenyMiddleware"
-}
-
-func (r *RegexBasicAuthDenyMiddleware) Config(conf MiddlewareConfMap) error {
-	var mwConf RegexBasicAuthDenyMiddlewareConf
-
-	if err := LoadMiddlewareConf(&mwConf, conf); err != nil {
-		return fmt.Errorf("error loading %s config: %w", mwConf.Name(), err)
-	}
-
-	r.Conf = mwConf
-
-	return nil
 }
 
 func (r *RegexBasicAuthDenyMiddleware) Handler(c *gin.Context) {
@@ -205,13 +197,8 @@ func (r *RegexBasicAuthDenyMiddleware) Handler(c *gin.Context) {
 func (r *RegexBasicAuthDenyMiddleware) DenyUsername(username string) bool {
 
 	// check deny regexes first
-	for _, denyRegex := range r.Conf.Deny {
-		denyRe, err := regexp.Compile(denyRegex)
-		if err != nil {
-			return false
-		}
-
-		if denyMatch := denyRe.MatchString(username); denyMatch {
+	for _, denyRegex := range r.DenyRegexes {
+		if denyMatch := denyRegex.MatchString(username); denyMatch {
 			return true
 		}
 	}
