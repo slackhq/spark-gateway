@@ -59,7 +59,7 @@ func NewHeaderAuthMiddleware(confMap MiddlewareConfMap) (GatewayMiddleware, erro
 	var mwConf HeaderAuthMiddlewareConf
 
 	if err := LoadMiddlewareConf(&mwConf, confMap); err != nil {
-		return nil, fmt.Errorf("error loading %s config: %w", mwConf.Name(), err)
+		return nil, fmt.Errorf("error creating HeaderAuthMiddleware: %w", err)
 	}
 
 	return &HeaderAuthMiddleware{Headers: mwConf.Headers}, nil
