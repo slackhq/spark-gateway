@@ -42,7 +42,8 @@ import (
 //  @license.name	Apache 2.0
 //  @license.url	http://www.apache.org/licenses/LICENSE-2.0.html
 
-const sparkApplicationPathName = "applications"
+const ApplicationAPIVersion = "v1"
+const SparkApplicationPathName = "applications"
 
 //go:generate moq -rm  -out mockgatewayapplicationservice.go . GatewayApplicationService
 
@@ -66,7 +67,7 @@ func NewApplicationHandler(service GatewayApplicationService, defaultLogLines in
 
 func (h *ApplicationHandler) RegisterRoutes(rg *gin.RouterGroup) {
 
-	appGroup := rg.Group(fmt.Sprintf("/%s", sparkApplicationPathName))
+	appGroup := rg.Group(fmt.Sprintf("/%s/%s", ApplicationAPIVersion, SparkApplicationPathName))
 	appGroup.Use(pkgHttp.ApplicationErrorHandler)
 	{
 
@@ -249,8 +250,8 @@ func (h *ApplicationHandler) Delete(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"status": "success"})
 }
 
-func RegisterSwaggerDocs(rg *gin.RouterGroup, gatewayApiVersion string) {
-	swaggerDocs.SwaggerInfo.BasePath = fmt.Sprintf("/%s/%s", gatewayApiVersion, sparkApplicationPathName)
+func RegisterSwaggerDocs(rg *gin.RouterGroup) {
+	swaggerDocs.SwaggerInfo.BasePath = fmt.Sprintf("/%s/%s", ApplicationAPIVersion, SparkApplicationPathName)
 
 	// Swagger UI on /swagger/index.html
 	rg.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler, ginSwagger.DefaultModelsExpandDepth(-1)))
