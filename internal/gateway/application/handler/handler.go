@@ -210,14 +210,12 @@ func (h ApplicationHandler) Create(c *gin.Context) {
 	}
 
 	// Set user
-	var user string
-	reqUser, exists := c.Get("user")
-
+	// This should always exist because of prior auth middlewares
+	gotUser, exists := c.Get("user")
 	if !exists {
-		user = reqUser.(string)
-	} else {
-		user = "anonymous"
+		c.Error(errors.New("no user set, congratulation you've encountered a bug that should never happen"))
 	}
+	user := gotUser.(string)
 
 	application, err := h.service.Create(c, &app, user)
 
