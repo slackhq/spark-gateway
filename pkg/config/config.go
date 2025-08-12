@@ -24,7 +24,6 @@ import (
 	"github.com/knadh/koanf/providers/file"
 	"github.com/knadh/koanf/v2"
 
-	"github.com/slackhq/spark-gateway/internal/gateway/middleware"
 	"github.com/slackhq/spark-gateway/pkg/model"
 	"github.com/slackhq/spark-gateway/pkg/util"
 )
@@ -105,12 +104,11 @@ type Database struct {
 }
 
 type MiddlewareDefinition struct {
-	Type string                       `koanf:"type"`
-	Conf middleware.MiddlewareConfMap `koanf:"conf"`
+	Type string         `koanf:"type"`
+	Conf map[string]any `koanf:"conf"`
 }
 
 type GatewayConfig struct {
-	GatewayApiVersion  string                   `koanf:"gatewayApiVersion"`
 	GatewayPort        string                   `koanf:"gatewayPort"`
 	Middleware         []MiddlewareDefinition   `koanf:"middleware"`
 	StatusUrlTemplates model.StatusUrlTemplates `koanf:"statusUrlTemplates"`

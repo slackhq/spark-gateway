@@ -114,10 +114,6 @@ Defines the port used by the SparkManager server.
 ### `gateway`
 Gateway server configuration.
 
-#### `gatewayApiVersion`
-Specifies the API version path in the URL. For example, if set to `v2`, the base path for all endpoints would be
-`https://hostname/v2/applications/`.
-
 #### `gatewayPort`
 Defines the port used by the Gateway server.
 
