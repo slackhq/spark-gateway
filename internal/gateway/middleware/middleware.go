@@ -93,9 +93,12 @@ func AddMiddleware(mwDefs []config.MiddlewareDefinition) ([]gin.HandlerFunc, err
 		}
 
 		mwHandlerChain = append(mwHandlerChain, mwImpl.Handler)
+		// IsAuthed runs all other middlewares first before checking the User key is set
+		// so it goes first in the chain
+
 	}
 
-	// IsAuthed goes last to ensure a User exists for
+	// IsAuthed goes after to ensure a User exists for future work to be accurately attributed
 	mwHandlerChain = append(mwHandlerChain, IsAuthed)
 
 	return mwHandlerChain, nil
