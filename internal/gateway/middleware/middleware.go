@@ -68,8 +68,14 @@ func LoadMiddlewareConf(mw GatewayMiddlewareConf, conf MiddlewareConfMap) error 
 }
 
 func AddMiddleware(mwDefs []config.MiddlewareDefinition) ([]gin.HandlerFunc, error) {
-	mwHandlerChain := []gin.HandlerFunc{}
 
+	// If no definitions are passed, we return the AnonymousUserMiddleware to ensure
+	// a user exists
+	if len(mwDefs) == 0 {
+		return []gin.HandlerFunc{AnonymousUserMiddleware}, nil
+	}
+
+	mwHandlerChain := []gin.HandlerFunc{}
 	for _, mwDef := range mwDefs {
 
 		// Get from available middleware
@@ -89,11 +95,8 @@ func AddMiddleware(mwDefs []config.MiddlewareDefinition) ([]gin.HandlerFunc, err
 		mwHandlerChain = append(mwHandlerChain, mwImpl.Handler)
 	}
 
-	// If we have middleware, we assume that user auth is cared about. IsAuthed goes last to ensure a User exists for
-	//  future work to be accurately attributed
-	if len(mwHandlerChain) != 0 {
-		mwHandlerChain = append(mwHandlerChain, IsAuthed)
-	}
+	// IsAuthed goes last to ensure a User exists for
+	mwHandlerChain = append(mwHandlerChain, IsAuthed)
 
 	return mwHandlerChain, nil
 }
