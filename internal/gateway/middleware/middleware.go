@@ -95,11 +95,8 @@ func AddMiddleware(mwDefs []config.MiddlewareDefinition) ([]gin.HandlerFunc, err
 		mwHandlerChain = append(mwHandlerChain, mwImpl.Handler)
 	}
 
-	// If we have middleware, we assume that user auth is cared about. IsAuthed goes last to ensure a User exists for
-	//  future work to be accurately attributed
-	if len(mwHandlerChain) != 0 {
-		mwHandlerChain = append(mwHandlerChain, IsAuthed)
-	}
+	// IsAuthed goes last to ensure a User exists for
+	mwHandlerChain = append(mwHandlerChain, IsAuthed)
 
 	return mwHandlerChain, nil
 }
