@@ -44,7 +44,6 @@ config:
   sparkManagerPort: &sparkManagerPort "8081"
 
   gateway:
-    gatewayApiVersion: v1
     gatewayPort: &gatewayPort "8080"
 
     middleware:

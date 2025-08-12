@@ -24,10 +24,10 @@ import (
 
 	"k8s.io/klog/v2"
 
-	"github.com/slackhq/spark-gateway/internal/gateway/application/handler"
 	"github.com/slackhq/spark-gateway/internal/gateway/application/repository"
 	"github.com/slackhq/spark-gateway/internal/gateway/application/service"
 	"github.com/slackhq/spark-gateway/internal/gateway/cluster"
+	v1Apps "github.com/slackhq/spark-gateway/internal/gateway/v1/application/handler"
 
 	"time"
 
@@ -60,6 +60,29 @@ func GenUUIDv7() (string, error) {
 func NewGateway(ctx context.Context, sgConfig *cfg.SparkGatewayConfig, sparkManagerHostnameTemplate string) (*GatewayServer, error) {
 
 	ginRouter := gin.Default()
+
+	/// Setup unversioned services/handlers first
+	rootGroup := ginRouter.Group("")
+	healthHandler := health.NewHealthHandler(health.NewHealthService())
+
+	healthHandler.RegisterRoutes(rootGroup)
+
+	// Swagger UI
+	if sgConfig.GatewayConfig.EnableSwaggerUI {
+		v1Apps.RegisterSwaggerDocs(rootGroup)
+	}
+
+	// Create /api group where all versioned endpoints will attach themselves
+	apiGroup := ginRouter.Group("/api")
+
+	// Attach all middleware to /api as any endpoints beyond require auth
+	mwHandlerChain, err := middleware.AddMiddleware(sgConfig.GatewayConfig.Middleware)
+	if err != nil {
+		return nil, fmt.Errorf("error while setting middlewares: %w", err)
+	}
+	apiGroup.Use(mwHandlerChain...)
+
+	// Setup remaining services for /api endpoints
 
 	//Repos
 	sparkManagerRepo, err := repository.NewSparkManagerRepository(sgConfig.KubeClusters, sparkManagerHostnameTemplate, sgConfig.SparkManagerPort, sgConfig.DebugPorts)
@@ -108,29 +131,11 @@ func NewGateway(ctx context.Context, sgConfig *cfg.SparkGatewayConfig, sparkMana
 		model.GatewayIdGenerator{UuidGenerator: GenUUIDv7},
 	)
 
-	healthService := health.NewHealthService()
-
 	// Handlers
-	appHandler := handler.NewApplicationHandler(appService, sgConfig.DefaultLogLines)
+	v1AppHandler := v1Apps.NewApplicationHandler(appService, sgConfig.DefaultLogLines)
 
-	healthHandler := health.NewHealthHandler(healthService)
-
-	/// Authed
-	/// Auth middlewares
-	mwHandlerChain, err := middleware.AddMiddleware(sgConfig.GatewayConfig.Middleware)
-
-	/// Register unversioned handlers
-	rootGroup := ginRouter.Group("")
-	healthHandler.RegisterRoutes(rootGroup)
-
-	// Swagger UI
-	if sgConfig.GatewayConfig.EnableSwaggerUI {
-		handler.RegisterSwaggerDocs(rootGroup, sgConfig.GatewayConfig.GatewayApiVersion)
-	}
-
-	/// Register versioned handlers
-	versionGroup := ginRouter.Group(fmt.Sprintf("/%s", sgConfig.GatewayConfig.GatewayApiVersion), mwHandlerChain...)
-	appHandler.RegisterRoutes(versionGroup)
+	/// Register versioned api handlers
+	v1AppHandler.RegisterRoutes(apiGroup)
 
 	// Log the routes after all routes are registered
 	routes := ginRouter.Routes()
