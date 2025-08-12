@@ -21,9 +21,11 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/knadh/koanf/providers/confmap"
 	"github.com/knadh/koanf/v2"
+	"github.com/slackhq/spark-gateway/pkg/config"
+	"k8s.io/klog/v2"
 )
 
-type MiddlewareConfMap map[string]interface{}
+type MiddlewareConfMap map[string]any
 type NewMiddleware func(conf MiddlewareConfMap) (GatewayMiddleware, error)
 
 var BuiltinMiddleware map[string]NewMiddleware = map[string]NewMiddleware{
@@ -63,4 +65,35 @@ func LoadMiddlewareConf(mw GatewayMiddlewareConf, conf MiddlewareConfMap) error 
 	}
 
 	return nil
+}
+
+func AddMiddleware(mwDefs []config.MiddlewareDefinition) ([]gin.HandlerFunc, error) {
+	mwHandlerChain := []gin.HandlerFunc{}
+
+	for _, mwDef := range mwDefs {
+
+		// Get from available middleware
+		// TODO: Make these plugins
+		mwNew, ok := BuiltinMiddleware[mwDef.Type]
+		if !ok {
+			return nil, fmt.Errorf("no builtin middleware with type [%s]", mwDef.Type)
+		}
+
+		klog.Infof("Initializing middleware [%s]", mwDef.Type)
+		mwImpl, err := mwNew(mwDef.Conf)
+
+		if err != nil {
+			return nil, fmt.Errorf("error configuring middleware [%s]: %w", mwDef.Type, err)
+		}
+
+		mwHandlerChain = append(mwHandlerChain, mwImpl.Handler)
+		// IsAuthed runs all other middlewares first before checking the User key is set
+		// so it goes first in the chain
+
+	}
+
+	// IsAuthed goes after to ensure a User exists for future work to be accurately attributed
+	mwHandlerChain = append(mwHandlerChain, IsAuthed)
+
+	return mwHandlerChain, nil
 }
