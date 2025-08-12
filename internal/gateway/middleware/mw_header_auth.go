@@ -27,7 +27,7 @@ import (
 // it conforms to requirements set by Spark Gateway admins. The `user` context variable is set to the
 // first header that passes it's configured Validation, if any.
 type HeaderAuthMiddleware struct {
-	Conf HeaderAuthMiddlewareConf
+	Headers []HeaderAuthHeader
 }
 
 type HeaderAuthHeader struct {
@@ -55,29 +55,24 @@ func (h *HeaderAuthMiddlewareConf) Name() string {
 	return "HeaderAuthMiddlewareConf"
 }
 
-func NewHeaderAuthMiddleware() GatewayMiddleware {
-	return &HeaderAuthMiddleware{}
-}
+func NewHeaderAuthMiddleware(confMap MiddlewareConfMap) (GatewayMiddleware, error) {
+	var mwConf HeaderAuthMiddlewareConf
 
-func (h *HeaderAuthMiddleware) Name() string {
-	return "HeaderAuthMiddleware"
+	if err := LoadMiddlewareConf(&mwConf, confMap); err != nil {
+		return nil, fmt.Errorf("error creating HeaderAuthMiddleware: %w", err)
+	}
+
+	return &HeaderAuthMiddleware{Headers: mwConf.Headers}, nil
 }
 
 func (h *HeaderAuthMiddleware) Config(conf MiddlewareConfMap) error {
-	var mwConf HeaderAuthMiddlewareConf
-
-	if err := LoadMiddlewareConf(&mwConf, conf); err != nil {
-		return fmt.Errorf("error loading %s config: %w", mwConf.Name(), err)
-	}
-
-	h.Conf = mwConf
 
 	return nil
 }
 
 func (h *HeaderAuthMiddleware) Handler(c *gin.Context) {
 
-	for _, authHeader := range h.Conf.Headers {
+	for _, authHeader := range h.Headers {
 		if gotHeader := c.GetHeader(authHeader.Key); gotHeader != "" {
 			validateReg := regexp.MustCompile(authHeader.Validation)
 

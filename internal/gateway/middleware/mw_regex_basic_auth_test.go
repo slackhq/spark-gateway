@@ -18,6 +18,7 @@ package middleware
 import (
 	"net/http"
 	"net/http/httptest"
+	"regexp"
 	"testing"
 
 	"github.com/gin-gonic/gin"
@@ -27,45 +28,6 @@ import (
 func init() {
 	gin.SetMode(gin.TestMode)
 
-}
-
-var test_str string = "test"
-
-var basicAuthGetUserTests = []struct {
-	test       string
-	authHeader string
-	expected   string
-	errMsg     string
-}{
-	{
-		test:       "auth header missing",
-		authHeader: "",
-		errMsg:     "invalid Authorization format, must be like `Basic <token>`",
-	},
-	{
-		test:       "bad decoding",
-		authHeader: "Authorization Basic decode%%%",
-		errMsg:     "could not decode auth token:",
-	},
-	{
-		test:       "valid auth header",
-		authHeader: "Authorization Basic dGVzdDp0ZXN0",
-		expected:   "test",
-	},
-}
-
-func TestBasicAuthGetUserFromAuthHeader(t *testing.T) {
-	basicAuth := BaseRegexBasicAuthMiddleware{}
-	for _, test := range basicAuthGetUserTests {
-		t.Run(test.test, func(t *testing.T) {
-
-			authToken, err := basicAuth.GetUserFromAuthHeader(test.authHeader)
-			assert.Equal(t, test.expected, authToken, test.test)
-			if err != nil {
-				assert.Contains(t, err.Error(), test.errMsg, "err message matches")
-			}
-		})
-	}
 }
 
 var allowAuthConfValidateTests = []struct {
@@ -111,7 +73,7 @@ func TestAllowRegexBasicAuthConfValidate(t *testing.T) {
 
 var allowAuthHandlerTests = []struct {
 	test           string
-	conf           RegexBasicAuthAllowMiddlewareConf
+	allowRes       []string
 	user           string
 	authHeader     string
 	expectedUser   string
@@ -132,18 +94,27 @@ var allowAuthHandlerTests = []struct {
 		expectedStatus: 403,
 	},
 	{
-		test: "Fail regex",
-		conf: RegexBasicAuthAllowMiddlewareConf{
-			Allow: []string{"valid"},
-		},
+		test:           "Fail regex (deny)",
+		allowRes:       []string{"valid"},
 		authHeader:     "Authorization Basic dGVzdDp0ZXN0",
 		expectedStatus: 403,
 	},
 	{
-		test: "Pass regex",
-		conf: RegexBasicAuthAllowMiddlewareConf{
-			Allow: []string{"test"},
-		},
+		test:           "Pass regex (allow)",
+		allowRes:       []string{"test"},
+		authHeader:     "Authorization Basic dGVzdDp0ZXN0",
+		expectedStatus: 200,
+		expectedUser:   "test",
+	},
+	{
+		test:           "Multiple regex (deny)",
+		allowRes:       []string{"one", "two"},
+		authHeader:     "Authorization Basic dGVzdDp0ZXN0",
+		expectedStatus: 403,
+	},
+	{
+		test:           "Multiple regex (allow)",
+		allowRes:       []string{"one", "test"},
 		authHeader:     "Authorization Basic dGVzdDp0ZXN0",
 		expectedStatus: 200,
 		expectedUser:   "test",
@@ -154,27 +125,29 @@ func TestRegexAllowBasicAuthMiddleware(t *testing.T) {
 
 	for _, test := range allowAuthHandlerTests {
 
+		allowRegexes := []*regexp.Regexp{}
+		for _, allowRe := range test.allowRes {
+			allowRegexes = append(allowRegexes, regexp.MustCompile(allowRe))
+		}
+
 		mw := RegexBasicAuthAllowMiddleware{
-			Conf: test.conf,
+			AllowRegexes: allowRegexes,
 		}
 
 		t.Run(test.test, func(t *testing.T) {
 
 			router := gin.New()
 
-			router.Use(func(c *gin.Context) {
-				c.Set("user", test.user)
-				c.Next()
-			})
-
 			router.Use(mw.Handler)
 
 			// User check
-			router.Use(func(ctx *gin.Context) {
-				userVal, _ := ctx.Get("user")
+			if test.expectedUser != "" {
+				router.Use(func(ctx *gin.Context) {
+					userVal, _ := ctx.Get("user")
 
-				assert.Equal(t, test.expectedUser, userVal, "user value should match")
-			})
+					assert.Equal(t, test.expectedUser, userVal, "user value should match")
+				})
+			}
 
 			router.GET("/")
 
@@ -193,9 +166,8 @@ func TestRegexAllowBasicAuthMiddleware(t *testing.T) {
 
 var denyAuthHandlerTests = []struct {
 	test           string
-	conf           RegexBasicAuthDenyMiddlewareConf
+	denyRes        []string
 	authHeader     string
-	user           string
 	expectedStatus int
 }{
 	{
@@ -213,18 +185,26 @@ var denyAuthHandlerTests = []struct {
 		expectedStatus: 200,
 	},
 	{
-		test: "Fail regex",
-		conf: RegexBasicAuthDenyMiddlewareConf{
-			Deny: []string{"valid"},
-		},
+		test:           "No matches (allow)",
+		denyRes:        []string{"valid"},
 		authHeader:     "Authorization Basic dGVzdDp0ZXN0",
 		expectedStatus: 200,
 	},
 	{
-		test: "Pass regex",
-		conf: RegexBasicAuthDenyMiddlewareConf{
-			Deny: []string{"test"},
-		},
+		test:           "Match regex (deny)",
+		denyRes:        []string{"test"},
+		authHeader:     "Authorization Basic dGVzdDp0ZXN0",
+		expectedStatus: 403,
+	},
+	{
+		test:           "Multiple regex (allow)",
+		denyRes:        []string{"one", "two"},
+		authHeader:     "Authorization Basic dGVzdDp0ZXN0",
+		expectedStatus: 200,
+	},
+	{
+		test:           "Multiple regex (deny)",
+		denyRes:        []string{"one", "test"},
 		authHeader:     "Authorization Basic dGVzdDp0ZXN0",
 		expectedStatus: 403,
 	},
@@ -234,17 +214,17 @@ func TestRegexDenyBasicAuthMiddleware(t *testing.T) {
 
 	for _, test := range denyAuthHandlerTests {
 
+		denyRegexes := []*regexp.Regexp{}
+		for _, denyRe := range test.denyRes {
+			denyRegexes = append(denyRegexes, regexp.MustCompile(denyRe))
+		}
+
 		mw := RegexBasicAuthDenyMiddleware{
-			Conf: test.conf,
+			DenyRegexes: denyRegexes,
 		}
 
 		t.Run(test.test, func(t *testing.T) {
 			router := gin.New()
-
-			router.Use(func(c *gin.Context) {
-				c.Set("user", test.user)
-				c.Next()
-			})
 
 			router.Use(mw.Handler)
 

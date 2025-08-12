@@ -25,77 +25,62 @@ import (
 	"github.com/knadh/koanf/v2"
 )
 
-const ServiceTokenMapPath = "/conf/service-auth-config.yaml"
+const ServiceTokenMapPathDefault = "/conf/service-auth-config.yaml"
+
+type ServiceTokenMap map[string]string
 
 // ServiceTokenAuth does validation based on specific headers sent through the request.
 type ServiceTokenAuthMiddleware struct {
-	Conf ServiceTokenAuthMiddlewareConf
+	ServiceTokenMap ServiceTokenMap
 }
 
 type ServiceTokenAuthMiddlewareConf struct {
 	ServiceTokenMapPath string `koanf:"serviceTokenMapFile"`
-	ServiceTokenMap     map[string]string
 }
 
 func (s *ServiceTokenAuthMiddlewareConf) Name() string {
 	return "ServiceTokenAuthMiddlewareConf"
 }
 
-// Unmarshal takes takes the loaded koanf of the service tokens map, so
-// this will unmarshal to the map struct vs the ServiceTokenAuthMiddlewareConf itself
-func (s *ServiceTokenAuthMiddlewareConf) Unmarshal(k *koanf.Koanf) error {
-	serviceTokenMap := make(map[string]string)
-	if err := k.Unmarshal(s.Key(), &serviceTokenMap); err != nil {
-		return fmt.Errorf("error unmarshaling ServiceTokenAuthMiddlewareConf: %w", err)
-	}
-
-	s.ServiceTokenMap = serviceTokenMap
-
-	return nil
-}
-
-// ServiceTokenAuthMiddlewareConf reads the service auth tokens file, so it needs
-// the whole path to be able to map to ServiceTokenMap
-func (s *ServiceTokenAuthMiddlewareConf) Key() string {
-	return ""
-}
-
 func (s *ServiceTokenAuthMiddlewareConf) Validate() error {
 	return nil
 }
 
-func NewServiceTokenAuthMiddleware() GatewayMiddleware {
-	return &ServiceTokenAuthMiddleware{Conf: ServiceTokenAuthMiddlewareConf{
-		ServiceTokenMapPath: ServiceTokenMapPath,
-	}}
-}
-
-func (s *ServiceTokenAuthMiddleware) Name() string {
-	return "ServiceTokenAuthMiddleware"
-}
-
-func (s *ServiceTokenAuthMiddleware) Config(conf MiddlewareConfMap) error {
+func NewServiceTokenAuthMiddleware(confMap MiddlewareConfMap) (GatewayMiddleware, error) {
 	var mwConf ServiceTokenAuthMiddlewareConf
 
-	if err := LoadMiddlewareConf(&mwConf, conf); err != nil {
-		return fmt.Errorf("error loading %s config: %w", mwConf.Name(), err)
+	if err := LoadMiddlewareConf(&mwConf, confMap); err != nil {
+		return nil, fmt.Errorf("error creating ServiceTokenAuthMiddleware: %w", err)
 	}
 
-	// If the loaded configuration has a file path and that path is different than the default,
-	// set the Conf to the new loaded one
-	if mwConf.ServiceTokenMapPath != "" && mwConf.ServiceTokenMapPath != s.Conf.ServiceTokenMapPath {
-		s.Conf = mwConf
+	var serviceTokenMap ServiceTokenMap
+
+	if err := LoadServiceTokensFromFile(&serviceTokenMap, mwConf); err != nil {
+		return nil, fmt.Errorf("error creating ServiceTokenAuthMiddleware: %w", err)
+	}
+
+	return &ServiceTokenAuthMiddleware{ServiceTokenMap: serviceTokenMap}, nil
+}
+
+// LoadServiceTokensFromFile marshals the key/value pairs from the path provided in the passed ServiceTokenAuthMiddlewareConf with Koanf. If
+// the provided config does not have a configured ServiceTokenMapPath, we use ServiceTokenMapPathDefault.
+func LoadServiceTokensFromFile(tokenMap *ServiceTokenMap, mwConf ServiceTokenAuthMiddlewareConf) error {
+
+	filePath := mwConf.ServiceTokenMapPath
+	// If no path was provided in the Config, use a default
+	if filePath == "" {
+		filePath = ServiceTokenMapPathDefault
 	}
 
 	// New koanf to hold key/value pairs of Service tokens
 	tokenK := koanf.New(".")
-	if err := tokenK.Load(file.Provider(s.Conf.ServiceTokenMapPath), yaml.Parser()); err != nil {
-		return fmt.Errorf("error parsing config file: %s", err)
+	if err := tokenK.Load(file.Provider(filePath), yaml.Parser()); err != nil {
+		return fmt.Errorf("error parsing service token map file: %s", err)
 	}
 
 	// Unmarshal the key/values pairs into the ServiceTokenMap field
-	if err := s.Conf.Unmarshal(tokenK); err != nil {
-		return fmt.Errorf("error unmarshaling service token map file: %w", err)
+	if err := tokenK.Unmarshal("", tokenMap); err != nil {
+		return fmt.Errorf("error unmarshaling ServiceTokenAuthMiddlewareConf: %w", err)
 	}
 
 	return nil
@@ -120,7 +105,7 @@ func (s *ServiceTokenAuthMiddleware) Handler(c *gin.Context) {
 	}
 
 	// Check if service is authorized
-	if gotToken, found := s.Conf.ServiceTokenMap[serviceName]; found {
+	if gotToken, found := s.ServiceTokenMap[serviceName]; found {
 		if serviceToken == gotToken {
 			c.Set("user", serviceName)
 			c.Next()

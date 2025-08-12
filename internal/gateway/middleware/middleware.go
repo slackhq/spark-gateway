@@ -23,8 +23,8 @@ import (
 	"github.com/knadh/koanf/v2"
 )
 
-type NewMiddleware func() GatewayMiddleware
 type MiddlewareConfMap map[string]interface{}
+type NewMiddleware func(conf MiddlewareConfMap) (GatewayMiddleware, error)
 
 var BuiltinMiddleware map[string]NewMiddleware = map[string]NewMiddleware{
 	"RegexBasicAuthAllowMiddleware": NewRegexBasicAuthAllowMiddleware,
@@ -39,11 +39,6 @@ type GatewayMiddleware interface {
 
 	// Handler returns the actual Gin HandlerFunc used in the chain
 	Handler(c *gin.Context)
-
-	// Config is used to set the Conf of the Middleware
-	Config(conf MiddlewareConfMap) error
-
-	Name() string
 }
 
 //go:generate moq -out mockmiddlewareconf.go . GatewayMiddlewareConf

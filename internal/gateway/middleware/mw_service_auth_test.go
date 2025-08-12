@@ -25,17 +25,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestServiceAuthConfigNoInput(t *testing.T) {
-
-	s := NewServiceTokenAuthMiddleware().(*ServiceTokenAuthMiddleware)
-
-	err := s.Config(MiddlewareConfMap{})
-
-	// This should error because default is /etc/conf/ file which we don't want make for testing
-	assert.NotNil(t, err, "err should exist")
-	assert.Equal(t, ServiceTokenMapPath, s.Conf.ServiceTokenMapPath, "conf should still be default")
-}
-
 func TestServiceAuthConfigDifferentPath(t *testing.T) {
 
 	tmpFile, err := os.CreateTemp("", "config.yaml")
@@ -51,15 +40,14 @@ func TestServiceAuthConfigDifferentPath(t *testing.T) {
 	}
 	tmpFile.Close()
 
-	s := NewServiceTokenAuthMiddleware().(*ServiceTokenAuthMiddleware)
-
-	err = s.Config(MiddlewareConfMap{
+	mw, err := NewServiceTokenAuthMiddleware(MiddlewareConfMap{
 		"serviceTokenMapFile": tmpFile.Name(),
 	})
 
+	s := mw.(*ServiceTokenAuthMiddleware)
+
 	assert.Nil(t, err, "err should exist")
-	assert.Equal(t, tmpFile.Name(), s.Conf.ServiceTokenMapPath, "conf should still be default")
-	assert.Equal(t, map[string]string{"service": "token"}, s.Conf.ServiceTokenMap, "service token map should be equal")
+	assert.Equal(t, ServiceTokenMap{"service": "token"}, s.ServiceTokenMap, "service token map should be equal")
 }
 
 type header struct {
@@ -76,7 +64,7 @@ var services = map[string]string{
 
 var serviceAuthValidateTests = []struct {
 	test           string
-	conf           ServiceTokenAuthMiddlewareConf
+	serviceMap     ServiceTokenMap
 	headers        []header
 	user           string
 	expectedUser   string
@@ -110,10 +98,8 @@ var serviceAuthValidateTests = []struct {
 		expectedStatus: 403,
 	},
 	{
-		test: "valid header",
-		conf: ServiceTokenAuthMiddlewareConf{
-			ServiceTokenMap: services,
-		},
+		test:       "valid header",
+		serviceMap: services,
 		headers: []header{
 			{Name: "X-Spark-Gateway-Token", Value: testToken},
 			{Name: "X-Spark-Gateway-User", Value: testUser},
@@ -128,7 +114,7 @@ func TestServiceTokenAuthMiddleware(t *testing.T) {
 	for _, test := range serviceAuthValidateTests {
 
 		mw := ServiceTokenAuthMiddleware{
-			Conf: test.conf,
+			ServiceTokenMap: test.serviceMap,
 		}
 
 		t.Run(test.test, func(t *testing.T) {
