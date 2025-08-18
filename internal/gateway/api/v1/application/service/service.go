@@ -24,8 +24,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/klog/v2"
 
-	clusterPkg "github.com/slackhq/spark-gateway/internal/gateway/cluster"
 	"github.com/slackhq/spark-gateway/internal/gateway/api/v1/application/handler"
+	clusterPkg "github.com/slackhq/spark-gateway/internal/gateway/cluster"
 	"github.com/slackhq/spark-gateway/pkg/config"
 	"github.com/slackhq/spark-gateway/pkg/util"
 
