@@ -25,9 +25,9 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/klog/v2"
 
-	"github.com/slackhq/spark-gateway/internal/sparkManager/application/handler"
-	appRepo "github.com/slackhq/spark-gateway/internal/sparkManager/application/repository"
-	"github.com/slackhq/spark-gateway/internal/sparkManager/application/service"
+	"github.com/slackhq/spark-gateway/internal/sparkManager/api/v1/application/handler"
+	appRepo "github.com/slackhq/spark-gateway/internal/sparkManager/api/v1/application/repository"
+	"github.com/slackhq/spark-gateway/internal/sparkManager/api/v1/application/service"
 	"github.com/slackhq/spark-gateway/internal/sparkManager/metrics"
 	dbRepo "github.com/slackhq/spark-gateway/pkg/database/repository"
 	"github.com/slackhq/spark-gateway/pkg/gatewayerrors"
