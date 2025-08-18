@@ -25,7 +25,7 @@ import (
 	"k8s.io/klog/v2"
 
 	clusterPkg "github.com/slackhq/spark-gateway/internal/gateway/cluster"
-	"github.com/slackhq/spark-gateway/internal/gateway/v1/application/handler"
+	"github.com/slackhq/spark-gateway/internal/gateway/api/v1/application/handler"
 	"github.com/slackhq/spark-gateway/pkg/config"
 	"github.com/slackhq/spark-gateway/pkg/util"
 

@@ -24,10 +24,10 @@ import (
 
 	"k8s.io/klog/v2"
 
-	"github.com/slackhq/spark-gateway/internal/gateway/application/repository"
-	"github.com/slackhq/spark-gateway/internal/gateway/application/service"
+	"github.com/slackhq/spark-gateway/internal/gateway/api/v1/application/repository"
+	"github.com/slackhq/spark-gateway/internal/gateway/api/v1/application/service"
 	"github.com/slackhq/spark-gateway/internal/gateway/cluster"
-	v1Apps "github.com/slackhq/spark-gateway/internal/gateway/v1/application/handler"
+	v1Apps "github.com/slackhq/spark-gateway/internal/gateway/api/v1/application/handler"
 
 	"time"
 
