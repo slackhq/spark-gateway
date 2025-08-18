@@ -40,6 +40,8 @@ type SparkApplicationService interface {
 	Delete(ctx context.Context, namespace string, name string) error
 }
 
+const ApplicationAPIVersion = "v1"
+
 type SparkApplicationHandler struct {
 	sparkApplicationService SparkApplicationService
 	defaultLogLines         int
@@ -51,8 +53,8 @@ func NewSparkApplicationHandler(sparkApplicationService SparkApplicationService,
 	return &sparkApplicationHandler
 }
 
-func (h *SparkApplicationHandler) RegisterRoutes(rg *gin.RouterGroup) {
-	nsGroup := rg.Group("")
+func (h SparkApplicationHandler) RegisterRoutes(rg *gin.RouterGroup) {
+	nsGroup := rg.Group(ApplicationAPIVersion)
 	nsGroup.Use(pkgHttp.ApplicationErrorHandler)
 	{
 		nsGroup.GET("/:namespace", h.List)
