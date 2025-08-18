@@ -58,6 +58,16 @@ func NewSparkManager(ctx context.Context, sgConfig *config.SparkGatewayConfig, c
 	// logger and recovery (crash-free) middleware
 	ginRouter := gin.Default()
 
+	// Setup unversioned services/handlers first
+	rootGroup := ginRouter.Group("")
+	
+	healthHandler := health.NewHealthHandler(health.NewHealthService())
+	healthHandler.RegisterRoutes(rootGroup)
+
+	// Create /api group where all versioned endpoints will attach themselves
+	apiGroup := ginRouter.Group("/api")
+
+
 	// Create DB Repo
 	var database dbRepo.DatabaseRepository = nil
 	if sgConfig.SparkManagerConfig.Database.Enable {
@@ -101,17 +111,14 @@ func NewSparkManager(ctx context.Context, sgConfig *config.SparkGatewayConfig, c
 	// Initialize services
 	sparkApplicationService := service.NewSparkApplicationService(sparkAppRepo, database, *kubeCluster)
 	metricsService := metrics.NewService(metricsRepo, kubeCluster)
-	healthService := health.NewHealthService()
 
 	// Init handlers
 	sparkAppHandler := handler.NewSparkApplicationHandler(sparkApplicationService, sgConfig.DefaultLogLines)
 	metricsServer := metrics.NewHandler(metricsService, sgConfig.SparkManagerConfig.MetricsServer)
-	healthHandler := health.NewHealthHandler(healthService)
 
 	// Register routes
-	rootGroup := ginRouter.Group("")
-	sparkAppHandler.RegisterRoutes(rootGroup)
-	healthHandler.RegisterRoutes(rootGroup)
+	sparkAppHandler.RegisterRoutes(apiGroup)
+	healthHandler.RegisterRoutes(apiGroup)
 
 	server := http.Server{
 		Addr:    fmt.Sprintf(":%s", sgConfig.SparkManagerPort),

@@ -41,7 +41,7 @@ type SparkManagerRepository struct {
 	debugPorts                   map[string]config.DebugPort
 }
 
-func NewV1SparkManagerRepository(sparkManagerHostnameTemplate string, sparkManagerPort string, debugPorts map[string]config.DebugPort) (*SparkManagerRepository, error) {
+func NewV1Beta2SparkManagerRepository(sparkManagerHostnameTemplate string, sparkManagerPort string, debugPorts map[string]config.DebugPort) (*SparkManagerRepository, error) {
 	klog.Infof("SparkManager hostname template: %s\n", sparkManagerHostnameTemplate)
 	return &SparkManagerRepository{
 		sparkManagerHostnameTemplate: sparkManagerHostnameTemplate,
