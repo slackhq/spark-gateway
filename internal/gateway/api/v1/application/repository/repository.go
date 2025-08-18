@@ -46,7 +46,7 @@ func NewV1Beta2SparkManagerRepository(sparkManagerHostnameTemplate string, spark
 	return &SparkManagerRepository{
 		sparkManagerHostnameTemplate: sparkManagerHostnameTemplate,
 		sparkManagerPort:             sparkManagerPort,
-		urlFormatString:              "http://%s:%s/api/%s",
+		urlFormatString:              "http://%s:%s/api/v1beta2",
 		debugPorts:                   debugPorts,
 	}, nil
 }
