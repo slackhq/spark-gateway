@@ -85,7 +85,7 @@ func NewGateway(ctx context.Context, sgConfig *cfg.SparkGatewayConfig, sparkMana
 	// Setup remaining services for /api endpoints
 
 	//Repos
-	sparkManagerRepo, err := repository.NewSparkManagerRepository(sparkManagerHostnameTemplate, sgConfig.SparkManagerPort, sgConfig.DebugPorts)
+	sparkManagerRepo, err := repository.NewV1SparkManagerRepository(sparkManagerHostnameTemplate, sgConfig.SparkManagerPort, sgConfig.DebugPorts)
 	if err != nil {
 		return nil, fmt.Errorf("could not create SparkManagerRespository: %w", err)
 	}

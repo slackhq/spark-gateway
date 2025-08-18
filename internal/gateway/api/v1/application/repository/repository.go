@@ -37,14 +37,16 @@ import (
 type SparkManagerRepository struct {
 	sparkManagerHostnameTemplate string
 	sparkManagerPort             string
+	urlFormatString              string
 	debugPorts                   map[string]config.DebugPort
 }
 
-func NewSparkManagerRepository(sparkManagerHostnameTemplate string, sparkManagerPort string, debugPorts map[string]config.DebugPort) (*SparkManagerRepository, error) {
+func NewV1SparkManagerRepository(sparkManagerHostnameTemplate string, sparkManagerPort string, debugPorts map[string]config.DebugPort) (*SparkManagerRepository, error) {
 	klog.Infof("SparkManager hostname template: %s\n", sparkManagerHostnameTemplate)
 	return &SparkManagerRepository{
 		sparkManagerHostnameTemplate: sparkManagerHostnameTemplate,
 		sparkManagerPort:             sparkManagerPort,
+		urlFormatString:              "http://%s:%s/api/%s",
 		debugPorts:                   debugPorts,
 	}, nil
 }
@@ -62,8 +64,9 @@ func (r *SparkManagerRepository) Get(ctx context.Context, cluster model.KubeClus
 		sparkManagerPort = debugPort.SparkManagerPort
 	}
 
-	// Url: http://host:port/namespace/name
-	url := fmt.Sprintf("http://%s:%s/%s/%s", *hostname, sparkManagerPort, namespace, name)
+	// Url: http://host:port/api/v1/namespace/name
+	urlF := r.urlFormatString + "/%s/%s"
+	url := fmt.Sprintf(urlF, *hostname, sparkManagerPort, namespace, name)
 
 	request, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
@@ -101,8 +104,9 @@ func (r *SparkManagerRepository) List(ctx context.Context, cluster model.KubeClu
 		sparkManagerPort = debugPort.SparkManagerPort
 	}
 
-	// Url: http://host:port/namespace
-	url := fmt.Sprintf("http://%s:%s/%s", *hostname, sparkManagerPort, namespace)
+	// Url: http://host:port/api/v1/namespace
+	urlF := r.urlFormatString + "/%s"
+	url := fmt.Sprintf(urlF, *hostname, sparkManagerPort, namespace)
 
 	request, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
@@ -140,8 +144,9 @@ func (r *SparkManagerRepository) Status(ctx context.Context, cluster model.KubeC
 		sparkManagerPort = debugPort.SparkManagerPort
 	}
 
-	// Url: http://host:port/namespace/name/status
-	url := fmt.Sprintf("http://%s:%s/%s/%s/status", *hostname, sparkManagerPort, namespace, name)
+	// Url: http://host:port/api/v1/namespace/name/status
+	urlF := r.urlFormatString + "/%s/%s/status"
+	url := fmt.Sprintf(urlF, *hostname, sparkManagerPort, namespace, name)
 
 	request, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
@@ -179,8 +184,9 @@ func (r *SparkManagerRepository) Logs(ctx context.Context, cluster model.KubeClu
 		sparkManagerPort = debugPort.SparkManagerPort
 	}
 
-	// Url: http://host:port/namespace/name/logs?lines=lineCount
-	url := fmt.Sprintf("http://%s:%s/%s/%s/logs?lines=%d", *hostname, sparkManagerPort, namespace, name, tailLines)
+	// Url: http://host:port/api/v1/namespace/name/logs?lines=lineCount
+	urlF := r.urlFormatString + "/%s/%s/logs?lines=%d"
+	url := fmt.Sprintf(urlF, *hostname, sparkManagerPort, namespace, name, tailLines)
 
 	request, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
@@ -217,8 +223,9 @@ func (r *SparkManagerRepository) Create(ctx context.Context, cluster model.KubeC
 		sparkManagerPort = debugPort.SparkManagerPort
 	}
 
-	// Url: http://host:port/namespace/name
-	url := fmt.Sprintf("http://%s:%s/%s/%s", *hostname, sparkManagerPort, sparkApplication.Namespace, sparkApplication.Name)
+	// Url: http://host:port/api/v1/namespace/name
+	urlF := r.urlFormatString + "/%s/%s"
+	url := fmt.Sprintf(urlF, *hostname, sparkManagerPort, sparkApplication.Namespace, sparkApplication.Name)
 
 	body, err := json.Marshal(sparkApplication)
 	if err != nil {
@@ -262,8 +269,9 @@ func (r *SparkManagerRepository) Delete(ctx context.Context, cluster model.KubeC
 		sparkManagerPort = debugPort.SparkManagerPort
 	}
 
-	// Url: http://host:port/namespace/name
-	url := fmt.Sprintf("http://%s:%s/%s/%s", *hostname, sparkManagerPort, namespace, name)
+	// Url: http://host:port/api/v1/namespace/name
+	urlF := r.urlFormatString + "/%s/%s"
+	url := fmt.Sprintf(urlF, *hostname, sparkManagerPort, namespace, name)
 
 	request, err := http.NewRequest(http.MethodDelete, url, nil)
 	if err != nil {
