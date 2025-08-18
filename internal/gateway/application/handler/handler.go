@@ -213,7 +213,7 @@ func (h ApplicationHandler) Create(c *gin.Context) {
 	// This should always exist because of prior auth middlewares
 	gotUser, exists := c.Get("user")
 	if !exists {
-		c.Error(errors.New("no user set, congratulation you've encountered a bug that should never happen"))
+		c.Error(errors.New("no user set, congratulations you've encountered a bug that should never happen"))
 	}
 	user := gotUser.(string)
 
