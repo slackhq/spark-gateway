@@ -89,7 +89,7 @@ func TestApplicationHandlerErrorHandler(t *testing.T) {
 
 func TestApplicationHandlerGet(t *testing.T) {
 	router := gin.New()
-	root := router.Group("apiVersion")
+	root := router.Group("api")
 	router.Use(pkgHttp.ApplicationErrorHandler)
 
 	retApp := &model.GatewayApplication{
@@ -111,7 +111,7 @@ func TestApplicationHandlerGet(t *testing.T) {
 
 	handler.RegisterRoutes(root)
 
-	req, _ := http.NewRequest("GET", "/apiVersion/applications/clusterid-testid", nil)
+	req, _ := http.NewRequest("GET", "/api/v1/applications/clusterid-testid", nil)
 	w := httptest.NewRecorder()
 	router.ServeHTTP(w, req)
 
@@ -123,7 +123,7 @@ func TestApplicationHandlerGet(t *testing.T) {
 }
 func TestApplicationHandlerGetError(t *testing.T) {
 	router := gin.New()
-	root := router.Group("apiVersion")
+	root := router.Group("api")
 	router.Use(pkgHttp.ApplicationErrorHandler)
 
 	handler := NewApplicationHandler(&GatewayApplicationServiceMock{
@@ -134,7 +134,7 @@ func TestApplicationHandlerGetError(t *testing.T) {
 
 	handler.RegisterRoutes(root)
 
-	req, _ := http.NewRequest("GET", "/apiVersion/applications/clusterid-testid", nil)
+	req, _ := http.NewRequest("GET", "/api/v1/applications/clusterid-testid", nil)
 	w := httptest.NewRecorder()
 	router.ServeHTTP(w, req)
 
@@ -149,7 +149,7 @@ func TestApplicationHandlerGetError(t *testing.T) {
 }
 func TestApplicationHandlerStatus(t *testing.T) {
 	router := gin.New()
-	root := router.Group("apiVersion")
+	root := router.Group("api")
 	router.Use(pkgHttp.ApplicationErrorHandler)
 
 	retResp := &v1beta2.SparkApplicationStatus{
@@ -164,7 +164,7 @@ func TestApplicationHandlerStatus(t *testing.T) {
 
 	handler.RegisterRoutes(root)
 
-	req, _ := http.NewRequest("GET", "/apiVersion/applications/clusterid-testid/status", nil)
+	req, _ := http.NewRequest("GET", "/api/v1/applications/clusterid-testid/status", nil)
 	w := httptest.NewRecorder()
 	router.ServeHTTP(w, req)
 
@@ -176,7 +176,7 @@ func TestApplicationHandlerStatus(t *testing.T) {
 }
 func TestApplicationHandlerStatusError(t *testing.T) {
 	router := gin.New()
-	root := router.Group("apiVersion")
+	root := router.Group("api")
 	router.Use(pkgHttp.ApplicationErrorHandler)
 
 	handler := NewApplicationHandler(&GatewayApplicationServiceMock{
@@ -187,7 +187,7 @@ func TestApplicationHandlerStatusError(t *testing.T) {
 
 	handler.RegisterRoutes(root)
 
-	req, _ := http.NewRequest("GET", "/apiVersion/applications/clusterid-testid/status", nil)
+	req, _ := http.NewRequest("GET", "/api/v1/applications/clusterid-testid/status", nil)
 	w := httptest.NewRecorder()
 	router.ServeHTTP(w, req)
 
@@ -200,7 +200,7 @@ func TestApplicationHandlerStatusError(t *testing.T) {
 
 func TestApplicationHandlerCreate(t *testing.T) {
 	router := gin.New()
-	root := router.Group("apiVersion")
+	root := router.Group("api")
 	router.Use(pkgHttp.ApplicationErrorHandler)
 	root.Use(func(ctx *gin.Context) {
 		ctx.Set("user", "user")
@@ -234,7 +234,7 @@ func TestApplicationHandlerCreate(t *testing.T) {
 	}
 
 	jsonReq, _ := json.Marshal(createApp)
-	req, _ := http.NewRequest("POST", "/apiVersion/applications", bytes.NewBuffer(jsonReq))
+	req, _ := http.NewRequest("POST", "/api/v1/applications", bytes.NewBuffer(jsonReq))
 	w := httptest.NewRecorder()
 	router.ServeHTTP(w, req)
 
@@ -246,7 +246,7 @@ func TestApplicationHandlerCreate(t *testing.T) {
 }
 func TestApplicationHandlerCreateBadRequest(t *testing.T) {
 	router := gin.New()
-	root := router.Group("apiVersion")
+	root := router.Group("api")
 	router.Use(pkgHttp.ApplicationErrorHandler)
 
 	handler := NewApplicationHandler(&GatewayApplicationServiceMock{
@@ -257,7 +257,7 @@ func TestApplicationHandlerCreateBadRequest(t *testing.T) {
 
 	handler.RegisterRoutes(root)
 
-	req, _ := http.NewRequest("POST", "/apiVersion/applications", nil)
+	req, _ := http.NewRequest("POST", "/api/v1/applications", nil)
 	w := httptest.NewRecorder()
 	router.ServeHTTP(w, req)
 
@@ -270,7 +270,7 @@ func TestApplicationHandlerCreateBadRequest(t *testing.T) {
 
 func TestApplicationHandlerCreateAlreadyExists(t *testing.T) {
 	router := gin.New()
-	root := router.Group("apiVersion")
+	root := router.Group("api")
 	router.Use(pkgHttp.ApplicationErrorHandler)
 	root.Use(func(ctx *gin.Context) {
 		ctx.Set("user", "user")
@@ -293,7 +293,7 @@ func TestApplicationHandlerCreateAlreadyExists(t *testing.T) {
 	}
 
 	jsonReq, _ := json.Marshal(createReq)
-	req, _ := http.NewRequest("POST", "/apiVersion/applications", bytes.NewBuffer(jsonReq))
+	req, _ := http.NewRequest("POST", "/api/v1/applications", bytes.NewBuffer(jsonReq))
 	w := httptest.NewRecorder()
 	router.ServeHTTP(w, req)
 
@@ -306,7 +306,7 @@ func TestApplicationHandlerCreateAlreadyExists(t *testing.T) {
 
 func TestApplicationHandlerDelete(t *testing.T) {
 	router := gin.New()
-	root := router.Group("apiVersion")
+	root := router.Group("api")
 	router.Use(pkgHttp.ApplicationErrorHandler)
 
 	handler := NewApplicationHandler(&GatewayApplicationServiceMock{
@@ -317,7 +317,7 @@ func TestApplicationHandlerDelete(t *testing.T) {
 
 	handler.RegisterRoutes(root)
 
-	req, _ := http.NewRequest("DELETE", "/apiVersion/applications/clusterid-testid", nil)
+	req, _ := http.NewRequest("DELETE", "/api/v1/applications/clusterid-testid", nil)
 	w := httptest.NewRecorder()
 	router.ServeHTTP(w, req)
 
@@ -332,7 +332,7 @@ func TestApplicationHandlerDelete(t *testing.T) {
 }
 func TestApplicationHandlerDeleteError(t *testing.T) {
 	router := gin.New()
-	root := router.Group("apiVersion")
+	root := router.Group("api")
 	router.Use(pkgHttp.ApplicationErrorHandler)
 
 	handler := NewApplicationHandler(&GatewayApplicationServiceMock{
@@ -343,7 +343,7 @@ func TestApplicationHandlerDeleteError(t *testing.T) {
 
 	handler.RegisterRoutes(root)
 
-	req, _ := http.NewRequest("DELETE", "/apiVersion/applications/clusterid-testid", nil)
+	req, _ := http.NewRequest("DELETE", "/api/v1/applications/clusterid-testid", nil)
 	w := httptest.NewRecorder()
 	router.ServeHTTP(w, req)
 
