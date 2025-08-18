@@ -117,31 +117,7 @@ func NewGateway(ctx context.Context, sgConfig *cfg.SparkGatewayConfig, sparkMana
 
 	/// Authed
 	/// Auth middlewares
-	mwHandlerChain := []gin.HandlerFunc{}
-	for _, mwDef := range sgConfig.GatewayConfig.Middleware {
-
-		// Get from available middleware
-		// TODO: Make these plugins
-		mwNew, ok := middleware.BuiltinMiddleware[mwDef.Type]
-		if !ok {
-			return nil, errors.New(fmt.Sprintf("no builtin middleware with type [%s]", mwDef.Type))
-		}
-
-		klog.Infof("Initializing middleware [%s]", mwDef.Type)
-		mwImpl, err := mwNew(mwDef.Conf)
-
-		if err != nil {
-			return nil, fmt.Errorf("error configuring middleware [%s]: %w", mwDef.Type, err)
-		}
-
-		mwHandlerChain = append(mwHandlerChain, mwImpl.Handler)
-		// IsAuthed runs all other middlewares first before checking the User key is set
-		// so it goes first in the chain
-
-	}
-
-	// IsAuthed goes after to ensure a User exists for future work to be accurately attributed
-	mwHandlerChain = append(mwHandlerChain, middleware.IsAuthed)
+	mwHandlerChain, err := middleware.AddMiddleware(sgConfig.GatewayConfig.Middleware)
 
 	/// Register unversioned handlers
 	rootGroup := ginRouter.Group("")
