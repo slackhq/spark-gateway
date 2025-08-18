@@ -23,7 +23,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/klog/v2"
 
-	"github.com/slackhq/spark-gateway/internal/sparkManager/application/handler"
+	"github.com/slackhq/spark-gateway/internal/sparkManager/api/v1/application/handler"
 	"github.com/slackhq/spark-gateway/pkg/database/repository"
 	"github.com/slackhq/spark-gateway/pkg/gatewayerrors"
 	"github.com/slackhq/spark-gateway/pkg/model"
