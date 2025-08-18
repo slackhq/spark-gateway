@@ -40,7 +40,7 @@ type SparkApplicationService interface {
 	Delete(ctx context.Context, namespace string, name string) error
 }
 
-const ApplicationAPIVersion = "v1"
+const ApplicationAPIVersion = "v1beta2"
 
 type SparkApplicationHandler struct {
 	sparkApplicationService SparkApplicationService

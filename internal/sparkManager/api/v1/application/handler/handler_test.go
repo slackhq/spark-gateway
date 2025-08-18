@@ -91,8 +91,8 @@ func SetupRouter(mockSparkAppService *SparkApplicationServiceMock) *gin.Engine {
 	// Calls RegisterRoutes
 	sparkAppHandler := NewSparkApplicationHandler(mockSparkAppService, 100)
 
-	rootGroup := ginRouter.Group("")
-	sparkAppHandler.RegisterRoutes(rootGroup)
+	apiGroup := ginRouter.Group("api")
+	sparkAppHandler.RegisterRoutes(apiGroup)
 
 	return ginRouter
 }
@@ -102,7 +102,7 @@ func Test_SparkApplicationHandler_Get_Success(t *testing.T) {
 	ginRouter := SetupRouter(&mockSparkAppService_SuccessTests)
 
 	w := httptest.NewRecorder() // http.ResponseWriter
-	req, _ := http.NewRequest(http.MethodGet, "/v1beta2/clusterid-testid", nil)
+	req, _ := http.NewRequest(http.MethodGet, "/api/v1beta2/testNamespace/clusterid-testid", nil)
 	ginRouter.ServeHTTP(w, req)
 
 	var respBody *v1beta2.SparkApplication
@@ -118,7 +118,7 @@ func Test_SparkApplicationHandler_Get_Error(t *testing.T) {
 	ginRouter := SetupRouter(&mockSparkAppService_FailureTests)
 
 	w := httptest.NewRecorder() // http.ResponseWriter
-	req, _ := http.NewRequest(http.MethodGet, "/v1beta2/clusterid-testid", nil)
+	req, _ := http.NewRequest(http.MethodGet, "/api/v1beta2/testNamespace/clusterid-testid", nil)
 	ginRouter.ServeHTTP(w, req)
 
 	expectedErrorResp := `{"error":"error getting SparkApplication 'clusterid-testid'"}`
@@ -133,7 +133,7 @@ func TestSparkApplicationHandler_Status_Success(t *testing.T) {
 	ginRouter := SetupRouter(&mockSparkAppService_SuccessTests)
 
 	w := httptest.NewRecorder() // http.ResponseWriter
-	req, _ := http.NewRequest(http.MethodGet, "/v1beta2/clusterid-testid/status", nil)
+	req, _ := http.NewRequest(http.MethodGet, "/api/v1beta2/testNamespace/clusterid-testid/status", nil)
 	ginRouter.ServeHTTP(w, req)
 
 	var respBody *v1beta2.SparkApplicationStatus
@@ -149,7 +149,7 @@ func Test_SparkApplicationHandler_Status_Error(t *testing.T) {
 	ginRouter := SetupRouter(&mockSparkAppService_FailureTests)
 
 	w := httptest.NewRecorder() // http.ResponseWriter
-	req, _ := http.NewRequest(http.MethodGet, "/v1beta2/clusterid-testid/status", nil)
+	req, _ := http.NewRequest(http.MethodGet, "/api/v1beta2/testNamespace/clusterid-testid/status", nil)
 	ginRouter.ServeHTTP(w, req)
 
 	expectedErrorResp := `{"error":"error getting SparkApplication 'clusterid-testid'"}`
@@ -165,7 +165,7 @@ func Test_SparkApplicationHandler_Logs_Success(t *testing.T) {
 	ginRouter := SetupRouter(&mockSparkAppService_SuccessTests)
 
 	w := httptest.NewRecorder() // http.ResponseWriter
-	req, _ := http.NewRequest(http.MethodGet, "/v1beta2/clusterid-testid/logs", nil)
+	req, _ := http.NewRequest(http.MethodGet, "/api/v1beta2/testNamespace/clusterid-testid/logs", nil)
 	ginRouter.ServeHTTP(w, req)
 
 	var respBody string
@@ -181,7 +181,7 @@ func Test_SparkApplicationHandler_Logs_Error(t *testing.T) {
 	ginRouter := SetupRouter(&mockSparkAppService_FailureTests)
 
 	w := httptest.NewRecorder() // http.ResponseWriter
-	req, _ := http.NewRequest(http.MethodGet, "/v1beta2/clusterid-testid/logs", nil)
+	req, _ := http.NewRequest(http.MethodGet, "/api/v1beta2/testNamespace/clusterid-testid/logs", nil)
 	ginRouter.ServeHTTP(w, req)
 
 	expectedErrorResp := `{"error":"error getting SparkApplication 'clusterid-testid' to get Spark Driver Pod name for logs"}`
@@ -197,7 +197,7 @@ func TestSparkApplicationHandler_Create_Success(t *testing.T) {
 
 	jsonReq, _ := json.Marshal(&expectedSparkApplication)
 	w := httptest.NewRecorder() // http.ResponseWriter
-	req, _ := http.NewRequest(http.MethodPost, "/v1beta2/clusterid-testid", bytes.NewBuffer(jsonReq))
+	req, _ := http.NewRequest(http.MethodPost, "/api/v1beta2/testNamespace/clusterid-testid", bytes.NewBuffer(jsonReq))
 	ginRouter.ServeHTTP(w, req)
 
 	var respBody *v1beta2.SparkApplication
@@ -212,7 +212,7 @@ func TestSparkApplicationHandler_Create_BadRequest(t *testing.T) {
 	ginRouter := SetupRouter(&mockSparkAppService_FailureTests)
 
 	w := httptest.NewRecorder() // http.ResponseWriter
-	req, _ := http.NewRequest(http.MethodPost, "/v1beta2/clusterid-testid", nil)
+	req, _ := http.NewRequest(http.MethodPost, "/api/v1beta2/testNamespace/clusterid-testid", nil)
 	ginRouter.ServeHTTP(w, req)
 
 	expectedErrorResp := `{"error":"invalid request"}`
@@ -228,7 +228,7 @@ func TestSparkApplicationHandler_Create_AlreadyExists(t *testing.T) {
 
 	jsonReq, _ := json.Marshal(&expectedSparkApplication)
 	w := httptest.NewRecorder() // http.ResponseWriter
-	req, _ := http.NewRequest(http.MethodPost, "/v1beta2/clusterid-testid", bytes.NewBuffer(jsonReq))
+	req, _ := http.NewRequest(http.MethodPost, "/api/v1beta2/testNamespace/clusterid-testid", bytes.NewBuffer(jsonReq))
 	ginRouter.ServeHTTP(w, req)
 
 	expectedErrorResp := `{"error":"resource.group \"test\" already exists"}`
@@ -243,7 +243,7 @@ func TestSparkApplicationHandler_Delete_Success(t *testing.T) {
 	ginRouter := SetupRouter(&mockSparkAppService_SuccessTests)
 
 	w := httptest.NewRecorder() // http.ResponseWriter
-	req, _ := http.NewRequest(http.MethodDelete, "/v1beta2/clusterid-testid", nil)
+	req, _ := http.NewRequest(http.MethodDelete, "/api/v1beta2/testNamespace/clusterid-testid", nil)
 	ginRouter.ServeHTTP(w, req)
 
 	expectedResponse := `{"status":"success"}`
@@ -258,7 +258,7 @@ func TestSparkApplicationHandler_Delete_NotFound(t *testing.T) {
 	ginRouter := SetupRouter(&mockSparkAppService_FailureTests)
 
 	w := httptest.NewRecorder() // http.ResponseWriter
-	req, _ := http.NewRequest(http.MethodDelete, "/v1beta2/clusterid-testid", nil)
+	req, _ := http.NewRequest(http.MethodDelete, "/api/v1beta2/testNamespace/clusterid-testid", nil)
 	ginRouter.ServeHTTP(w, req)
 
 	expectedErrorResp := `{"error":"error getting SparkApplication 'clusterid-testid'"}`
