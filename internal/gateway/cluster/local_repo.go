@@ -51,7 +51,7 @@ func NewLocalClusterRepo(clusters []model.KubeCluster) (*LocalClusterRepo, error
 	return &LocalClusterRepo{KubeClusters: clustersById}, nil
 }
 
-func (r LocalClusterRepo) GetByName(cluster string) (*model.KubeCluster, error) {
+func (r *LocalClusterRepo) GetByName(cluster string) (*model.KubeCluster, error) {
 	for _, kubeCluster := range r.KubeClusters {
 		if kubeCluster.Name == cluster {
 			return &kubeCluster, nil
@@ -61,7 +61,7 @@ func (r LocalClusterRepo) GetByName(cluster string) (*model.KubeCluster, error) 
 	return nil, fmt.Errorf("cluster does not exist: %s", cluster)
 }
 
-func (r LocalClusterRepo) GetById(clusterId string) (*model.KubeCluster, error) {
+func (r *LocalClusterRepo) GetById(clusterId string) (*model.KubeCluster, error) {
 
 	cluster, ok := r.KubeClusters[clusterId]
 
@@ -72,7 +72,7 @@ func (r LocalClusterRepo) GetById(clusterId string) (*model.KubeCluster, error) 
 	return &cluster, nil
 }
 
-func (r LocalClusterRepo) GetAll() ([]model.KubeCluster, error) {
+func (r *LocalClusterRepo) GetAll() ([]model.KubeCluster, error) {
 	var clusters []model.KubeCluster
 
 	for _, cluster := range r.KubeClusters {
@@ -86,7 +86,7 @@ func (r LocalClusterRepo) GetAll() ([]model.KubeCluster, error) {
 	return clusters, nil
 }
 
-func (r LocalClusterRepo) GetAllWithNamespace(namespace string) ([]model.KubeCluster, error) {
+func (r *LocalClusterRepo) GetAllWithNamespace(namespace string) ([]model.KubeCluster, error) {
 	var clusters []model.KubeCluster
 
 	allClusters, err := r.GetAll()

@@ -64,7 +64,7 @@ func NewApplicationHandler(service GatewayApplicationService, defaultLogLines in
 	return &ApplicationHandler{service: service, defaultLogLines: defaultLogLines}
 }
 
-func (h ApplicationHandler) RegisterRoutes(rg *gin.RouterGroup) {
+func (h *ApplicationHandler) RegisterRoutes(rg *gin.RouterGroup) {
 
 	appGroup := rg.Group(fmt.Sprintf("/%s", sparkApplicationPathName))
 	appGroup.Use(pkgHttp.ApplicationErrorHandler)
@@ -93,7 +93,7 @@ func (h ApplicationHandler) RegisterRoutes(rg *gin.RouterGroup) {
 // @Param namespace query string false "Namespace (optional)"
 // @Success 200 {array} metav1.ObjectMeta "List of SparkApplication metadata"
 // @Router / [get]
-func (h ApplicationHandler) List(c *gin.Context) {
+func (h *ApplicationHandler) List(c *gin.Context) {
 
 	cluster := c.Query("cluster")
 	if cluster == "" {
@@ -123,7 +123,7 @@ func (h ApplicationHandler) List(c *gin.Context) {
 // @Param gatewayId path string true "SparkApplication Name"
 // @Success 200 {object} model.GatewayApplication "SparkApplication resource"
 // @Router /{gatewayId} [get]
-func (h ApplicationHandler) Get(c *gin.Context) {
+func (h *ApplicationHandler) Get(c *gin.Context) {
 
 	application, err := h.service.Get(c, c.Param("gatewayId"))
 
@@ -145,7 +145,7 @@ func (h ApplicationHandler) Get(c *gin.Context) {
 // @Param gatewayId path string true "SparkApplication Name"
 // @Success 200 {object} v1beta2.SparkApplicationStatus "SparkApplication status"
 // @Router /{gatewayId}/status [get]
-func (h ApplicationHandler) Status(c *gin.Context) {
+func (h *ApplicationHandler) Status(c *gin.Context) {
 
 	appStatus, err := h.service.Status(c, c.Param("gatewayId"))
 
@@ -168,7 +168,7 @@ func (h ApplicationHandler) Status(c *gin.Context) {
 // @Param lines query int false "Number of log lines to retrieve (default: 100)"
 // @Success 200 {string} string "Driver logs"
 // @Router /{gatewayId}/logs [get]
-func (h ApplicationHandler) Logs(c *gin.Context) {
+func (h *ApplicationHandler) Logs(c *gin.Context) {
 
 	tailLines := h.defaultLogLines
 	var err error
@@ -200,7 +200,7 @@ func (h ApplicationHandler) Logs(c *gin.Context) {
 // @Param SparkApplication body v1beta2.SparkApplication true "v1beta2.SparkApplication resource"
 // @Success 201 {object} model.GatewayApplication "SparkApplication Created"
 // @Router / [post]
-func (h ApplicationHandler) Create(c *gin.Context) {
+func (h *ApplicationHandler) Create(c *gin.Context) {
 
 	var app v1beta2.SparkApplication
 
@@ -237,7 +237,7 @@ func (h ApplicationHandler) Create(c *gin.Context) {
 // @Param gatewayId path string true "SparkApplication Name"
 // @Success 200 {object} map[string]string "Application deleted: {'status': 'success'}"
 // @Router /{gatewayId} [delete]
-func (h ApplicationHandler) Delete(c *gin.Context) {
+func (h *ApplicationHandler) Delete(c *gin.Context) {
 
 	err := h.service.Delete(c, c.Param("gatewayId"))
 
