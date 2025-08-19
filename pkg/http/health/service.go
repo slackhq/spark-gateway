@@ -20,8 +20,8 @@ import "context"
 type service struct {
 }
 
-func NewHealthService() service {
-	return service{}
+func NewHealthService() *service {
+	return &service{}
 }
 
 type HealthResponse struct {
