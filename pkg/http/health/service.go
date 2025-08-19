@@ -28,6 +28,6 @@ type HealthResponse struct {
 	Status string `json:"status"`
 }
 
-func (s service) Health(ctx context.Context) HealthResponse {
+func (s *service) Health(ctx context.Context) HealthResponse {
 	return HealthResponse{Status: "OK"}
 }

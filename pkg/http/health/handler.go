@@ -35,13 +35,13 @@ func NewHealthHandler(service HealthService) *HealthHandler {
 	return &healthHandler
 }
 
-func (h HealthHandler) RegisterRoutes(rg *gin.RouterGroup) {
+func (h *HealthHandler) RegisterRoutes(rg *gin.RouterGroup) {
 	healthGroup := rg.Group("")
 
 	healthGroup.GET("/health", h.Health)
 }
 
-func (h HealthHandler) Health(c *gin.Context) {
+func (h *HealthHandler) Health(c *gin.Context) {
 
 	health := h.service.Health(c)
 
