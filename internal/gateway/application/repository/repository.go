@@ -35,35 +35,47 @@ import (
 )
 
 type SparkManagerRepository struct {
-	sparkManagerHostnameTemplate string
-	sparkManagerPort             string
-	debugPorts                   map[string]config.DebugPort
+	ClusterEndpoints map[string]string
 }
 
-func NewSparkManagerRepository(sparkManagerHostnameTemplate string, sparkManagerPort string, debugPorts map[string]config.DebugPort) (*SparkManagerRepository, error) {
-	klog.Infof("SparkManager hostname template: %s\n", sparkManagerHostnameTemplate)
+func NewSparkManagerRepository(clusters []model.KubeCluster, sparkManagerHostnameTemplate string, sparkManagerPort string, debugPorts map[string]config.DebugPort) (*SparkManagerRepository, error) {
+
+	hostNameF := "http://%s:%s"
+	clusterEndpoints := map[string]string{}
+
+	// Pretemplate the hostname with debug port if any
+	for _, kubeCluster := range clusters {
+		// Set sparkManager port
+		sparkManagerPort := sparkManagerPort
+		if debugPort, ok := debugPorts[kubeCluster.Name]; ok {
+			sparkManagerPort = debugPort.SparkManagerPort
+		}
+
+		// Template hostname
+		hostname, err := util.RenderTemplate(sparkManagerHostnameTemplate, map[string]string{"clusterName": kubeCluster.Name})
+
+		if err != nil {
+			return nil, fmt.Errorf("error while formatting SparkManager Hostname: %w", err)
+		}
+
+		// Create full hostname
+		hostNamePort := fmt.Sprintf(hostNameF, *hostname, sparkManagerPort)
+
+		clusterEndpoints[kubeCluster.Name] = hostNamePort
+		klog.Infof("Cluster %s configured with endpoint: %s", kubeCluster.Name, hostNamePort)
+
+	}
+
 	return &SparkManagerRepository{
-		sparkManagerHostnameTemplate: sparkManagerHostnameTemplate,
-		sparkManagerPort:             sparkManagerPort,
-		debugPorts:                   debugPorts,
+		ClusterEndpoints: clusterEndpoints,
 	}, nil
 }
 
 func (r *SparkManagerRepository) Get(ctx context.Context, cluster model.KubeCluster, namespace string, name string) (*v1beta2.SparkApplication, error) {
 
-	hostname, err := util.RenderTemplate(r.sparkManagerHostnameTemplate, map[string]string{"clusterName": cluster.Name})
-	if err != nil {
-		return nil, gatewayerrors.NewFrom(err)
-	}
-
-	// Set sparkManager port
-	sparkManagerPort := r.sparkManagerPort
-	if debugPort, ok := r.debugPorts[cluster.Name]; ok {
-		sparkManagerPort = debugPort.SparkManagerPort
-	}
-
+	clusterEndpoint := r.ClusterEndpoints[cluster.Name]
 	// Url: http://host:port/namespace/name
-	url := fmt.Sprintf("http://%s:%s/%s/%s", *hostname, sparkManagerPort, namespace, name)
+	url := fmt.Sprintf("%s/%s/%s", clusterEndpoint, namespace, name)
 
 	request, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
@@ -90,19 +102,9 @@ func (r *SparkManagerRepository) Get(ctx context.Context, cluster model.KubeClus
 
 func (r *SparkManagerRepository) List(ctx context.Context, cluster model.KubeCluster, namespace string) ([]*metav1.ObjectMeta, error) {
 
-	hostname, err := util.RenderTemplate(r.sparkManagerHostnameTemplate, map[string]string{"clusterName": cluster.Name})
-	if err != nil {
-		return nil, gatewayerrors.NewFrom(err)
-	}
-
-	// Set sparkManager port
-	sparkManagerPort := r.sparkManagerPort
-	if debugPort, ok := r.debugPorts[cluster.Name]; ok {
-		sparkManagerPort = debugPort.SparkManagerPort
-	}
-
+	clusterEndpoint := r.ClusterEndpoints[cluster.Name]
 	// Url: http://host:port/namespace
-	url := fmt.Sprintf("http://%s:%s/%s", *hostname, sparkManagerPort, namespace)
+	url := fmt.Sprintf("%s/%s", clusterEndpoint, namespace)
 
 	request, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
@@ -129,19 +131,9 @@ func (r *SparkManagerRepository) List(ctx context.Context, cluster model.KubeClu
 
 func (r *SparkManagerRepository) Status(ctx context.Context, cluster model.KubeCluster, namespace string, name string) (*v1beta2.SparkApplicationStatus, error) {
 
-	hostname, err := util.RenderTemplate(r.sparkManagerHostnameTemplate, map[string]string{"clusterName": cluster.Name})
-	if err != nil {
-		return nil, gatewayerrors.NewFrom(err)
-	}
-
-	// Set sparkManager port
-	sparkManagerPort := r.sparkManagerPort
-	if debugPort, ok := r.debugPorts[cluster.Name]; ok {
-		sparkManagerPort = debugPort.SparkManagerPort
-	}
-
+	clusterEndpoint := r.ClusterEndpoints[cluster.Name]
 	// Url: http://host:port/namespace/name/status
-	url := fmt.Sprintf("http://%s:%s/%s/%s/status", *hostname, sparkManagerPort, namespace, name)
+	url := fmt.Sprintf("%s/%s/%s/status", clusterEndpoint, namespace, name)
 
 	request, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
@@ -168,19 +160,9 @@ func (r *SparkManagerRepository) Status(ctx context.Context, cluster model.KubeC
 
 func (r *SparkManagerRepository) Logs(ctx context.Context, cluster model.KubeCluster, namespace string, name string, tailLines int) (*string, error) {
 
-	hostname, err := util.RenderTemplate(r.sparkManagerHostnameTemplate, map[string]string{"clusterName": cluster.Name})
-	if err != nil {
-		return nil, gatewayerrors.NewFrom(err)
-	}
-
-	// Set sparkManager port
-	sparkManagerPort := r.sparkManagerPort
-	if debugPort, ok := r.debugPorts[cluster.Name]; ok {
-		sparkManagerPort = debugPort.SparkManagerPort
-	}
-
+	clusterEndpoint := r.ClusterEndpoints[cluster.Name]
 	// Url: http://host:port/namespace/name/logs?lines=lineCount
-	url := fmt.Sprintf("http://%s:%s/%s/%s/logs?lines=%d", *hostname, sparkManagerPort, namespace, name, tailLines)
+	url := fmt.Sprintf("%s/%s/%s/logs?lines=%d", clusterEndpoint, namespace, name, tailLines)
 
 	request, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
@@ -206,19 +188,10 @@ func (r *SparkManagerRepository) Logs(ctx context.Context, cluster model.KubeClu
 }
 
 func (r *SparkManagerRepository) Create(ctx context.Context, cluster model.KubeCluster, sparkApplication *v1beta2.SparkApplication) (*v1beta2.SparkApplication, error) {
-	hostname, err := util.RenderTemplate(r.sparkManagerHostnameTemplate, map[string]string{"clusterName": cluster.Name})
-	if err != nil {
-		return nil, gatewayerrors.NewFrom(err)
-	}
 
-	// Set sparkManager port
-	sparkManagerPort := r.sparkManagerPort
-	if debugPort, ok := r.debugPorts[cluster.Name]; ok {
-		sparkManagerPort = debugPort.SparkManagerPort
-	}
-
+	clusterEndpoint := r.ClusterEndpoints[cluster.Name]
 	// Url: http://host:port/namespace/name
-	url := fmt.Sprintf("http://%s:%s/%s/%s", *hostname, sparkManagerPort, sparkApplication.Namespace, sparkApplication.Name)
+	url := fmt.Sprintf("%s/%s/%s", clusterEndpoint, sparkApplication.Namespace, sparkApplication.Name)
 
 	body, err := json.Marshal(sparkApplication)
 	if err != nil {
@@ -251,19 +224,9 @@ func (r *SparkManagerRepository) Create(ctx context.Context, cluster model.KubeC
 
 func (r *SparkManagerRepository) Delete(ctx context.Context, cluster model.KubeCluster, namespace string, name string) error {
 
-	hostname, err := util.RenderTemplate(r.sparkManagerHostnameTemplate, map[string]string{"clusterName": cluster.Name})
-	if err != nil {
-		return err
-	}
-
-	// Set sparkManager port
-	sparkManagerPort := r.sparkManagerPort
-	if debugPort, ok := r.debugPorts[cluster.Name]; ok {
-		sparkManagerPort = debugPort.SparkManagerPort
-	}
-
+	clusterEndpoint := r.ClusterEndpoints[cluster.Name]
 	// Url: http://host:port/namespace/name
-	url := fmt.Sprintf("http://%s:%s/%s/%s", *hostname, sparkManagerPort, namespace, name)
+	url := fmt.Sprintf("%s/%s/%s", clusterEndpoint, namespace, name)
 
 	request, err := http.NewRequest(http.MethodDelete, url, nil)
 	if err != nil {
