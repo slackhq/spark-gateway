@@ -13,7 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package model
+package domain
 
 import (
 	"fmt"
@@ -33,6 +33,16 @@ type StatusUrlTemplates struct {
 	SparkUI        string `koanf:"sparkUI"`
 	SparkHistoryUI string `koanf:"sparkHistoryUI"`
 	LogsUI         string `koanf:"logsUI"`
+}
+
+type GatewayApplicationMeta struct {
+	GatewayId string `json:"gatewayId"`
+	Cluster   string `json:"cluster"`
+	User      string `json:"user"`
+}
+
+type GatewayApplicationStatus struct {
+	Status string `json:"status"`
 }
 
 type GatewayApplication struct {
