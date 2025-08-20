@@ -50,7 +50,7 @@
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/v1.ObjectMeta"
+                                "$ref": "#/definitions/model.GatewayApplicationMeta"
                             }
                         }
                     }
@@ -305,6 +305,17 @@
                 }
             }
         },
+        "model.GatewayApplicationMeta": {
+            "type": "object",
+            "properties": {
+                "cluster": {
+                    "type": "string"
+                },
+                "sparkManagerApplicationMeta": {
+                    "$ref": "#/definitions/model.SparkManagerApplicationMeta"
+                }
+            }
+        },
         "model.SparkLogURLs": {
             "type": "object",
             "properties": {
@@ -315,6 +326,39 @@
                     "type": "string"
                 },
                 "sparkUI": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.SparkManagerApplicationMeta": {
+            "type": "object",
+            "properties": {
+                "applicationState": {
+                    "$ref": "#/definitions/v1beta2.ApplicationState"
+                },
+                "driverInfo": {
+                    "$ref": "#/definitions/v1beta2.DriverInfo"
+                },
+                "executionAttempts": {
+                    "type": "integer"
+                },
+                "lastSubmissionAttemptTime": {
+                    "type": "string"
+                },
+                "meta": {
+                    "$ref": "#/definitions/v1.ObjectMeta"
+                },
+                "sparkApplicationId": {
+                    "description": "All fields below come from v1beta2.SparkApplicationStatus\nCurrently it's all fields except for ExecutorState because it can get pretty large",
+                    "type": "string"
+                },
+                "submissionAttempts": {
+                    "type": "integer"
+                },
+                "submissionID": {
+                    "type": "string"
+                },
+                "terminationTime": {
                     "type": "string"
                 }
             }

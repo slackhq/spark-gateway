@@ -36,6 +36,13 @@ definitions:
       user:
         type: string
     type: object
+  model.GatewayApplicationMeta:
+    properties:
+      cluster:
+        type: string
+      sparkManagerApplicationMeta:
+        $ref: '#/definitions/model.SparkManagerApplicationMeta'
+    type: object
   model.SparkLogURLs:
     properties:
       logsUI:
@@ -43,6 +50,30 @@ definitions:
       sparkHistoryUI:
         type: string
       sparkUI:
+        type: string
+    type: object
+  model.SparkManagerApplicationMeta:
+    properties:
+      applicationState:
+        $ref: '#/definitions/v1beta2.ApplicationState'
+      driverInfo:
+        $ref: '#/definitions/v1beta2.DriverInfo'
+      executionAttempts:
+        type: integer
+      lastSubmissionAttemptTime:
+        type: string
+      meta:
+        $ref: '#/definitions/v1.ObjectMeta'
+      sparkApplicationId:
+        description: |-
+          All fields below come from v1beta2.SparkApplicationStatus
+          Currently it's all fields except for ExecutorState because it can get pretty large
+        type: string
+      submissionAttempts:
+        type: integer
+      submissionID:
+        type: string
+      terminationTime:
         type: string
     type: object
   resource.Quantity:
@@ -6353,7 +6384,7 @@ paths:
           description: List of SparkApplication metadata
           schema:
             items:
-              $ref: '#/definitions/v1.ObjectMeta'
+              $ref: '#/definitions/model.GatewayApplicationMeta'
             type: array
       security:
       - BasicAuth: []
