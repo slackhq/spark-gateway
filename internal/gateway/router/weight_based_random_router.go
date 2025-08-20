@@ -34,7 +34,7 @@ func NewWeightBasedRandomRouter(
 	clusterRepository cluster.ClusterRepository,
 	clusterRouterConfig cfgPkg.ClusterRouter,
 ) ClusterRouter {
-	return WeightBasedRandomRouter{
+	return &WeightBasedRandomRouter{
 		clusterRepository:   clusterRepository,
 		clusterRouterConfig: clusterRouterConfig,
 	}
@@ -76,7 +76,7 @@ func NewWeightBasedRandomRouter(
 
 	return chosenCluster
 */
-func (r WeightBasedRandomRouter) GetCluster(ctx context.Context, namespace string) (*model.KubeCluster, error) {
+func (r *WeightBasedRandomRouter) GetCluster(ctx context.Context, namespace string) (*model.KubeCluster, error) {
 
 	clustersList, err := r.clusterRepository.GetAllWithNamespace(namespace)
 	if err != nil {

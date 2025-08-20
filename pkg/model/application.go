@@ -47,7 +47,7 @@ type GatewayIdGenerator struct {
 	UuidGenerator func() (string, error)
 }
 
-func (g GatewayIdGenerator) NewId(cluster KubeCluster, namespace string) (string, error) {
+func (g *GatewayIdGenerator) NewId(cluster KubeCluster, namespace string) (string, error) {
 	// Generate name from clusterId and UUID and set
 	genUUID, err := g.UuidGenerator()
 	if err != nil {

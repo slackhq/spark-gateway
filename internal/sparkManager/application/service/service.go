@@ -46,10 +46,10 @@ type SparkApplicationService struct {
 }
 
 func NewSparkApplicationService(sparkAppRepo SparkApplicationRepository, database repository.DatabaseRepository, cluster model.KubeCluster) handler.SparkApplicationService {
-	return SparkApplicationService{sparkApplicationRepository: sparkAppRepo, database: database, cluster: cluster}
+	return &SparkApplicationService{sparkApplicationRepository: sparkAppRepo, database: database, cluster: cluster}
 }
 
-func (s SparkApplicationService) Get(ctx context.Context, namespace string, name string) (*v1beta2.SparkApplication, error) {
+func (s *SparkApplicationService) Get(ctx context.Context, namespace string, name string) (*v1beta2.SparkApplication, error) {
 
 	sparkApp, err := s.sparkApplicationRepository.Get(ctx, namespace, name)
 
@@ -60,7 +60,7 @@ func (s SparkApplicationService) Get(ctx context.Context, namespace string, name
 	return sparkApp, nil
 }
 
-func (s SparkApplicationService) List(ctx context.Context, namespace string) ([]*metav1.ObjectMeta, error) {
+func (s *SparkApplicationService) List(ctx context.Context, namespace string) ([]*metav1.ObjectMeta, error) {
 
 	sparkApp, err := s.sparkApplicationRepository.List(ctx, namespace)
 
@@ -71,7 +71,7 @@ func (s SparkApplicationService) List(ctx context.Context, namespace string) ([]
 	return sparkApp, nil
 }
 
-func (s SparkApplicationService) Status(ctx context.Context, namespace string, name string) (*v1beta2.SparkApplicationStatus, error) {
+func (s *SparkApplicationService) Status(ctx context.Context, namespace string, name string) (*v1beta2.SparkApplicationStatus, error) {
 	sparkApp, err := s.Get(ctx, namespace, name)
 	if err != nil {
 		return nil, gatewayerrors.NewFrom(err)
@@ -80,11 +80,11 @@ func (s SparkApplicationService) Status(ctx context.Context, namespace string, n
 	return &sparkApp.Status, nil
 }
 
-func (s SparkApplicationService) Logs(ctx context.Context, namespace string, name string, tailLines int64) (*string, error) {
+func (s *SparkApplicationService) Logs(ctx context.Context, namespace string, name string, tailLines int64) (*string, error) {
 	return s.sparkApplicationRepository.GetLogs(ctx, namespace, name, tailLines)
 }
 
-func (s SparkApplicationService) Create(ctx context.Context, application *v1beta2.SparkApplication) (*v1beta2.SparkApplication, error) {
+func (s *SparkApplicationService) Create(ctx context.Context, application *v1beta2.SparkApplication) (*v1beta2.SparkApplication, error) {
 
 	if s.database != nil {
 		uid, err := model.ParseGatewayIdUUID(application.Name)
@@ -107,7 +107,7 @@ func (s SparkApplicationService) Create(ctx context.Context, application *v1beta
 	return sparkApp, nil
 }
 
-func (s SparkApplicationService) Delete(ctx context.Context, namespace string, name string) error {
+func (s *SparkApplicationService) Delete(ctx context.Context, namespace string, name string) error {
 	if err := s.sparkApplicationRepository.Delete(ctx, namespace, name); err != nil {
 		return gatewayerrors.NewFrom(err)
 	}
