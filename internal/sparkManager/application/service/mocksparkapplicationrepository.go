@@ -6,7 +6,7 @@ package service
 import (
 	"context"
 	"github.com/kubeflow/spark-operator/v2/api/v1beta2"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"github.com/slackhq/spark-gateway/pkg/model"
 	"sync"
 )
 
@@ -26,13 +26,13 @@ var _ SparkApplicationRepository = &SparkApplicationRepositoryMock{}
 //			DeleteFunc: func(ctx context.Context, namespace string, name string) error {
 //				panic("mock out the Delete method")
 //			},
-//			GetFunc: func(ctx context.Context, namespace string, name string) (*v1beta2.SparkApplication, error) {
+//			GetFunc: func(namespace string, name string) (*v1beta2.SparkApplication, error) {
 //				panic("mock out the Get method")
 //			},
-//			GetLogsFunc: func(ctx context.Context, namespace string, name string, tailLines int64) (*string, error) {
+//			GetLogsFunc: func(namespace string, name string, tailLines int64) (*string, error) {
 //				panic("mock out the GetLogs method")
 //			},
-//			ListFunc: func(ctx context.Context, namespace string) ([]*metav1.ObjectMeta, error) {
+//			ListFunc: func(namespace string) ([]*model.SparkManagerApplicationMeta, error) {
 //				panic("mock out the List method")
 //			},
 //		}
@@ -49,13 +49,13 @@ type SparkApplicationRepositoryMock struct {
 	DeleteFunc func(ctx context.Context, namespace string, name string) error
 
 	// GetFunc mocks the Get method.
-	GetFunc func(ctx context.Context, namespace string, name string) (*v1beta2.SparkApplication, error)
+	GetFunc func(namespace string, name string) (*v1beta2.SparkApplication, error)
 
 	// GetLogsFunc mocks the GetLogs method.
-	GetLogsFunc func(ctx context.Context, namespace string, name string, tailLines int64) (*string, error)
+	GetLogsFunc func(namespace string, name string, tailLines int64) (*string, error)
 
 	// ListFunc mocks the List method.
-	ListFunc func(ctx context.Context, namespace string) ([]*metav1.ObjectMeta, error)
+	ListFunc func(namespace string) ([]*model.SparkManagerApplicationMeta, error)
 
 	// calls tracks calls to the methods.
 	calls struct {
@@ -77,8 +77,6 @@ type SparkApplicationRepositoryMock struct {
 		}
 		// Get holds details about calls to the Get method.
 		Get []struct {
-			// Ctx is the ctx argument value.
-			Ctx context.Context
 			// Namespace is the namespace argument value.
 			Namespace string
 			// Name is the name argument value.
@@ -86,8 +84,6 @@ type SparkApplicationRepositoryMock struct {
 		}
 		// GetLogs holds details about calls to the GetLogs method.
 		GetLogs []struct {
-			// Ctx is the ctx argument value.
-			Ctx context.Context
 			// Namespace is the namespace argument value.
 			Namespace string
 			// Name is the name argument value.
@@ -97,8 +93,6 @@ type SparkApplicationRepositoryMock struct {
 		}
 		// List holds details about calls to the List method.
 		List []struct {
-			// Ctx is the ctx argument value.
-			Ctx context.Context
 			// Namespace is the namespace argument value.
 			Namespace string
 		}
@@ -187,23 +181,21 @@ func (mock *SparkApplicationRepositoryMock) DeleteCalls() []struct {
 }
 
 // Get calls GetFunc.
-func (mock *SparkApplicationRepositoryMock) Get(ctx context.Context, namespace string, name string) (*v1beta2.SparkApplication, error) {
+func (mock *SparkApplicationRepositoryMock) Get(namespace string, name string) (*v1beta2.SparkApplication, error) {
 	if mock.GetFunc == nil {
 		panic("SparkApplicationRepositoryMock.GetFunc: method is nil but SparkApplicationRepository.Get was just called")
 	}
 	callInfo := struct {
-		Ctx       context.Context
 		Namespace string
 		Name      string
 	}{
-		Ctx:       ctx,
 		Namespace: namespace,
 		Name:      name,
 	}
 	mock.lockGet.Lock()
 	mock.calls.Get = append(mock.calls.Get, callInfo)
 	mock.lockGet.Unlock()
-	return mock.GetFunc(ctx, namespace, name)
+	return mock.GetFunc(namespace, name)
 }
 
 // GetCalls gets all the calls that were made to Get.
@@ -211,12 +203,10 @@ func (mock *SparkApplicationRepositoryMock) Get(ctx context.Context, namespace s
 //
 //	len(mockedSparkApplicationRepository.GetCalls())
 func (mock *SparkApplicationRepositoryMock) GetCalls() []struct {
-	Ctx       context.Context
 	Namespace string
 	Name      string
 } {
 	var calls []struct {
-		Ctx       context.Context
 		Namespace string
 		Name      string
 	}
@@ -227,17 +217,15 @@ func (mock *SparkApplicationRepositoryMock) GetCalls() []struct {
 }
 
 // GetLogs calls GetLogsFunc.
-func (mock *SparkApplicationRepositoryMock) GetLogs(ctx context.Context, namespace string, name string, tailLines int64) (*string, error) {
+func (mock *SparkApplicationRepositoryMock) GetLogs(namespace string, name string, tailLines int64) (*string, error) {
 	if mock.GetLogsFunc == nil {
 		panic("SparkApplicationRepositoryMock.GetLogsFunc: method is nil but SparkApplicationRepository.GetLogs was just called")
 	}
 	callInfo := struct {
-		Ctx       context.Context
 		Namespace string
 		Name      string
 		TailLines int64
 	}{
-		Ctx:       ctx,
 		Namespace: namespace,
 		Name:      name,
 		TailLines: tailLines,
@@ -245,7 +233,7 @@ func (mock *SparkApplicationRepositoryMock) GetLogs(ctx context.Context, namespa
 	mock.lockGetLogs.Lock()
 	mock.calls.GetLogs = append(mock.calls.GetLogs, callInfo)
 	mock.lockGetLogs.Unlock()
-	return mock.GetLogsFunc(ctx, namespace, name, tailLines)
+	return mock.GetLogsFunc(namespace, name, tailLines)
 }
 
 // GetLogsCalls gets all the calls that were made to GetLogs.
@@ -253,13 +241,11 @@ func (mock *SparkApplicationRepositoryMock) GetLogs(ctx context.Context, namespa
 //
 //	len(mockedSparkApplicationRepository.GetLogsCalls())
 func (mock *SparkApplicationRepositoryMock) GetLogsCalls() []struct {
-	Ctx       context.Context
 	Namespace string
 	Name      string
 	TailLines int64
 } {
 	var calls []struct {
-		Ctx       context.Context
 		Namespace string
 		Name      string
 		TailLines int64
@@ -271,21 +257,19 @@ func (mock *SparkApplicationRepositoryMock) GetLogsCalls() []struct {
 }
 
 // List calls ListFunc.
-func (mock *SparkApplicationRepositoryMock) List(ctx context.Context, namespace string) ([]*metav1.ObjectMeta, error) {
+func (mock *SparkApplicationRepositoryMock) List(namespace string) ([]*model.SparkManagerApplicationMeta, error) {
 	if mock.ListFunc == nil {
 		panic("SparkApplicationRepositoryMock.ListFunc: method is nil but SparkApplicationRepository.List was just called")
 	}
 	callInfo := struct {
-		Ctx       context.Context
 		Namespace string
 	}{
-		Ctx:       ctx,
 		Namespace: namespace,
 	}
 	mock.lockList.Lock()
 	mock.calls.List = append(mock.calls.List, callInfo)
 	mock.lockList.Unlock()
-	return mock.ListFunc(ctx, namespace)
+	return mock.ListFunc(namespace)
 }
 
 // ListCalls gets all the calls that were made to List.
@@ -293,11 +277,9 @@ func (mock *SparkApplicationRepositoryMock) List(ctx context.Context, namespace 
 //
 //	len(mockedSparkApplicationRepository.ListCalls())
 func (mock *SparkApplicationRepositoryMock) ListCalls() []struct {
-	Ctx       context.Context
 	Namespace string
 } {
 	var calls []struct {
-		Ctx       context.Context
 		Namespace string
 	}
 	mock.lockList.RLock()
