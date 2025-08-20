@@ -62,7 +62,7 @@ func NewWeightBasedRouter(
 	metricsServerConfig cfgPkg.MetricsServer,
 	debugPorts map[string]cfgPkg.DebugPort,
 ) ClusterRouter {
-	return &WeightBasedRouter{
+	return WeightBasedRouter{
 		clusterRepository:            clusterRepository,
 		clusterRouterConfig:          clusterRouterConfig,
 		sparkManagerHostnameTemplate: sparkManagerHostnameTemplate,
@@ -107,7 +107,7 @@ func NewWeightBasedRouter(
 	chosen_cluster = max_difference(cluster A difference, cluster C difference) = max(0.04, -0.06) = cluster A
 	return cluster A
 */
-func (r *WeightBasedRouter) GetCluster(ctx context.Context, namespace string) (*model.KubeCluster, error) {
+func (r WeightBasedRouter) GetCluster(ctx context.Context, namespace string) (*model.KubeCluster, error) {
 
 	clustersList, err := r.clusterRepository.GetAllWithNamespace(namespace)
 	if err != nil {

@@ -51,7 +51,7 @@ func NewSparkApplicationHandler(sparkApplicationService SparkApplicationService,
 	return &sparkApplicationHandler
 }
 
-func (h *SparkApplicationHandler) RegisterRoutes(rg *gin.RouterGroup) {
+func (h SparkApplicationHandler) RegisterRoutes(rg *gin.RouterGroup) {
 	nsGroup := rg.Group("")
 	nsGroup.Use(pkgHttp.ApplicationErrorHandler)
 	{
@@ -66,7 +66,7 @@ func (h *SparkApplicationHandler) RegisterRoutes(rg *gin.RouterGroup) {
 	}
 }
 
-func (h *SparkApplicationHandler) Get(c *gin.Context) {
+func (h SparkApplicationHandler) Get(c *gin.Context) {
 
 	application, err := h.sparkApplicationService.Get(c, c.Param("namespace"), c.Param("name"))
 
@@ -78,7 +78,7 @@ func (h *SparkApplicationHandler) Get(c *gin.Context) {
 	c.JSON(http.StatusOK, application)
 }
 
-func (h *SparkApplicationHandler) List(c *gin.Context) {
+func (h SparkApplicationHandler) List(c *gin.Context) {
 	application, err := h.sparkApplicationService.List(c, c.Param("namespace"))
 
 	if err != nil {
@@ -89,7 +89,7 @@ func (h *SparkApplicationHandler) List(c *gin.Context) {
 	c.JSON(http.StatusOK, application)
 }
 
-func (h *SparkApplicationHandler) Status(c *gin.Context) {
+func (h SparkApplicationHandler) Status(c *gin.Context) {
 
 	appStatus, err := h.sparkApplicationService.Status(c, c.Param("namespace"), c.Param("name"))
 
@@ -101,7 +101,7 @@ func (h *SparkApplicationHandler) Status(c *gin.Context) {
 	c.JSON(http.StatusOK, appStatus)
 }
 
-func (h *SparkApplicationHandler) Logs(c *gin.Context) {
+func (h SparkApplicationHandler) Logs(c *gin.Context) {
 
 	tailLinesStr := c.DefaultQuery("lines", strconv.Itoa(h.defaultLogLines))
 	tailLines, err := strconv.ParseInt(tailLinesStr, 10, 64)
@@ -120,7 +120,7 @@ func (h *SparkApplicationHandler) Logs(c *gin.Context) {
 
 }
 
-func (h *SparkApplicationHandler) Create(c *gin.Context) {
+func (h SparkApplicationHandler) Create(c *gin.Context) {
 	var application v1beta2.SparkApplication
 
 	if err := c.ShouldBindJSON(&application); err != nil {
@@ -138,7 +138,7 @@ func (h *SparkApplicationHandler) Create(c *gin.Context) {
 	c.JSON(http.StatusCreated, sparkApplication)
 }
 
-func (h *SparkApplicationHandler) Delete(c *gin.Context) {
+func (h SparkApplicationHandler) Delete(c *gin.Context) {
 
 	err := h.sparkApplicationService.Delete(c, c.Param("namespace"), c.Param("name"))
 
