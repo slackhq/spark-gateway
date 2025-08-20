@@ -150,7 +150,7 @@ func NewGateway(ctx context.Context, sgConfig *cfg.SparkGatewayConfig, sparkMana
 	}, nil
 }
 
-func (s *GatewayServer) Run() {
+func (s GatewayServer) Run() {
 
 	// Initializing the server in a goroutine so that
 	// it won't block the graceful shutdown handling below

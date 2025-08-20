@@ -46,7 +46,7 @@ func NewSparkApplicationRepository(controller *kube.SparkController, sparkClient
 	}, nil
 }
 
-func (k *SparkApplicationRepository) Get(ctx context.Context, namespace string, name string) (*v1beta2.SparkApplication, error) {
+func (k SparkApplicationRepository) Get(ctx context.Context, namespace string, name string) (*v1beta2.SparkApplication, error) {
 	sparkApp, err := k.controller.SparkLister.SparkApplications(namespace).Get(name)
 
 	if err != nil {
@@ -57,7 +57,7 @@ func (k *SparkApplicationRepository) Get(ctx context.Context, namespace string, 
 
 }
 
-func (k *SparkApplicationRepository) List(ctx context.Context, namespace string) ([]*v1.ObjectMeta, error) {
+func (k SparkApplicationRepository) List(ctx context.Context, namespace string) ([]*v1.ObjectMeta, error) {
 	sparkApps, err := k.controller.SparkLister.SparkApplications(namespace).List(labels.Everything())
 
 	if err != nil {
@@ -75,7 +75,7 @@ func (k *SparkApplicationRepository) List(ctx context.Context, namespace string)
 
 }
 
-func (k *SparkApplicationRepository) GetLogs(ctx context.Context, namespace string, name string, tailLines int64) (*string, error) {
+func (k SparkApplicationRepository) GetLogs(ctx context.Context, namespace string, name string, tailLines int64) (*string, error) {
 	sparkApp, err := k.Get(ctx, namespace, name)
 	if err != nil {
 		return nil, gatewayerrors.MapK8sErrorToGatewayError(fmt.Errorf("error getting SparkApplication '%s/%s' to get Spark Driver Pod name for logs: %w", sparkApp.Namespace, sparkApp.Name, err))
@@ -90,7 +90,7 @@ func (k *SparkApplicationRepository) GetLogs(ctx context.Context, namespace stri
 	return formattedLogString, nil
 }
 
-func (k *SparkApplicationRepository) Create(ctx context.Context, application *v1beta2.SparkApplication) (*v1beta2.SparkApplication, error) {
+func (k SparkApplicationRepository) Create(ctx context.Context, application *v1beta2.SparkApplication) (*v1beta2.SparkApplication, error) {
 
 	sparkApp, err := k.sparkClient.SparkoperatorV1beta2().SparkApplications(application.Namespace).Create(ctx, application, v1.CreateOptions{})
 	if err != nil {
@@ -124,7 +124,7 @@ func (k *SparkApplicationRepository) Create(ctx context.Context, application *v1
 	return sparkApp, nil
 }
 
-func (k *SparkApplicationRepository) Delete(ctx context.Context, namespace string, name string) error {
+func (k SparkApplicationRepository) Delete(ctx context.Context, namespace string, name string) error {
 	if err := k.sparkClient.SparkoperatorV1beta2().SparkApplications(namespace).Delete(ctx, name, v1.DeleteOptions{}); err != nil {
 		return gatewayerrors.MapK8sErrorToGatewayError(fmt.Errorf("error deleting SparkApplication: %w", err))
 	}

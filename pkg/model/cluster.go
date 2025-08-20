@@ -35,7 +35,7 @@ type KubeCluster struct {
 	CertificateAuthorityB64File string          `koanf:"certificateAuthorityB64File"`
 }
 
-func (k *KubeCluster) GetNamespaceById(namespaceId string) (KubeNamespace, error) {
+func (k KubeCluster) GetNamespaceById(namespaceId string) (KubeNamespace, error) {
 	for _, kubeNamespace := range k.Namespaces {
 		if kubeNamespace.NamespaceId == namespaceId {
 			return kubeNamespace, nil
@@ -45,7 +45,7 @@ func (k *KubeCluster) GetNamespaceById(namespaceId string) (KubeNamespace, error
 	return KubeNamespace{}, fmt.Errorf("could not find configured namespace with id '%s' in cluster '%s'", namespaceId, k.Name)
 }
 
-func (k *KubeCluster) GetNamespaceByName(name string) (*KubeNamespace, error) {
+func (k KubeCluster) GetNamespaceByName(name string) (*KubeNamespace, error) {
 	for _, kubeNamespace := range k.Namespaces {
 		if kubeNamespace.Name == name {
 			return &kubeNamespace, nil
