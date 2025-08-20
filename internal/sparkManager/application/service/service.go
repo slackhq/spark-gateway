@@ -20,7 +20,6 @@ import (
 	"time"
 
 	"github.com/kubeflow/spark-operator/v2/api/v1beta2"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/klog/v2"
 
 	"github.com/slackhq/spark-gateway/internal/sparkManager/application/handler"
@@ -32,9 +31,9 @@ import (
 //go:generate moq -rm -out mocksparkapplicationrepository.go . SparkApplicationRepository
 
 type SparkApplicationRepository interface {
-	Get(ctx context.Context, namespace string, name string) (*v1beta2.SparkApplication, error)
-	List(ctx context.Context, namespace string) ([]*metav1.ObjectMeta, error)
-	GetLogs(ctx context.Context, namespace string, name string, tailLines int64) (*string, error)
+	Get(namespace string, name string) (*v1beta2.SparkApplication, error)
+	List(namespace string) ([]*model.SparkManagerApplicationMeta, error)
+	GetLogs(namespace string, name string, tailLines int64) (*string, error)
 	Create(ctx context.Context, application *v1beta2.SparkApplication) (*v1beta2.SparkApplication, error)
 	Delete(ctx context.Context, namespace string, name string) error
 }
@@ -49,20 +48,9 @@ func NewSparkApplicationService(sparkAppRepo SparkApplicationRepository, databas
 	return &SparkApplicationService{sparkApplicationRepository: sparkAppRepo, database: database, cluster: cluster}
 }
 
-func (s *SparkApplicationService) Get(ctx context.Context, namespace string, name string) (*v1beta2.SparkApplication, error) {
+func (s *SparkApplicationService) Get(namespace string, name string) (*v1beta2.SparkApplication, error) {
 
-	sparkApp, err := s.sparkApplicationRepository.Get(ctx, namespace, name)
-
-	if err != nil {
-		return nil, gatewayerrors.NewFrom(err)
-	}
-
-	return sparkApp, nil
-}
-
-func (s *SparkApplicationService) List(ctx context.Context, namespace string) ([]*metav1.ObjectMeta, error) {
-
-	sparkApp, err := s.sparkApplicationRepository.List(ctx, namespace)
+	sparkApp, err := s.sparkApplicationRepository.Get(namespace, name)
 
 	if err != nil {
 		return nil, gatewayerrors.NewFrom(err)
@@ -71,8 +59,20 @@ func (s *SparkApplicationService) List(ctx context.Context, namespace string) ([
 	return sparkApp, nil
 }
 
-func (s *SparkApplicationService) Status(ctx context.Context, namespace string, name string) (*v1beta2.SparkApplicationStatus, error) {
-	sparkApp, err := s.Get(ctx, namespace, name)
+func (s *SparkApplicationService) List(namespace string) ([]*model.SparkManagerApplicationMeta, error) {
+
+	appMetaList, err := s.sparkApplicationRepository.List(namespace)
+
+	if err != nil {
+		return nil, gatewayerrors.NewFrom(err)
+	}
+
+	return appMetaList, nil
+}
+
+func (s *SparkApplicationService) Status(namespace string, name string) (*v1beta2.SparkApplicationStatus, error) {
+
+	sparkApp, err := s.Get(namespace, name)
 	if err != nil {
 		return nil, gatewayerrors.NewFrom(err)
 	}
@@ -80,8 +80,8 @@ func (s *SparkApplicationService) Status(ctx context.Context, namespace string, 
 	return &sparkApp.Status, nil
 }
 
-func (s *SparkApplicationService) Logs(ctx context.Context, namespace string, name string, tailLines int64) (*string, error) {
-	return s.sparkApplicationRepository.GetLogs(ctx, namespace, name, tailLines)
+func (s *SparkApplicationService) Logs(namespace string, name string, tailLines int64) (*string, error) {
+	return s.sparkApplicationRepository.GetLogs(namespace, name, tailLines)
 }
 
 func (s *SparkApplicationService) Create(ctx context.Context, application *v1beta2.SparkApplication) (*v1beta2.SparkApplication, error) {

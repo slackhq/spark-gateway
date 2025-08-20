@@ -18,6 +18,7 @@ package repository
 import (
 	"context"
 	"fmt"
+	"github.com/slackhq/spark-gateway/pkg/model"
 	"net/http"
 	"time"
 
@@ -46,9 +47,9 @@ func NewSparkApplicationRepository(controller *kube.SparkController, sparkClient
 	}, nil
 }
 
-func (k *SparkApplicationRepository) Get(ctx context.Context, namespace string, name string) (*v1beta2.SparkApplication, error) {
-	sparkApp, err := k.controller.SparkLister.SparkApplications(namespace).Get(name)
+func (k *SparkApplicationRepository) Get(namespace string, name string) (*v1beta2.SparkApplication, error) {
 
+	sparkApp, err := k.controller.SparkLister.SparkApplications(namespace).Get(name)
 	if err != nil {
 		return nil, gatewayerrors.MapK8sErrorToGatewayError(fmt.Errorf("error getting SparkApplication '%s/%s': %w", namespace, name, err))
 	}
@@ -57,26 +58,27 @@ func (k *SparkApplicationRepository) Get(ctx context.Context, namespace string, 
 
 }
 
-func (k *SparkApplicationRepository) List(ctx context.Context, namespace string) ([]*v1.ObjectMeta, error) {
+func (k *SparkApplicationRepository) List(namespace string) ([]*model.SparkManagerApplicationMeta, error) {
+
 	sparkApps, err := k.controller.SparkLister.SparkApplications(namespace).List(labels.Everything())
 
 	if err != nil {
 		return nil, gatewayerrors.MapK8sErrorToGatewayError(fmt.Errorf("error listing SparkApplications in namespace [%s]: %w", namespace, err))
 	}
 
-	var appMetas []*v1.ObjectMeta
+	var appMetaList []*model.SparkManagerApplicationMeta
 
 	for _, sparkApp := range sparkApps {
-		sparkAppMeta := &sparkApp.ObjectMeta
-		sparkAppMeta.ManagedFields = nil
-		appMetas = append(appMetas, sparkAppMeta)
+		sparkAppMeta := model.NewSparkManagerApplicationMeta(sparkApp)
+		appMetaList = append(appMetaList, sparkAppMeta)
 	}
-	return appMetas, nil
+	return appMetaList, nil
 
 }
 
-func (k *SparkApplicationRepository) GetLogs(ctx context.Context, namespace string, name string, tailLines int64) (*string, error) {
-	sparkApp, err := k.Get(ctx, namespace, name)
+func (k *SparkApplicationRepository) GetLogs(namespace string, name string, tailLines int64) (*string, error) {
+
+	sparkApp, err := k.Get(namespace, name)
 	if err != nil {
 		return nil, gatewayerrors.MapK8sErrorToGatewayError(fmt.Errorf("error getting SparkApplication '%s/%s' to get Spark Driver Pod name for logs: %w", sparkApp.Namespace, sparkApp.Name, err))
 	}
@@ -99,7 +101,7 @@ func (k *SparkApplicationRepository) Create(ctx context.Context, application *v1
 
 	counter := 5
 	for counter > 0 {
-		sparkApp, err = k.Get(ctx, application.Namespace, application.Name)
+		sparkApp, err = k.Get(application.Namespace, application.Name)
 		if err != nil {
 			if getErr, ok := err.(gatewayerrors.GatewayError); ok {
 				if getErr.Status == http.StatusNotFound {

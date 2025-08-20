@@ -30,7 +30,6 @@ import (
 	"github.com/slackhq/spark-gateway/pkg/gatewayerrors"
 	pkgHttp "github.com/slackhq/spark-gateway/pkg/http"
 	"github.com/slackhq/spark-gateway/pkg/model"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 //  Swagger General	API Info
@@ -48,7 +47,7 @@ const sparkApplicationPathName = "applications"
 
 type GatewayApplicationService interface {
 	Get(ctx context.Context, gatewayId string) (*model.GatewayApplication, error)
-	List(ctx context.Context, cluster string, namespace string) ([]*metav1.ObjectMeta, error)
+	List(ctx context.Context, cluster string, namespace string) ([]*model.GatewayApplicationMeta, error)
 	Create(ctx context.Context, application *v1beta2.SparkApplication, user string) (*model.GatewayApplication, error)
 	Status(ctx context.Context, gatewayId string) (*v1beta2.SparkApplicationStatus, error)
 	Logs(ctx context.Context, gatewayId string, tailLines int) (*string, error)
@@ -91,7 +90,7 @@ func (h *ApplicationHandler) RegisterRoutes(rg *gin.RouterGroup) {
 // @Security BasicAuth
 // @Param cluster query string true "Cluster name"
 // @Param namespace query string false "Namespace (optional)"
-// @Success 200 {array} metav1.ObjectMeta "List of SparkApplication metadata"
+// @Success 200 {array} model.GatewayApplicationMeta "List of SparkApplication metadata"
 // @Router / [get]
 func (h *ApplicationHandler) List(c *gin.Context) {
 
@@ -103,14 +102,14 @@ func (h *ApplicationHandler) List(c *gin.Context) {
 
 	namespace := c.Query("namespace")
 
-	applications, err := h.service.List(c, cluster, namespace)
+	appMetaList, err := h.service.List(c, cluster, namespace)
 
 	if err != nil {
 		c.Error(err)
 		return
 	}
 
-	c.JSON(http.StatusOK, applications)
+	c.JSON(http.StatusOK, appMetaList)
 }
 
 // GetSparkApplication godoc
