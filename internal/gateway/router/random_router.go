@@ -29,11 +29,11 @@ type RandomClusterRouter struct {
 	clusterRepository cluster.ClusterRepository
 }
 
-func NewRandomClusterRouter(repo cluster.ClusterRepository) RandomClusterRouter {
-	return RandomClusterRouter{clusterRepository: repo}
+func NewRandomClusterRouter(repo cluster.ClusterRepository) ClusterRouter {
+	return &RandomClusterRouter{clusterRepository: repo}
 }
 
-func (r RandomClusterRouter) GetCluster(ctx context.Context, namespace string) (*model.KubeCluster, error) {
+func (r *RandomClusterRouter) GetCluster(ctx context.Context, namespace string) (*model.KubeCluster, error) {
 	clusters, err := r.clusterRepository.GetAllWithNamespace(namespace)
 	if err != nil || len(clusters) == 0 {
 		return nil, fmt.Errorf("error listing clusters: %w", err)

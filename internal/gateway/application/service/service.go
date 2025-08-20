@@ -68,7 +68,7 @@ func NewApplicationService(
 	selectorValue string,
 	gatewayIdGenerator model.GatewayIdGenerator,
 ) handler.GatewayApplicationService {
-	return service{
+	return &service{
 		sparkAppRepo:          sparkAppRepo,
 		clusterRepository:     clusterRepository,
 		clusterRouter:         clusterRouter,
@@ -80,7 +80,7 @@ func NewApplicationService(
 	}
 }
 
-func (s service) GetClusterNamespaceFromGatewayId(gatewayId string) (*model.KubeCluster, string, error) {
+func (s *service) GetClusterNamespaceFromGatewayId(gatewayId string) (*model.KubeCluster, string, error) {
 	clusterId := strings.Split(gatewayId, "-")[0]
 	kubeCluster, err := s.clusterRepository.GetById(clusterId)
 
@@ -97,7 +97,7 @@ func (s service) GetClusterNamespaceFromGatewayId(gatewayId string) (*model.Kube
 	return kubeCluster, namespace.Name, nil
 }
 
-func (s service) Get(ctx context.Context, gatewayId string) (*model.GatewayApplication, error) {
+func (s *service) Get(ctx context.Context, gatewayId string) (*model.GatewayApplication, error) {
 
 	cluster, namespace, err := s.GetClusterNamespaceFromGatewayId(gatewayId)
 	if err != nil {
@@ -127,7 +127,7 @@ func (s service) Get(ctx context.Context, gatewayId string) (*model.GatewayAppli
 }
 
 // List retrieves `num` number of GatewayApplications from specified namespace `namespace` in cluster `cluster`
-func (s service) List(ctx context.Context, cluster string, namespace string) ([]*metav1.ObjectMeta, error) {
+func (s *service) List(ctx context.Context, cluster string, namespace string) ([]*metav1.ObjectMeta, error) {
 
 	kubeCluster, err := s.clusterRepository.GetByName(cluster)
 
@@ -162,7 +162,7 @@ func (s service) List(ctx context.Context, cluster string, namespace string) ([]
 
 }
 
-func (s service) Create(ctx context.Context, application *v1beta2.SparkApplication, user string) (*model.GatewayApplication, error) {
+func (s *service) Create(ctx context.Context, application *v1beta2.SparkApplication, user string) (*model.GatewayApplication, error) {
 
 	errors := s.SparkApplicationValidator(application)
 	if len(errors) > 0 {
@@ -207,7 +207,7 @@ func (s service) Create(ctx context.Context, application *v1beta2.SparkApplicati
 	return gatewayApp, nil
 }
 
-func (s service) Status(ctx context.Context, gatewayId string) (*v1beta2.SparkApplicationStatus, error) {
+func (s *service) Status(ctx context.Context, gatewayId string) (*v1beta2.SparkApplicationStatus, error) {
 	cluster, namespace, err := s.GetClusterNamespaceFromGatewayId(gatewayId)
 	if err != nil {
 		return nil, err
@@ -221,7 +221,7 @@ func (s service) Status(ctx context.Context, gatewayId string) (*v1beta2.SparkAp
 	return &sparkApp.Status, nil
 }
 
-func (s service) Logs(ctx context.Context, gatewayId string, tailLines int) (*string, error) {
+func (s *service) Logs(ctx context.Context, gatewayId string, tailLines int) (*string, error) {
 	cluster, namespace, err := s.GetClusterNamespaceFromGatewayId(gatewayId)
 	if err != nil {
 		return nil, err
@@ -235,7 +235,7 @@ func (s service) Logs(ctx context.Context, gatewayId string, tailLines int) (*st
 	return logString, nil
 }
 
-func (s service) Delete(ctx context.Context, gatewayId string) error {
+func (s *service) Delete(ctx context.Context, gatewayId string) error {
 	cluster, namespace, err := s.GetClusterNamespaceFromGatewayId(gatewayId)
 	if err != nil {
 		return err
@@ -275,7 +275,7 @@ func GetRenderedURLs(templates model.StatusUrlTemplates, sparkApp *v1beta2.Spark
 	}
 }
 
-func (s service) SparkApplicationValidator(application *v1beta2.SparkApplication) []string {
+func (s *service) SparkApplicationValidator(application *v1beta2.SparkApplication) []string {
 	var errors []string
 	if application == nil {
 		errors = append(errors, "application should never be nil")
@@ -304,7 +304,7 @@ func SparkApplicationDefaulter(application *v1beta2.SparkApplication) *v1beta2.S
 	return application
 }
 
-func (s service) SparkApplicationOverrides(application *v1beta2.SparkApplication, user string, appName string) *v1beta2.SparkApplication {
+func (s *service) SparkApplicationOverrides(application *v1beta2.SparkApplication, user string, appName string) *v1beta2.SparkApplication {
 	if application.Name != "" {
 		application.Annotations["applicationName"] = application.Name
 	}
