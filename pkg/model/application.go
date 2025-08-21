@@ -79,7 +79,7 @@ func ParseGatewayIdUUID(gatewayId string) (*uuid.UUID, error) {
 }
 
 type SparkManagerApplicationMeta struct {
-	ObjectMeta metav1.ObjectMeta `json:"meta"`
+	ObjectMeta metav1.ObjectMeta `json:"metadata"`
 	// All fields below come from v1beta2.SparkApplicationStatus
 	// Currently it's all fields except for ExecutorState because it can get pretty large
 	SparkApplicationID        string                   `json:"sparkApplicationId"`
@@ -93,8 +93,8 @@ type SparkManagerApplicationMeta struct {
 }
 
 type GatewayApplicationMeta struct {
-	SparkManagerApplicationMeta SparkManagerApplicationMeta
-	Cluster                     string `json:"cluster"`
+	SparkAppMeta SparkManagerApplicationMeta `json:"sparkAppMetadata"`
+	Cluster      string                      `json:"cluster"`
 }
 
 func NewSparkManagerApplicationMeta(sparkApp *v1beta2.SparkApplication) *SparkManagerApplicationMeta {
@@ -123,7 +123,7 @@ func NewSparkManagerApplicationMeta(sparkApp *v1beta2.SparkApplication) *SparkMa
 
 func NewGatewayApplicationMeta(smAppMeta *SparkManagerApplicationMeta, cluster string) *GatewayApplicationMeta {
 	return &GatewayApplicationMeta{
-		SparkManagerApplicationMeta: *smAppMeta,
-		Cluster:                     cluster,
+		SparkAppMeta: *smAppMeta,
+		Cluster:      cluster,
 	}
 }
