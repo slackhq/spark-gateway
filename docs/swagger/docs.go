@@ -319,7 +319,7 @@ const docTemplate = `{
                 "cluster": {
                     "type": "string"
                 },
-                "sparkManagerApplicationMeta": {
+                "sparkAppMetadata": {
                     "$ref": "#/definitions/model.SparkManagerApplicationMeta"
                 }
             }
@@ -353,7 +353,7 @@ const docTemplate = `{
                 "lastSubmissionAttemptTime": {
                     "type": "string"
                 },
-                "meta": {
+                "metadata": {
                     "$ref": "#/definitions/v1.ObjectMeta"
                 },
                 "sparkApplicationId": {

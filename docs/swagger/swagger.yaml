@@ -40,7 +40,7 @@ definitions:
     properties:
       cluster:
         type: string
-      sparkManagerApplicationMeta:
+      sparkAppMetadata:
         $ref: '#/definitions/model.SparkManagerApplicationMeta'
     type: object
   model.SparkLogURLs:
@@ -62,7 +62,7 @@ definitions:
         type: integer
       lastSubmissionAttemptTime:
         type: string
-      meta:
+      metadata:
         $ref: '#/definitions/v1.ObjectMeta'
       sparkApplicationId:
         description: |-
