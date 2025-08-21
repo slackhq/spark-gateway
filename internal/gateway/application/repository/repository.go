@@ -22,7 +22,6 @@ import (
 	"net/http"
 
 	"github.com/kubeflow/spark-operator/v2/api/v1beta2"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/json"
 	"k8s.io/klog/v2"
 
@@ -88,7 +87,7 @@ func (r *SparkManagerRepository) Get(ctx context.Context, cluster model.KubeClus
 	return kube.Sanitize(&app), nil
 }
 
-func (r *SparkManagerRepository) List(ctx context.Context, cluster model.KubeCluster, namespace string) ([]*metav1.ObjectMeta, error) {
+func (r *SparkManagerRepository) List(ctx context.Context, cluster model.KubeCluster, namespace string) ([]*model.SparkManagerApplicationMeta, error) {
 
 	hostname, err := util.RenderTemplate(r.sparkManagerHostnameTemplate, map[string]string{"clusterName": cluster.Name})
 	if err != nil {
@@ -119,12 +118,12 @@ func (r *SparkManagerRepository) List(ctx context.Context, cluster model.KubeClu
 		return nil, gatewayerrors.NewFrom(err)
 	}
 
-	var appMetas []*metav1.ObjectMeta
-	if err := json.Unmarshal(*respBody, &appMetas); err != nil {
+	var appMetaList []*model.SparkManagerApplicationMeta
+	if err := json.Unmarshal(*respBody, &appMetaList); err != nil {
 		return nil, fmt.Errorf("failed to Unmarshal JSON response: %w", err)
 	}
 
-	return appMetas, nil
+	return appMetaList, nil
 }
 
 func (r *SparkManagerRepository) Status(ctx context.Context, cluster model.KubeCluster, namespace string, name string) (*v1beta2.SparkApplicationStatus, error) {

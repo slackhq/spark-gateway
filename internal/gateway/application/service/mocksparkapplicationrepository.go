@@ -5,11 +5,9 @@ package service
 
 import (
 	"context"
-	"sync"
-
 	"github.com/kubeflow/spark-operator/v2/api/v1beta2"
 	"github.com/slackhq/spark-gateway/pkg/model"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"sync"
 )
 
 // Ensure, that SparkApplicationRepositoryMock does implement SparkApplicationRepository.
@@ -31,7 +29,7 @@ var _ SparkApplicationRepository = &SparkApplicationRepositoryMock{}
 //			GetFunc: func(ctx context.Context, cluster model.KubeCluster, namespace string, name string) (*v1beta2.SparkApplication, error) {
 //				panic("mock out the Get method")
 //			},
-//			ListFunc: func(ctx context.Context, cluster model.KubeCluster, namespace string) ([]*metav1.ObjectMeta, error) {
+//			ListFunc: func(ctx context.Context, cluster model.KubeCluster, namespace string) ([]*model.SparkManagerApplicationMeta, error) {
 //				panic("mock out the List method")
 //			},
 //			LogsFunc: func(ctx context.Context, cluster model.KubeCluster, namespace string, name string, tailLines int) (*string, error) {
@@ -57,7 +55,7 @@ type SparkApplicationRepositoryMock struct {
 	GetFunc func(ctx context.Context, cluster model.KubeCluster, namespace string, name string) (*v1beta2.SparkApplication, error)
 
 	// ListFunc mocks the List method.
-	ListFunc func(ctx context.Context, cluster model.KubeCluster, namespace string) ([]*metav1.ObjectMeta, error)
+	ListFunc func(ctx context.Context, cluster model.KubeCluster, namespace string) ([]*model.SparkManagerApplicationMeta, error)
 
 	// LogsFunc mocks the Logs method.
 	LogsFunc func(ctx context.Context, cluster model.KubeCluster, namespace string, name string, tailLines int) (*string, error)
@@ -269,7 +267,7 @@ func (mock *SparkApplicationRepositoryMock) GetCalls() []struct {
 }
 
 // List calls ListFunc.
-func (mock *SparkApplicationRepositoryMock) List(ctx context.Context, cluster model.KubeCluster, namespace string) ([]*metav1.ObjectMeta, error) {
+func (mock *SparkApplicationRepositoryMock) List(ctx context.Context, cluster model.KubeCluster, namespace string) ([]*model.SparkManagerApplicationMeta, error) {
 	if mock.ListFunc == nil {
 		panic("SparkApplicationRepositoryMock.ListFunc: method is nil but SparkApplicationRepository.List was just called")
 	}

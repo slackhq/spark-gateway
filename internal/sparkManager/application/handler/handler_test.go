@@ -46,13 +46,13 @@ var expectedSparkApplication v1beta2.SparkApplication = v1beta2.SparkApplication
 var logString string = "testlogstring"
 
 var mockSparkAppService_SuccessTests SparkApplicationServiceMock = SparkApplicationServiceMock{
-	GetFunc: func(ctx context.Context, namespace string, name string) (*v1beta2.SparkApplication, error) {
+	GetFunc: func(namespace string, name string) (*v1beta2.SparkApplication, error) {
 		return &expectedSparkApplication, nil
 	},
-	StatusFunc: func(ctx context.Context, namespace string, name string) (*v1beta2.SparkApplicationStatus, error) {
+	StatusFunc: func(namespace string, name string) (*v1beta2.SparkApplicationStatus, error) {
 		return &expectedSparkApplication.Status, nil
 	},
-	LogsFunc: func(ctx context.Context, namespace string, name string, tailLines int64) (*string, error) {
+	LogsFunc: func(namespace string, name string, tailLines int64) (*string, error) {
 		return &logString, nil
 	},
 	CreateFunc: func(ctx context.Context, application *v1beta2.SparkApplication) (*v1beta2.SparkApplication, error) {
@@ -64,13 +64,13 @@ var mockSparkAppService_SuccessTests SparkApplicationServiceMock = SparkApplicat
 }
 
 var mockSparkAppService_FailureTests SparkApplicationServiceMock = SparkApplicationServiceMock{
-	GetFunc: func(ctx context.Context, namespace string, name string) (*v1beta2.SparkApplication, error) {
+	GetFunc: func(namespace string, name string) (*v1beta2.SparkApplication, error) {
 		return nil, gatewayerrors.NewNotFound(errors.New(fmt.Sprintf("error getting SparkApplication '%s'", expectedSparkApplication.Name)))
 	},
-	StatusFunc: func(ctx context.Context, namespace string, name string) (*v1beta2.SparkApplicationStatus, error) {
+	StatusFunc: func(namespace string, name string) (*v1beta2.SparkApplicationStatus, error) {
 		return nil, gatewayerrors.NewNotFound(errors.New(fmt.Sprintf("error getting SparkApplication '%s'", expectedSparkApplication.Name)))
 	},
-	LogsFunc: func(ctx context.Context, namespace string, name string, tailLines int64) (*string, error) {
+	LogsFunc: func(namespace string, name string, tailLines int64) (*string, error) {
 		return nil, gatewayerrors.NewNotFound(errors.New(fmt.Sprintf("error getting SparkApplication '%s' to get Spark Driver Pod name for logs", expectedSparkApplication.Name)))
 	},
 	CreateFunc: func(ctx context.Context, application *v1beta2.SparkApplication) (*v1beta2.SparkApplication, error) {

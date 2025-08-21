@@ -53,10 +53,10 @@ var testCluster model.KubeCluster = model.KubeCluster{
 }
 
 var mockSparkAppRepository_SuccessTests SparkApplicationRepositoryMock = SparkApplicationRepositoryMock{
-	GetFunc: func(ctx context.Context, namespace string, name string) (*v1beta2.SparkApplication, error) {
+	GetFunc: func(namespace string, name string) (*v1beta2.SparkApplication, error) {
 		return &expectedSparkApplication, nil
 	},
-	GetLogsFunc: func(ctx context.Context, namespace string, name string, tailLine int64) (*string, error) {
+	GetLogsFunc: func(namespace string, name string, tailLine int64) (*string, error) {
 		return &logString, nil
 	},
 	CreateFunc: func(ctx context.Context, application *v1beta2.SparkApplication) (*v1beta2.SparkApplication, error) {
@@ -68,10 +68,10 @@ var mockSparkAppRepository_SuccessTests SparkApplicationRepositoryMock = SparkAp
 }
 
 var mockSparkAppRepository_FailureTests SparkApplicationRepositoryMock = SparkApplicationRepositoryMock{
-	GetFunc: func(ctx context.Context, namespace string, name string) (*v1beta2.SparkApplication, error) {
+	GetFunc: func(namespace string, name string) (*v1beta2.SparkApplication, error) {
 		return nil, gatewayerrors.NewNotFound(fmt.Errorf("error getting SparkApplication '%s/%s'", expectedSparkApplication.Namespace, expectedSparkApplication.Name))
 	},
-	GetLogsFunc: func(ctx context.Context, namespace string, name string, tailLine int64) (*string, error) {
+	GetLogsFunc: func(namespace string, name string, tailLine int64) (*string, error) {
 		return nil, errors.New("error getting logs")
 	},
 	CreateFunc: func(ctx context.Context, application *v1beta2.SparkApplication) (*v1beta2.SparkApplication, error) {
@@ -85,7 +85,7 @@ var mockSparkAppRepository_FailureTests SparkApplicationRepositoryMock = SparkAp
 func TestSparkApplicationService_Get(t *testing.T) {
 	service := NewSparkApplicationService(&mockSparkAppRepository_SuccessTests, nil, testCluster)
 
-	result, err := service.Get(context.Background(), "testNamespace", "clusterid-nsid-testid")
+	result, err := service.Get("testNamespace", "clusterid-nsid-testid")
 	assert.NoError(t, err)
 	assert.Equal(t, &expectedSparkApplication, result)
 }
@@ -93,7 +93,7 @@ func TestSparkApplicationService_Get(t *testing.T) {
 func TestSparkApplicationService_Get_Error(t *testing.T) {
 	service := NewSparkApplicationService(&mockSparkAppRepository_FailureTests, nil, testCluster)
 
-	_, err := service.Get(context.Background(), "testNamespace", "clusterid-nsid-testid")
+	_, err := service.Get("testNamespace", "clusterid-nsid-testid")
 	assert.Error(t, err)
 	assert.Equal(t, gatewayerrors.NewNotFound(fmt.Errorf("error getting SparkApplication '%s/%s'", expectedSparkApplication.Namespace, expectedSparkApplication.Name)), err)
 }
@@ -101,7 +101,7 @@ func TestSparkApplicationService_Get_Error(t *testing.T) {
 func TestSparkApplicationService_Status(t *testing.T) {
 	service := NewSparkApplicationService(&mockSparkAppRepository_SuccessTests, nil, testCluster)
 
-	result, err := service.Get(context.Background(), "testNamespace", "clusterid-nsid-testid")
+	result, err := service.Get("testNamespace", "clusterid-nsid-testid")
 	assert.NoError(t, err)
 	assert.Equal(t, &expectedSparkApplication, result)
 }
@@ -109,7 +109,7 @@ func TestSparkApplicationService_Status(t *testing.T) {
 func TestSparkApplicationService_Status_Error(t *testing.T) {
 	service := NewSparkApplicationService(&mockSparkAppRepository_FailureTests, nil, testCluster)
 
-	_, err := service.Get(context.Background(), "testNamespace", "clusterid-nsid-testid")
+	_, err := service.Get("testNamespace", "clusterid-nsid-testid")
 	assert.Error(t, err)
 	assert.Equal(t, gatewayerrors.NewNotFound(fmt.Errorf("error getting SparkApplication '%s/%s'", expectedSparkApplication.Namespace, expectedSparkApplication.Name)), err)
 }
@@ -117,7 +117,7 @@ func TestSparkApplicationService_Status_Error(t *testing.T) {
 func TestSparkApplicationService_GetLogs(t *testing.T) {
 	service := NewSparkApplicationService(&mockSparkAppRepository_SuccessTests, nil, testCluster)
 
-	result, err := service.Logs(context.Background(), "testNamespace", "clusterid-nsid-testid", 100)
+	result, err := service.Logs("testNamespace", "clusterid-nsid-testid", 100)
 	assert.NoError(t, err)
 	assert.Equal(t, &logString, result)
 }
@@ -125,7 +125,7 @@ func TestSparkApplicationService_GetLogs(t *testing.T) {
 func TestSparkApplicationService_GetLogs_Error(t *testing.T) {
 	service := NewSparkApplicationService(&mockSparkAppRepository_FailureTests, nil, testCluster)
 
-	_, err := service.Logs(context.Background(), "testNamespace", "clusterid-nsid-testid", 100)
+	_, err := service.Logs("testNamespace", "clusterid-nsid-testid", 100)
 	assert.Error(t, err)
 	assert.Equal(t, errors.New("error getting logs"), err)
 }

@@ -21,7 +21,6 @@ import (
 	"fmt"
 	"strings"
 
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/klog/v2"
 
 	"github.com/slackhq/spark-gateway/internal/gateway/application/handler"
@@ -40,7 +39,7 @@ import (
 
 type SparkApplicationRepository interface {
 	Get(ctx context.Context, cluster model.KubeCluster, namespace string, name string) (*v1beta2.SparkApplication, error)
-	List(ctx context.Context, cluster model.KubeCluster, namespace string) ([]*metav1.ObjectMeta, error)
+	List(ctx context.Context, cluster model.KubeCluster, namespace string) ([]*model.SparkManagerApplicationMeta, error)
 	Status(ctx context.Context, cluster model.KubeCluster, namespace string, name string) (*v1beta2.SparkApplicationStatus, error)
 	Logs(ctx context.Context, cluster model.KubeCluster, namespace string, name string, tailLines int) (*string, error)
 	Create(ctx context.Context, cluster model.KubeCluster, application *v1beta2.SparkApplication) (*v1beta2.SparkApplication, error)
@@ -110,7 +109,7 @@ func (s *service) Get(ctx context.Context, gatewayId string) (*model.GatewayAppl
 		return nil, gatewayerrors.NewFrom(fmt.Errorf("error getting SparkApplication '%s': %w", gatewayId, err))
 	}
 
-	user, ok := sparkApp.Labels["spark-gateway/user"]
+	user, ok := sparkApp.Labels[model.GATEWAY_USER_LABEL]
 	if !ok {
 		return nil, gatewayerrors.NewFrom(errors.New("no gateway user associated with this application, possibly not created through spark-gateway?"))
 	}
@@ -127,7 +126,7 @@ func (s *service) Get(ctx context.Context, gatewayId string) (*model.GatewayAppl
 }
 
 // List retrieves `num` number of GatewayApplications from specified namespace `namespace` in cluster `cluster`
-func (s *service) List(ctx context.Context, cluster string, namespace string) ([]*metav1.ObjectMeta, error) {
+func (s *service) List(ctx context.Context, cluster string, namespace string) ([]*model.GatewayApplicationMeta, error) {
 
 	kubeCluster, err := s.clusterRepository.GetByName(cluster)
 
@@ -148,17 +147,20 @@ func (s *service) List(ctx context.Context, cluster string, namespace string) ([
 		}
 	}
 
-	var appMetas []*metav1.ObjectMeta
+	var appMetaList []*model.GatewayApplicationMeta
 	for _, ns := range namespaces {
-		nsSparkAppMetas, err := s.sparkAppRepo.List(ctx, *kubeCluster, ns)
+		nsAppMetas, err := s.sparkAppRepo.List(ctx, *kubeCluster, ns)
 		if err != nil {
 			return nil, gatewayerrors.NewFrom(fmt.Errorf("error getting applications: %w", err))
 		}
 
-		appMetas = append(appMetas, nsSparkAppMetas...)
+		for _, appMeta := range nsAppMetas {
+			appMetaList = append(appMetaList, model.NewGatewayApplicationMeta(appMeta, cluster))
+		}
+
 	}
 
-	return appMetas, nil
+	return appMetaList, nil
 
 }
 
@@ -313,7 +315,7 @@ func (s *service) SparkApplicationOverrides(application *v1beta2.SparkApplicatio
 
 	// Set default gateway labels
 	gatewayLabels := map[string]string{
-		"spark-gateway/user": user,
+		model.GATEWAY_USER_LABEL: user,
 	}
 
 	// Set selector label

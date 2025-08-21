@@ -18,13 +18,12 @@ package handler
 import (
 	"context"
 	"fmt"
+	"github.com/slackhq/spark-gateway/pkg/model"
 	"net/http"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/kubeflow/spark-operator/v2/api/v1beta2"
-
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	pkgHttp "github.com/slackhq/spark-gateway/pkg/http"
 )
@@ -32,10 +31,10 @@ import (
 //go:generate moq -rm -out mocksparkapplicationservice.go . SparkApplicationService
 
 type SparkApplicationService interface {
-	Get(ctx context.Context, namespace string, name string) (*v1beta2.SparkApplication, error)
-	List(ctx context.Context, namespace string) ([]*metav1.ObjectMeta, error)
-	Status(ctx context.Context, namespace string, name string) (*v1beta2.SparkApplicationStatus, error)
-	Logs(ctx context.Context, namespace string, name string, tailLines int64) (*string, error)
+	Get(namespace string, name string) (*v1beta2.SparkApplication, error)
+	List(namespace string) ([]*model.SparkManagerApplicationMeta, error)
+	Status(namespace string, name string) (*v1beta2.SparkApplicationStatus, error)
+	Logs(namespace string, name string, tailLines int64) (*string, error)
 	Create(ctx context.Context, application *v1beta2.SparkApplication) (*v1beta2.SparkApplication, error)
 	Delete(ctx context.Context, namespace string, name string) error
 }
@@ -68,7 +67,7 @@ func (h *SparkApplicationHandler) RegisterRoutes(rg *gin.RouterGroup) {
 
 func (h *SparkApplicationHandler) Get(c *gin.Context) {
 
-	application, err := h.sparkApplicationService.Get(c, c.Param("namespace"), c.Param("name"))
+	application, err := h.sparkApplicationService.Get(c.Param("namespace"), c.Param("name"))
 
 	if err != nil {
 		c.Error(err)
@@ -79,19 +78,19 @@ func (h *SparkApplicationHandler) Get(c *gin.Context) {
 }
 
 func (h *SparkApplicationHandler) List(c *gin.Context) {
-	application, err := h.sparkApplicationService.List(c, c.Param("namespace"))
+	appMetaList, err := h.sparkApplicationService.List(c.Param("namespace"))
 
 	if err != nil {
 		c.Error(err)
 		return
 	}
 
-	c.JSON(http.StatusOK, application)
+	c.JSON(http.StatusOK, appMetaList)
 }
 
 func (h *SparkApplicationHandler) Status(c *gin.Context) {
 
-	appStatus, err := h.sparkApplicationService.Status(c, c.Param("namespace"), c.Param("name"))
+	appStatus, err := h.sparkApplicationService.Status(c.Param("namespace"), c.Param("name"))
 
 	if err != nil {
 		c.Error(err)
@@ -110,7 +109,7 @@ func (h *SparkApplicationHandler) Logs(c *gin.Context) {
 		return
 	}
 
-	logs, err := h.sparkApplicationService.Logs(c, c.Param("namespace"), c.Param("name"), tailLines)
+	logs, err := h.sparkApplicationService.Logs(c.Param("namespace"), c.Param("name"), tailLines)
 	if err != nil {
 		c.Error(fmt.Errorf("cannot get logs: %w", err))
 		return
