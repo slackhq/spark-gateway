@@ -18,13 +18,13 @@ package repository
 import (
 	"testing"
 
-	"github.com/slackhq/spark-gateway/pkg/config"
-	"github.com/slackhq/spark-gateway/pkg/model"
+	"github.com/slackhq/spark-gateway/internal/domain"
+	"github.com/slackhq/spark-gateway/internal/shared/config"
 	"github.com/stretchr/testify/assert"
 )
 
 type NewRepoTestInput struct {
-	clusters         []model.KubeCluster
+	clusters         []domain.KubeCluster
 	template         string
 	sparkManagerPort string
 	debugPorts       map[string]config.DebugPort
@@ -39,7 +39,7 @@ var newRepoTests = []struct {
 	{
 		test: "Happy path, cluster with port no overrides/errors",
 		input: NewRepoTestInput{
-			clusters: []model.KubeCluster{
+			clusters: []domain.KubeCluster{
 				{
 					Name: "testCluster",
 				},
@@ -54,7 +54,7 @@ var newRepoTests = []struct {
 	{
 		test: "Multiple cluster with port no overrides/errors",
 		input: NewRepoTestInput{
-			clusters: []model.KubeCluster{
+			clusters: []domain.KubeCluster{
 				{
 					Name: "testCluster",
 				},
@@ -73,7 +73,7 @@ var newRepoTests = []struct {
 	{
 		test: "Single cluster with port no override",
 		input: NewRepoTestInput{
-			clusters: []model.KubeCluster{
+			clusters: []domain.KubeCluster{
 				{
 					Name: "testCluster",
 				},
@@ -93,7 +93,7 @@ var newRepoTests = []struct {
 	{
 		test: "Multiple cluster with port no override",
 		input: NewRepoTestInput{
-			clusters: []model.KubeCluster{
+			clusters: []domain.KubeCluster{
 				{
 					Name: "testCluster",
 				},
@@ -120,7 +120,7 @@ var newRepoTests = []struct {
 	{
 		test: "Bad template",
 		input: NewRepoTestInput{
-			clusters: []model.KubeCluster{
+			clusters: []domain.KubeCluster{
 				{
 					Name: "testCluster",
 				},

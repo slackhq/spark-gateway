@@ -5,9 +5,10 @@ package v1kubeflow
 
 import (
 	"context"
-	"github.com/kubeflow/spark-operator/v2/api/v1beta2"
-	"github.com/slackhq/spark-gateway/pkg/model"
 	"sync"
+
+	"github.com/kubeflow/spark-operator/v2/api/v1beta2"
+	"github.com/slackhq/spark-gateway/internal/domain"
 )
 
 // Ensure, that SparkApplicationServiceMock does implement SparkApplicationService.
@@ -29,7 +30,7 @@ var _ SparkApplicationService = &SparkApplicationServiceMock{}
 //			GetFunc: func(namespace string, name string) (*v1beta2.SparkApplication, error) {
 //				panic("mock out the Get method")
 //			},
-//			ListFunc: func(namespace string) ([]*model.SparkManagerApplicationMeta, error) {
+//			ListFunc: func(namespace string) ([]*domain.SparkManagerApplicationMeta, error) {
 //				panic("mock out the List method")
 //			},
 //			LogsFunc: func(namespace string, name string, tailLines int64) (*string, error) {
@@ -55,7 +56,7 @@ type SparkApplicationServiceMock struct {
 	GetFunc func(namespace string, name string) (*v1beta2.SparkApplication, error)
 
 	// ListFunc mocks the List method.
-	ListFunc func(namespace string) ([]*model.SparkManagerApplicationMeta, error)
+	ListFunc func(namespace string) ([]*domain.SparkManagerApplicationMeta, error)
 
 	// LogsFunc mocks the Logs method.
 	LogsFunc func(namespace string, name string, tailLines int64) (*string, error)
@@ -231,7 +232,7 @@ func (mock *SparkApplicationServiceMock) GetCalls() []struct {
 }
 
 // List calls ListFunc.
-func (mock *SparkApplicationServiceMock) List(namespace string) ([]*model.SparkManagerApplicationMeta, error) {
+func (mock *SparkApplicationServiceMock) List(namespace string) ([]*domain.SparkManagerApplicationMeta, error) {
 	if mock.ListFunc == nil {
 		panic("SparkApplicationServiceMock.ListFunc: method is nil but SparkApplicationService.List was just called")
 	}

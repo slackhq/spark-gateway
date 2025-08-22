@@ -18,10 +18,10 @@ package repository
 import (
 	"context"
 	"fmt"
-	"github.com/slackhq/spark-gateway/pkg/model"
 	"net/http"
 	"time"
 
+	"github.com/slackhq/spark-gateway/internal/domain"
 	"github.com/slackhq/spark-gateway/internal/shared/gatewayerrors"
 	"github.com/slackhq/spark-gateway/internal/shared/util"
 	"github.com/slackhq/spark-gateway/internal/sparkManager/kube"
@@ -58,7 +58,7 @@ func (k *SparkApplicationRepository) Get(namespace string, name string) (*v1beta
 
 }
 
-func (k *SparkApplicationRepository) List(namespace string) ([]*model.SparkManagerApplicationMeta, error) {
+func (k *SparkApplicationRepository) List(namespace string) ([]*domain.SparkManagerApplicationMeta, error) {
 
 	sparkApps, err := k.controller.SparkLister.SparkApplications(namespace).List(labels.Everything())
 
@@ -66,10 +66,10 @@ func (k *SparkApplicationRepository) List(namespace string) ([]*model.SparkManag
 		return nil, gatewayerrors.MapK8sErrorToGatewayError(fmt.Errorf("error listing SparkApplications in namespace [%s]: %w", namespace, err))
 	}
 
-	var appMetaList []*model.SparkManagerApplicationMeta
+	var appMetaList []*domain.SparkManagerApplicationMeta
 
 	for _, sparkApp := range sparkApps {
-		sparkAppMeta := model.NewSparkManagerApplicationMeta(sparkApp)
+		sparkAppMeta := domain.NewSparkManagerApplicationMeta(sparkApp)
 		appMetaList = append(appMetaList, sparkAppMeta)
 	}
 	return appMetaList, nil

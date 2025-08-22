@@ -5,9 +5,10 @@ package v1kubeflow
 
 import (
 	"context"
+	"sync"
+
 	"github.com/kubeflow/spark-operator/v2/api/v1beta2"
 	"github.com/slackhq/spark-gateway/internal/domain"
-	"sync"
 )
 
 // Ensure, that GatewayApplicationServiceMock does implement GatewayApplicationService.
@@ -29,7 +30,7 @@ var _ GatewayApplicationService = &GatewayApplicationServiceMock{}
 //			GetFunc: func(ctx context.Context, gatewayId string) (*domain.GatewayApplication, error) {
 //				panic("mock out the Get method")
 //			},
-//			ListFunc: func(ctx context.Context, cluster string, namespace string) ([]*model.GatewayApplicationMeta, error) {
+//			ListFunc: func(ctx context.Context, cluster string, namespace string) ([]*domain.GatewayApplicationMeta, error) {
 //				panic("mock out the List method")
 //			},
 //			LogsFunc: func(ctx context.Context, gatewayId string, tailLines int) (*string, error) {
@@ -55,7 +56,7 @@ type GatewayApplicationServiceMock struct {
 	GetFunc func(ctx context.Context, gatewayId string) (*domain.GatewayApplication, error)
 
 	// ListFunc mocks the List method.
-	ListFunc func(ctx context.Context, cluster string, namespace string) ([]*model.GatewayApplicationMeta, error)
+	ListFunc func(ctx context.Context, cluster string, namespace string) ([]*domain.GatewayApplicationMeta, error)
 
 	// LogsFunc mocks the Logs method.
 	LogsFunc func(ctx context.Context, gatewayId string, tailLines int) (*string, error)
@@ -235,7 +236,7 @@ func (mock *GatewayApplicationServiceMock) GetCalls() []struct {
 }
 
 // List calls ListFunc.
-func (mock *GatewayApplicationServiceMock) List(ctx context.Context, cluster string, namespace string) ([]*model.GatewayApplicationMeta, error) {
+func (mock *GatewayApplicationServiceMock) List(ctx context.Context, cluster string, namespace string) ([]*domain.GatewayApplicationMeta, error) {
 	if mock.ListFunc == nil {
 		panic("GatewayApplicationServiceMock.ListFunc: method is nil but GatewayApplicationService.List was just called")
 	}

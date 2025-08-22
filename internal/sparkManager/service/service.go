@@ -32,7 +32,7 @@ import (
 
 type SparkApplicationRepository interface {
 	Get(namespace string, name string) (*v1beta2.SparkApplication, error)
-	List(namespace string) ([]*model.SparkManagerApplicationMeta, error)
+	List(namespace string) ([]*domain.SparkManagerApplicationMeta, error)
 	GetLogs(namespace string, name string, tailLines int64) (*string, error)
 	Create(ctx context.Context, application *v1beta2.SparkApplication) (*v1beta2.SparkApplication, error)
 	Delete(ctx context.Context, namespace string, name string) error
@@ -59,7 +59,7 @@ func (s *SparkApplicationService) Get(namespace string, name string) (*v1beta2.S
 	return sparkApp, nil
 }
 
-func (s *SparkApplicationService) List(namespace string) ([]*model.SparkManagerApplicationMeta, error) {
+func (s *SparkApplicationService) List(namespace string) ([]*domain.SparkManagerApplicationMeta, error) {
 
 	appMetaList, err := s.sparkApplicationRepository.List(namespace)
 
