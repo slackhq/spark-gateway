@@ -28,7 +28,7 @@ import (
 	"github.com/slackhq/spark-gateway/internal/domain"
 	"github.com/slackhq/spark-gateway/internal/shared/config"
 	"github.com/slackhq/spark-gateway/internal/shared/gatewayerrors"
-	pkgHttp "github.com/slackhq/spark-gateway/internal/shared/http"
+	sharedHttp "github.com/slackhq/spark-gateway/internal/shared/http"
 	"github.com/slackhq/spark-gateway/internal/shared/util"
 	"github.com/slackhq/spark-gateway/internal/sparkManager/kube"
 )
@@ -81,12 +81,12 @@ func (r *SparkManagerRepository) Get(ctx context.Context, cluster domain.KubeClu
 		return nil, gatewayerrors.NewFrom(fmt.Errorf("error creating %s request: %w", http.MethodGet, err))
 	}
 
-	resp, respBody, err := pkgHttp.HttpRequest(ctx, &http.Client{}, request)
+	resp, respBody, err := sharedHttp.HttpRequest(ctx, &http.Client{}, request)
 	if err != nil {
 		return nil, gatewayerrors.NewFrom(err)
 	}
 
-	err = pkgHttp.CheckJsonResponse(resp, respBody)
+	err = sharedHttp.CheckJsonResponse(resp, respBody)
 	if err != nil {
 		return nil, gatewayerrors.NewFrom(err)
 	}
@@ -110,12 +110,12 @@ func (r *SparkManagerRepository) List(ctx context.Context, cluster domain.KubeCl
 		return nil, gatewayerrors.NewFrom(fmt.Errorf("error creating %s request: %w", http.MethodGet, err))
 	}
 
-	resp, respBody, err := pkgHttp.HttpRequest(ctx, &http.Client{}, request)
+	resp, respBody, err := sharedHttp.HttpRequest(ctx, &http.Client{}, request)
 	if err != nil {
 		return nil, gatewayerrors.NewFrom(err)
 	}
 
-	err = pkgHttp.CheckJsonResponse(resp, respBody)
+	err = sharedHttp.CheckJsonResponse(resp, respBody)
 	if err != nil {
 		return nil, gatewayerrors.NewFrom(err)
 	}
@@ -139,12 +139,12 @@ func (r *SparkManagerRepository) Status(ctx context.Context, cluster domain.Kube
 		return nil, gatewayerrors.NewFrom(fmt.Errorf("error creating %s request: %w", http.MethodGet, err))
 	}
 
-	resp, respBody, err := pkgHttp.HttpRequest(ctx, &http.Client{}, request)
+	resp, respBody, err := sharedHttp.HttpRequest(ctx, &http.Client{}, request)
 	if err != nil {
 		return nil, gatewayerrors.NewFrom(err)
 	}
 
-	err = pkgHttp.CheckJsonResponse(resp, respBody)
+	err = sharedHttp.CheckJsonResponse(resp, respBody)
 	if err != nil {
 		return nil, gatewayerrors.NewFrom(err)
 	}
@@ -168,12 +168,12 @@ func (r *SparkManagerRepository) Logs(ctx context.Context, cluster domain.KubeCl
 		return nil, gatewayerrors.NewFrom(fmt.Errorf("error creating %s request: %w", http.MethodGet, err))
 	}
 
-	resp, respBody, err := pkgHttp.HttpRequest(ctx, &http.Client{}, request)
+	resp, respBody, err := sharedHttp.HttpRequest(ctx, &http.Client{}, request)
 	if err != nil {
 		return nil, gatewayerrors.NewFrom(err)
 	}
 
-	err = pkgHttp.CheckJsonResponse(resp, respBody)
+	err = sharedHttp.CheckJsonResponse(resp, respBody)
 	if err != nil {
 		return nil, gatewayerrors.NewFrom(err)
 	}
@@ -203,12 +203,12 @@ func (r *SparkManagerRepository) Create(ctx context.Context, cluster domain.Kube
 	}
 	request.Header.Set("Content-Type", "application/json")
 
-	resp, respBody, err := pkgHttp.HttpRequest(ctx, &http.Client{}, request)
+	resp, respBody, err := sharedHttp.HttpRequest(ctx, &http.Client{}, request)
 	if err != nil {
 		return nil, gatewayerrors.NewFrom(err)
 	}
 
-	err = pkgHttp.CheckJsonResponse(resp, respBody)
+	err = sharedHttp.CheckJsonResponse(resp, respBody)
 	if err != nil {
 		return nil, gatewayerrors.NewFrom(err)
 	}
@@ -232,12 +232,12 @@ func (r *SparkManagerRepository) Delete(ctx context.Context, cluster domain.Kube
 		return gatewayerrors.NewFrom(fmt.Errorf("error creating %s request: %w", http.MethodDelete, err))
 	}
 
-	resp, respBody, err := pkgHttp.HttpRequest(ctx, &http.Client{}, request)
+	resp, respBody, err := sharedHttp.HttpRequest(ctx, &http.Client{}, request)
 	if err != nil {
 		return gatewayerrors.NewFrom(err)
 	}
 
-	err = pkgHttp.CheckJsonResponse(resp, respBody)
+	err = sharedHttp.CheckJsonResponse(resp, respBody)
 	if err != nil {
 		return gatewayerrors.NewFrom(err)
 	}

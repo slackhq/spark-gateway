@@ -30,7 +30,7 @@ import (
 	"github.com/slackhq/spark-gateway/internal/gateway/repository"
 	cfgPkg "github.com/slackhq/spark-gateway/internal/shared/config"
 	"github.com/slackhq/spark-gateway/internal/shared/gatewayerrors"
-	pkgHttp "github.com/slackhq/spark-gateway/internal/shared/http"
+	sharedHttp "github.com/slackhq/spark-gateway/internal/shared/http"
 	"github.com/slackhq/spark-gateway/internal/shared/util"
 )
 
@@ -271,12 +271,12 @@ func GetClusterMetricFamilies(
 		return nil, gatewayerrors.NewFrom(fmt.Errorf("error creating %s request: %w", "GET", err))
 	}
 
-	resp, respBody, err := pkgHttp.HttpRequest(ctx, &http.Client{}, request)
+	resp, respBody, err := sharedHttp.HttpRequest(ctx, &http.Client{}, request)
 	if err != nil {
 		return nil, gatewayerrors.NewFrom(err)
 	}
 
-	err = pkgHttp.CheckJsonResponse(resp, respBody)
+	err = sharedHttp.CheckJsonResponse(resp, respBody)
 	if err != nil {
 		return nil, gatewayerrors.NewFrom(err)
 	}

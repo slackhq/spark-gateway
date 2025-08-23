@@ -30,7 +30,7 @@ import (
 	"github.com/kubeflow/spark-operator/v2/api/v1beta2"
 	"github.com/slackhq/spark-gateway/internal/domain"
 	"github.com/slackhq/spark-gateway/internal/shared/gatewayerrors"
-	pkgHttp "github.com/slackhq/spark-gateway/internal/shared/http"
+	sharedHttp "github.com/slackhq/spark-gateway/internal/shared/http"
 )
 
 //  Swagger General	API Info
@@ -67,7 +67,7 @@ func NewApplicationHandler(service GatewayApplicationService, defaultLogLines in
 func (h *ApplicationHandler) RegisterRoutes(rg *gin.RouterGroup) {
 
 	appGroup := rg.Group(fmt.Sprintf("/%s", sparkApplicationPathName))
-	appGroup.Use(pkgHttp.ApplicationErrorHandler)
+	appGroup.Use(sharedHttp.ApplicationErrorHandler)
 	{
 
 		appGroup.GET("", h.List)

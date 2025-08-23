@@ -18,14 +18,15 @@ package v1kubeflow
 import (
 	"context"
 	"fmt"
-	"github.com/slackhq/spark-gateway/internal/domain"
 	"net/http"
 	"strconv"
+
+	"github.com/slackhq/spark-gateway/internal/domain"
 
 	"github.com/gin-gonic/gin"
 	"github.com/kubeflow/spark-operator/v2/api/v1beta2"
 
-	pkgHttp "github.com/slackhq/spark-gateway/internal/shared/http"
+	sharedHttp "github.com/slackhq/spark-gateway/internal/shared/http"
 )
 
 //go:generate moq -rm -out mocksparkapplicationservice.go . SparkApplicationService
@@ -52,7 +53,7 @@ func NewSparkApplicationHandler(sparkApplicationService SparkApplicationService,
 
 func (h *SparkApplicationHandler) RegisterRoutes(rg *gin.RouterGroup) {
 	nsGroup := rg.Group("")
-	nsGroup.Use(pkgHttp.ApplicationErrorHandler)
+	nsGroup.Use(sharedHttp.ApplicationErrorHandler)
 	{
 		nsGroup.GET("/:namespace", h.List)
 
