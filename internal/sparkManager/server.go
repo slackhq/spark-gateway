@@ -25,20 +25,20 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/klog/v2"
 
-	"github.com/slackhq/spark-gateway/internal/sparkManager/application/handler"
-	appRepo "github.com/slackhq/spark-gateway/internal/sparkManager/application/repository"
-	"github.com/slackhq/spark-gateway/internal/sparkManager/application/service"
+	"github.com/slackhq/spark-gateway/internal/shared/config"
+	"github.com/slackhq/spark-gateway/internal/shared/gatewayerrors"
+	"github.com/slackhq/spark-gateway/internal/sparkManager/api/v1/kubeflow"
+	appRepo "github.com/slackhq/spark-gateway/internal/sparkManager/repository"
+	"github.com/slackhq/spark-gateway/internal/sparkManager/service"
+	dbRepo "github.com/slackhq/spark-gateway/internal/sparkManager/database/repository"
+	"github.com/slackhq/spark-gateway/internal/sparkManager/kube"
 	"github.com/slackhq/spark-gateway/internal/sparkManager/metrics"
-	dbRepo "github.com/slackhq/spark-gateway/pkg/database/repository"
-	"github.com/slackhq/spark-gateway/pkg/gatewayerrors"
-	"github.com/slackhq/spark-gateway/pkg/kube"
 
 	"time"
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/slackhq/spark-gateway/pkg/config"
-	"github.com/slackhq/spark-gateway/pkg/http/health"
+	"github.com/slackhq/spark-gateway/internal/sparkManager/api/health"
 )
 
 type SparkManager struct {
@@ -104,7 +104,7 @@ func NewSparkManager(ctx context.Context, sgConfig *config.SparkGatewayConfig, c
 	healthService := health.NewHealthService()
 
 	// Init handlers
-	sparkAppHandler := handler.NewSparkApplicationHandler(sparkApplicationService, sgConfig.DefaultLogLines)
+	sparkAppHandler := v1kubeflow.NewSparkApplicationHandler(sparkApplicationService, sgConfig.DefaultLogLines)
 	metricsServer := metrics.NewHandler(metricsService, sgConfig.SparkManagerConfig.MetricsServer)
 	healthHandler := health.NewHealthHandler(healthService)
 

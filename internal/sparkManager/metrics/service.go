@@ -19,17 +19,16 @@ import (
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/slackhq/spark-gateway/internal/domain"
 	"k8s.io/klog/v2"
-
-	"github.com/slackhq/spark-gateway/pkg/model"
 )
 
 type service struct {
-	kubeCluster *model.KubeCluster
+	kubeCluster *domain.KubeCluster
 	repository  *Repository
 }
 
-func NewService(repository *Repository, kubeCluster *model.KubeCluster) Service {
+func NewService(repository *Repository, kubeCluster *domain.KubeCluster) Service {
 	m := &service{
 		kubeCluster: kubeCluster,
 		repository:  repository,

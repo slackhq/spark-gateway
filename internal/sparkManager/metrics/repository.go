@@ -23,7 +23,7 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/klog/v2"
 
-	"github.com/slackhq/spark-gateway/pkg/kube"
+	"github.com/slackhq/spark-gateway/internal/sparkManager/kube"
 )
 
 type Repository struct {

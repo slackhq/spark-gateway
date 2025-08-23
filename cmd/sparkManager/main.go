@@ -24,9 +24,9 @@ import (
 	flag "github.com/spf13/pflag"
 	"k8s.io/klog/v2"
 
+	cfg "github.com/slackhq/spark-gateway/internal/shared/config"
+	"github.com/slackhq/spark-gateway/internal/shared/util"
 	"github.com/slackhq/spark-gateway/internal/sparkManager"
-	cfg "github.com/slackhq/spark-gateway/pkg/config"
-	"github.com/slackhq/spark-gateway/pkg/util"
 )
 
 var (

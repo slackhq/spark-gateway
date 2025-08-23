@@ -24,22 +24,21 @@ import (
 
 	"k8s.io/klog/v2"
 
-	"github.com/slackhq/spark-gateway/internal/gateway/application/handler"
-	"github.com/slackhq/spark-gateway/internal/gateway/application/repository"
-	"github.com/slackhq/spark-gateway/internal/gateway/application/service"
-	"github.com/slackhq/spark-gateway/internal/gateway/cluster"
+	"github.com/slackhq/spark-gateway/internal/domain"
+	v1kubeflow "github.com/slackhq/spark-gateway/internal/gateway/api/v1/kubeflow"
+	"github.com/slackhq/spark-gateway/internal/gateway/repository"
+	"github.com/slackhq/spark-gateway/internal/gateway/service"
 
 	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 
-	"github.com/slackhq/spark-gateway/internal/gateway/middleware"
-	"github.com/slackhq/spark-gateway/internal/gateway/router"
-	cfg "github.com/slackhq/spark-gateway/pkg/config"
-	"github.com/slackhq/spark-gateway/pkg/model"
+	"github.com/slackhq/spark-gateway/internal/gateway/api/middleware"
+	"github.com/slackhq/spark-gateway/internal/gateway/clusterrouter"
+	cfg "github.com/slackhq/spark-gateway/internal/shared/config"
 
-	"github.com/slackhq/spark-gateway/pkg/http/health"
+	"github.com/slackhq/spark-gateway/internal/gateway/api/health"
 )
 
 type GatewayServer struct {
@@ -68,13 +67,13 @@ func NewGateway(ctx context.Context, sgConfig *cfg.SparkGatewayConfig, sparkMana
 	}
 	klog.Infof("Spark Gateway configured with SparkManagerRespository: %s", reflect.TypeOf(sparkManagerRepo).String())
 
-	localClusterRepo, err := cluster.NewLocalClusterRepo(sgConfig.KubeClusters)
+	localClusterRepo, err := repository.NewLocalClusterRepo(sgConfig.KubeClusters)
 	if err != nil {
 		return nil, fmt.Errorf("could not create LocalClusterRepo: %w", err)
 	}
 	klog.Infof("Spark Gateway configured with ClusterRepository: %s", reflect.TypeOf(sparkManagerRepo).String())
 
-	clusterRouter, err := router.GetClusterRouter(
+	clusterRouter, err := clusterrouter.GetClusterRouter(
 		sgConfig.ClusterRouter.Type,
 		localClusterRepo,
 		sgConfig.ClusterRouter,
@@ -85,7 +84,7 @@ func NewGateway(ctx context.Context, sgConfig *cfg.SparkGatewayConfig, sparkMana
 		return nil, err
 	}
 
-	fallbackClusterRouter, err := router.GetClusterRouter(
+	fallbackClusterRouter, err := clusterrouter.GetClusterRouter(
 		sgConfig.ClusterRouter.FallbackType,
 		localClusterRepo,
 		sgConfig.ClusterRouter,
@@ -105,13 +104,13 @@ func NewGateway(ctx context.Context, sgConfig *cfg.SparkGatewayConfig, sparkMana
 		sgConfig.GatewayConfig,
 		sgConfig.SelectorKey,
 		sgConfig.SelectorValue,
-		model.GatewayIdGenerator{UuidGenerator: GenUUIDv7},
+		domain.GatewayIdGenerator{UuidGenerator: GenUUIDv7},
 	)
 
 	healthService := health.NewHealthService()
 
 	// Handlers
-	appHandler := handler.NewApplicationHandler(appService, sgConfig.DefaultLogLines)
+	appHandler := v1kubeflow.NewApplicationHandler(appService, sgConfig.DefaultLogLines)
 
 	healthHandler := health.NewHealthHandler(healthService)
 
@@ -125,7 +124,7 @@ func NewGateway(ctx context.Context, sgConfig *cfg.SparkGatewayConfig, sparkMana
 
 	// Swagger UI
 	if sgConfig.GatewayConfig.EnableSwaggerUI {
-		handler.RegisterSwaggerDocs(rootGroup, sgConfig.GatewayConfig.GatewayApiVersion)
+		v1kubeflow.RegisterSwaggerDocs(rootGroup, sgConfig.GatewayConfig.GatewayApiVersion)
 	}
 
 	/// Register versioned handlers

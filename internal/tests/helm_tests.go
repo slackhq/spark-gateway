@@ -28,8 +28,8 @@ import (
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/klog/v2"
 
-	pkgHttp "github.com/slackhq/spark-gateway/pkg/http"
-	"github.com/slackhq/spark-gateway/pkg/model"
+	"github.com/slackhq/spark-gateway/internal/domain"
+	sharedHttp "github.com/slackhq/spark-gateway/internal/shared/http"
 )
 
 func Run(ctx context.Context, gatewayHostname string) {
@@ -74,13 +74,13 @@ func TestCreateSparkApplication(ctx context.Context, sparkApplication *v1beta2.S
 
 	request = AddBasicAuth(request, "admin")
 
-	resp, respBody, err := pkgHttp.HttpRequest(ctx, &http.Client{}, request)
+	resp, respBody, err := sharedHttp.HttpRequest(ctx, &http.Client{}, request)
 	if err != nil {
 		klog.Error(err)
 		os.Exit(1)
 	}
 
-	err = pkgHttp.CheckJsonResponse(resp, respBody)
+	err = sharedHttp.CheckJsonResponse(resp, respBody)
 	if err != nil {
 		klog.Error(err)
 		os.Exit(1)
@@ -106,19 +106,19 @@ func TestGetSparkApplication(ctx context.Context, sparkApplication *v1beta2.Spar
 
 	request = AddBasicAuth(request, "admin")
 
-	resp, respBody, err := pkgHttp.HttpRequest(ctx, &http.Client{}, request)
+	resp, respBody, err := sharedHttp.HttpRequest(ctx, &http.Client{}, request)
 	if err != nil {
 		klog.Error(err)
 		os.Exit(1)
 	}
 
-	err = pkgHttp.CheckJsonResponse(resp, respBody)
+	err = sharedHttp.CheckJsonResponse(resp, respBody)
 	if err != nil {
 		klog.Error(err)
 		os.Exit(1)
 	}
 
-	var app model.GatewayApplication
+	var app domain.GatewayApplication
 	if err := json.Unmarshal(*respBody, &app); err != nil {
 		klog.Errorf("failed to Unmarshal JSON response: %v", err)
 		os.Exit(1)
@@ -146,13 +146,13 @@ func TestGetSparkApplicationStatus(ctx context.Context, sparkApplication *v1beta
 
 	request = AddBasicAuth(request, "admin")
 
-	resp, respBody, err := pkgHttp.HttpRequest(ctx, &http.Client{}, request)
+	resp, respBody, err := sharedHttp.HttpRequest(ctx, &http.Client{}, request)
 	if err != nil {
 		klog.Error(err)
 		os.Exit(1)
 	}
 
-	err = pkgHttp.CheckJsonResponse(resp, respBody)
+	err = sharedHttp.CheckJsonResponse(resp, respBody)
 	if err != nil {
 		klog.Error(err)
 		os.Exit(1)
@@ -179,14 +179,14 @@ func TestGetSparkApplicationLogs(ctx context.Context, sparkApplication *v1beta2.
 
 	request = AddBasicAuth(request, "admin")
 
-	resp, respBody, err := pkgHttp.HttpRequest(ctx, &http.Client{}, request)
+	resp, respBody, err := sharedHttp.HttpRequest(ctx, &http.Client{}, request)
 	if err != nil {
 		if err.Error() != "spark driver does not exist, cannot fetch logs" {
 			os.Exit(1)
 		}
 	}
 
-	err = pkgHttp.CheckJsonResponse(resp, respBody)
+	err = sharedHttp.CheckJsonResponse(resp, respBody)
 	if err != nil {
 		klog.Error(err)
 		os.Exit(1)
@@ -206,12 +206,12 @@ func TestDeleteSparkApplication(ctx context.Context, sparkApplication *v1beta2.S
 
 	request = AddBasicAuth(request, "admin")
 
-	resp, respBody, err := pkgHttp.HttpRequest(ctx, &http.Client{}, request)
+	resp, respBody, err := sharedHttp.HttpRequest(ctx, &http.Client{}, request)
 	if err != nil {
 		klog.Error(err)
 		os.Exit(1)
 	}
-	err = pkgHttp.CheckJsonResponse(resp, respBody)
+	err = sharedHttp.CheckJsonResponse(resp, respBody)
 	if err != nil {
 		klog.Error(err)
 		os.Exit(1)
