@@ -1,4 +1,57 @@
 definitions:
+  domain.GatewayApplication:
+    properties:
+      cluster:
+        type: string
+      gatewayId:
+        type: string
+      sparkApplication:
+        $ref: '#/definitions/v1beta2.SparkApplication'
+      sparkLogURLs:
+        $ref: '#/definitions/domain.SparkLogURLs'
+      user:
+        type: string
+    type: object
+  domain.GatewayApplicationMeta:
+    properties:
+      cluster:
+        type: string
+      sparkAppMetadata:
+        $ref: '#/definitions/domain.SparkManagerApplicationMeta'
+    type: object
+  domain.SparkLogURLs:
+    properties:
+      logsUI:
+        type: string
+      sparkHistoryUI:
+        type: string
+      sparkUI:
+        type: string
+    type: object
+  domain.SparkManagerApplicationMeta:
+    properties:
+      applicationState:
+        $ref: '#/definitions/v1beta2.ApplicationState'
+      driverInfo:
+        $ref: '#/definitions/v1beta2.DriverInfo'
+      executionAttempts:
+        type: integer
+      lastSubmissionAttemptTime:
+        type: string
+      metadata:
+        $ref: '#/definitions/v1.ObjectMeta'
+      sparkApplicationId:
+        description: |-
+          All fields below come from v1beta2.SparkApplicationStatus
+          Currently it's all fields except for ExecutorState because it can get pretty large
+        type: string
+      submissionAttempts:
+        type: integer
+      submissionID:
+        type: string
+      terminationTime:
+        type: string
+    type: object
   intstr.IntOrString:
     properties:
       intVal:
@@ -23,59 +76,6 @@ definitions:
     x-enum-varnames:
     - Int
     - String
-  model.GatewayApplication:
-    properties:
-      cluster:
-        type: string
-      gatewayId:
-        type: string
-      sparkApplication:
-        $ref: '#/definitions/v1beta2.SparkApplication'
-      sparkLogURLs:
-        $ref: '#/definitions/model.SparkLogURLs'
-      user:
-        type: string
-    type: object
-  model.GatewayApplicationMeta:
-    properties:
-      cluster:
-        type: string
-      sparkAppMetadata:
-        $ref: '#/definitions/model.SparkManagerApplicationMeta'
-    type: object
-  model.SparkLogURLs:
-    properties:
-      logsUI:
-        type: string
-      sparkHistoryUI:
-        type: string
-      sparkUI:
-        type: string
-    type: object
-  model.SparkManagerApplicationMeta:
-    properties:
-      applicationState:
-        $ref: '#/definitions/v1beta2.ApplicationState'
-      driverInfo:
-        $ref: '#/definitions/v1beta2.DriverInfo'
-      executionAttempts:
-        type: integer
-      lastSubmissionAttemptTime:
-        type: string
-      metadata:
-        $ref: '#/definitions/v1.ObjectMeta'
-      sparkApplicationId:
-        description: |-
-          All fields below come from v1beta2.SparkApplicationStatus
-          Currently it's all fields except for ExecutorState because it can get pretty large
-        type: string
-      submissionAttempts:
-        type: integer
-      submissionID:
-        type: string
-      terminationTime:
-        type: string
-    type: object
   resource.Quantity:
     properties:
       Format:
@@ -6384,7 +6384,7 @@ paths:
           description: List of SparkApplication metadata
           schema:
             items:
-              $ref: '#/definitions/model.GatewayApplicationMeta'
+              $ref: '#/definitions/domain.GatewayApplicationMeta'
             type: array
       security:
       - BasicAuth: []
@@ -6408,7 +6408,7 @@ paths:
         "201":
           description: SparkApplication Created
           schema:
-            $ref: '#/definitions/model.GatewayApplication'
+            $ref: '#/definitions/domain.GatewayApplication'
       security:
       - BasicAuth: []
       summary: Submit a new SparkApplication
@@ -6455,7 +6455,7 @@ paths:
         "200":
           description: SparkApplication resource
           schema:
-            $ref: '#/definitions/model.GatewayApplication'
+            $ref: '#/definitions/domain.GatewayApplication'
       security:
       - BasicAuth: []
       summary: Get a SparkApplication

@@ -58,7 +58,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/model.GatewayApplicationMeta"
+                                "$ref": "#/definitions/domain.GatewayApplicationMeta"
                             }
                         }
                     }
@@ -96,7 +96,7 @@ const docTemplate = `{
                     "201": {
                         "description": "SparkApplication Created",
                         "schema": {
-                            "$ref": "#/definitions/model.GatewayApplication"
+                            "$ref": "#/definitions/domain.GatewayApplication"
                         }
                     }
                 }
@@ -133,7 +133,7 @@ const docTemplate = `{
                     "200": {
                         "description": "SparkApplication resource",
                         "schema": {
-                            "$ref": "#/definitions/model.GatewayApplication"
+                            "$ref": "#/definitions/domain.GatewayApplication"
                         }
                     }
                 }
@@ -259,6 +259,84 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "domain.GatewayApplication": {
+            "type": "object",
+            "properties": {
+                "cluster": {
+                    "type": "string"
+                },
+                "gatewayId": {
+                    "type": "string"
+                },
+                "sparkApplication": {
+                    "$ref": "#/definitions/v1beta2.SparkApplication"
+                },
+                "sparkLogURLs": {
+                    "$ref": "#/definitions/domain.SparkLogURLs"
+                },
+                "user": {
+                    "type": "string"
+                }
+            }
+        },
+        "domain.GatewayApplicationMeta": {
+            "type": "object",
+            "properties": {
+                "cluster": {
+                    "type": "string"
+                },
+                "sparkAppMetadata": {
+                    "$ref": "#/definitions/domain.SparkManagerApplicationMeta"
+                }
+            }
+        },
+        "domain.SparkLogURLs": {
+            "type": "object",
+            "properties": {
+                "logsUI": {
+                    "type": "string"
+                },
+                "sparkHistoryUI": {
+                    "type": "string"
+                },
+                "sparkUI": {
+                    "type": "string"
+                }
+            }
+        },
+        "domain.SparkManagerApplicationMeta": {
+            "type": "object",
+            "properties": {
+                "applicationState": {
+                    "$ref": "#/definitions/v1beta2.ApplicationState"
+                },
+                "driverInfo": {
+                    "$ref": "#/definitions/v1beta2.DriverInfo"
+                },
+                "executionAttempts": {
+                    "type": "integer"
+                },
+                "lastSubmissionAttemptTime": {
+                    "type": "string"
+                },
+                "metadata": {
+                    "$ref": "#/definitions/v1.ObjectMeta"
+                },
+                "sparkApplicationId": {
+                    "description": "All fields below come from v1beta2.SparkApplicationStatus\nCurrently it's all fields except for ExecutorState because it can get pretty large",
+                    "type": "string"
+                },
+                "submissionAttempts": {
+                    "type": "integer"
+                },
+                "submissionID": {
+                    "type": "string"
+                },
+                "terminationTime": {
+                    "type": "string"
+                }
+            }
+        },
         "intstr.IntOrString": {
             "type": "object",
             "properties": {
@@ -292,84 +370,6 @@ const docTemplate = `{
                 "Int",
                 "String"
             ]
-        },
-        "model.GatewayApplication": {
-            "type": "object",
-            "properties": {
-                "cluster": {
-                    "type": "string"
-                },
-                "gatewayId": {
-                    "type": "string"
-                },
-                "sparkApplication": {
-                    "$ref": "#/definitions/v1beta2.SparkApplication"
-                },
-                "sparkLogURLs": {
-                    "$ref": "#/definitions/model.SparkLogURLs"
-                },
-                "user": {
-                    "type": "string"
-                }
-            }
-        },
-        "model.GatewayApplicationMeta": {
-            "type": "object",
-            "properties": {
-                "cluster": {
-                    "type": "string"
-                },
-                "sparkAppMetadata": {
-                    "$ref": "#/definitions/model.SparkManagerApplicationMeta"
-                }
-            }
-        },
-        "model.SparkLogURLs": {
-            "type": "object",
-            "properties": {
-                "logsUI": {
-                    "type": "string"
-                },
-                "sparkHistoryUI": {
-                    "type": "string"
-                },
-                "sparkUI": {
-                    "type": "string"
-                }
-            }
-        },
-        "model.SparkManagerApplicationMeta": {
-            "type": "object",
-            "properties": {
-                "applicationState": {
-                    "$ref": "#/definitions/v1beta2.ApplicationState"
-                },
-                "driverInfo": {
-                    "$ref": "#/definitions/v1beta2.DriverInfo"
-                },
-                "executionAttempts": {
-                    "type": "integer"
-                },
-                "lastSubmissionAttemptTime": {
-                    "type": "string"
-                },
-                "metadata": {
-                    "$ref": "#/definitions/v1.ObjectMeta"
-                },
-                "sparkApplicationId": {
-                    "description": "All fields below come from v1beta2.SparkApplicationStatus\nCurrently it's all fields except for ExecutorState because it can get pretty large",
-                    "type": "string"
-                },
-                "submissionAttempts": {
-                    "type": "integer"
-                },
-                "submissionID": {
-                    "type": "string"
-                },
-                "terminationTime": {
-                    "type": "string"
-                }
-            }
         },
         "resource.Quantity": {
             "type": "object",
