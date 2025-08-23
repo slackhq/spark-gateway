@@ -28,8 +28,8 @@ import (
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/klog/v2"
 
-	pkgHttp "github.com/slackhq/spark-gateway/pkg/http"
-	"github.com/slackhq/spark-gateway/pkg/model"
+	"github.com/slackhq/spark-gateway/internal/domain"
+	pkgHttp "github.com/slackhq/spark-gateway/internal/shared/http"
 )
 
 func Run(ctx context.Context, gatewayHostname string) {
@@ -118,7 +118,7 @@ func TestGetSparkApplication(ctx context.Context, sparkApplication *v1beta2.Spar
 		os.Exit(1)
 	}
 
-	var app model.GatewayApplication
+	var app domain.GatewayApplication
 	if err := json.Unmarshal(*respBody, &app); err != nil {
 		klog.Errorf("failed to Unmarshal JSON response: %v", err)
 		os.Exit(1)

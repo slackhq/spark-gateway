@@ -21,20 +21,18 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/slackhq/spark-gateway/pkg/util"
+	"github.com/slackhq/spark-gateway/internal/domain"
+	"github.com/slackhq/spark-gateway/internal/shared/config"
+	"github.com/slackhq/spark-gateway/internal/shared/util"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/tools/clientcmd/api"
 	"k8s.io/klog/v2"
 
-	"github.com/slackhq/spark-gateway/pkg/model"
-
-	"github.com/slackhq/spark-gateway/pkg/config"
-
 	"strings"
 )
 
-func GetKubeConfig(clusterAuthType string, kubeCluster *model.KubeCluster) (*rest.Config, error) {
+func GetKubeConfig(clusterAuthType string, kubeCluster *domain.KubeCluster) (*rest.Config, error) {
 	var kubeConfig *rest.Config
 	var err error
 	klog.Infof("Using cluster auth type: %s", clusterAuthType)
@@ -92,7 +90,7 @@ func dataFromFile(file string) ([]byte, error) {
 	return nil, nil
 }
 
-func NewK8sLocalConfig(kubeCluster *model.KubeCluster) (*rest.Config, error) {
+func NewK8sLocalConfig(kubeCluster *domain.KubeCluster) (*rest.Config, error) {
 	var configPaths []string
 	if kubeConfigEnvVar := os.Getenv("KUBECONFIG"); kubeConfigEnvVar != "" {
 		// Get Kubeconfig path from KUBECONFIG env var

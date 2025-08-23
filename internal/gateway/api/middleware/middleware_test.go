@@ -21,7 +21,7 @@ import (
 	"testing"
 
 	"github.com/gin-gonic/gin"
-	"github.com/slackhq/spark-gateway/pkg/config"
+	"github.com/slackhq/spark-gateway/internal/shared/config"
 	"github.com/stretchr/testify/assert"
 )
 

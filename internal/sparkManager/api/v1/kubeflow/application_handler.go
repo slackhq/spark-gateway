@@ -13,26 +13,26 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package handler
+package v1kubeflow
 
 import (
 	"context"
 	"fmt"
-	"github.com/slackhq/spark-gateway/pkg/model"
+	"github.com/slackhq/spark-gateway/internal/domain"
 	"net/http"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/kubeflow/spark-operator/v2/api/v1beta2"
 
-	pkgHttp "github.com/slackhq/spark-gateway/pkg/http"
+	pkgHttp "github.com/slackhq/spark-gateway/internal/shared/http"
 )
 
 //go:generate moq -rm -out mocksparkapplicationservice.go . SparkApplicationService
 
 type SparkApplicationService interface {
 	Get(namespace string, name string) (*v1beta2.SparkApplication, error)
-	List(namespace string) ([]*model.SparkManagerApplicationMeta, error)
+	List(namespace string) ([]*domain.SparkManagerApplicationMeta, error)
 	Status(namespace string, name string) (*v1beta2.SparkApplicationStatus, error)
 	Logs(namespace string, name string, tailLines int64) (*string, error)
 	Create(ctx context.Context, application *v1beta2.SparkApplication) (*v1beta2.SparkApplication, error)

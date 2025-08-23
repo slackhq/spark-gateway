@@ -22,10 +22,10 @@ import (
 	"github.com/kubeflow/spark-operator/v2/api/v1beta2"
 	"k8s.io/klog/v2"
 
-	"github.com/slackhq/spark-gateway/internal/sparkManager/application/handler"
-	"github.com/slackhq/spark-gateway/pkg/database/repository"
-	"github.com/slackhq/spark-gateway/pkg/gatewayerrors"
-	"github.com/slackhq/spark-gateway/pkg/model"
+	"github.com/slackhq/spark-gateway/internal/domain"
+	"github.com/slackhq/spark-gateway/internal/shared/gatewayerrors"
+	v1kubeflow "github.com/slackhq/spark-gateway/internal/sparkManager/api/v1/kubeflow"
+	"github.com/slackhq/spark-gateway/internal/sparkManager/database/repository"
 )
 
 //go:generate moq -rm -out mocksparkapplicationrepository.go . SparkApplicationRepository
@@ -41,10 +41,10 @@ type SparkApplicationRepository interface {
 type SparkApplicationService struct {
 	sparkApplicationRepository SparkApplicationRepository
 	database                   repository.DatabaseRepository
-	cluster                    model.KubeCluster
+	cluster                    domain.KubeCluster
 }
 
-func NewSparkApplicationService(sparkAppRepo SparkApplicationRepository, database repository.DatabaseRepository, cluster model.KubeCluster) handler.SparkApplicationService {
+func NewSparkApplicationService(sparkAppRepo SparkApplicationRepository, database repository.DatabaseRepository, cluster domain.KubeCluster) v1kubeflow.SparkApplicationService {
 	return &SparkApplicationService{sparkApplicationRepository: sparkAppRepo, database: database, cluster: cluster}
 }
 
@@ -87,7 +87,7 @@ func (s *SparkApplicationService) Logs(namespace string, name string, tailLines 
 func (s *SparkApplicationService) Create(ctx context.Context, application *v1beta2.SparkApplication) (*v1beta2.SparkApplication, error) {
 
 	if s.database != nil {
-		uid, err := model.ParseGatewayIdUUID(application.Name)
+		uid, err := domain.ParseGatewayIdUUID(application.Name)
 		if err != nil {
 			klog.ErrorS(err, "Failed to parse the gateway UUID, unable to insert into DB", "gatewayId", application.Name)
 			return nil, gatewayerrors.NewFrom(err)

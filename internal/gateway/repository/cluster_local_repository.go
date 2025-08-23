@@ -13,36 +13,35 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package cluster
+package repository
 
 import (
 	"fmt"
 
+	"github.com/slackhq/spark-gateway/internal/domain"
 	"k8s.io/klog/v2"
-
-	"github.com/slackhq/spark-gateway/pkg/model"
 )
 
 //go:generate moq -rm  -out mockclusterrepository.go . ClusterRepository
 
 type ClusterRepository interface {
-	GetByName(cluster string) (*model.KubeCluster, error)
-	GetById(clusterId string) (*model.KubeCluster, error)
-	GetAll() ([]model.KubeCluster, error)
-	GetAllWithNamespace(namespace string) ([]model.KubeCluster, error)
+	GetByName(cluster string) (*domain.KubeCluster, error)
+	GetById(clusterId string) (*domain.KubeCluster, error)
+	GetAll() ([]domain.KubeCluster, error)
+	GetAllWithNamespace(namespace string) ([]domain.KubeCluster, error)
 }
 
 type LocalClusterRepo struct {
-	KubeClusters map[string]model.KubeCluster
+	KubeClusters map[string]domain.KubeCluster
 }
 
-func NewLocalClusterRepo(clusters []model.KubeCluster) (*LocalClusterRepo, error) {
+func NewLocalClusterRepo(clusters []domain.KubeCluster) (*LocalClusterRepo, error) {
 
 	if len(clusters) == 0 {
 		return nil, fmt.Errorf("NewLocalClusterRepo: No clusters passed")
 	}
 
-	clustersById := map[string]model.KubeCluster{}
+	clustersById := map[string]domain.KubeCluster{}
 
 	for _, cluster := range clusters {
 		clustersById[cluster.ClusterId] = cluster
@@ -51,7 +50,7 @@ func NewLocalClusterRepo(clusters []model.KubeCluster) (*LocalClusterRepo, error
 	return &LocalClusterRepo{KubeClusters: clustersById}, nil
 }
 
-func (r *LocalClusterRepo) GetByName(cluster string) (*model.KubeCluster, error) {
+func (r *LocalClusterRepo) GetByName(cluster string) (*domain.KubeCluster, error) {
 	for _, kubeCluster := range r.KubeClusters {
 		if kubeCluster.Name == cluster {
 			return &kubeCluster, nil
@@ -61,7 +60,7 @@ func (r *LocalClusterRepo) GetByName(cluster string) (*model.KubeCluster, error)
 	return nil, fmt.Errorf("cluster does not exist: %s", cluster)
 }
 
-func (r *LocalClusterRepo) GetById(clusterId string) (*model.KubeCluster, error) {
+func (r *LocalClusterRepo) GetById(clusterId string) (*domain.KubeCluster, error) {
 
 	cluster, ok := r.KubeClusters[clusterId]
 
@@ -72,8 +71,8 @@ func (r *LocalClusterRepo) GetById(clusterId string) (*model.KubeCluster, error)
 	return &cluster, nil
 }
 
-func (r *LocalClusterRepo) GetAll() ([]model.KubeCluster, error) {
-	var clusters []model.KubeCluster
+func (r *LocalClusterRepo) GetAll() ([]domain.KubeCluster, error) {
+	var clusters []domain.KubeCluster
 
 	for _, cluster := range r.KubeClusters {
 		clusters = append(clusters, cluster)
@@ -86,8 +85,8 @@ func (r *LocalClusterRepo) GetAll() ([]model.KubeCluster, error) {
 	return clusters, nil
 }
 
-func (r *LocalClusterRepo) GetAllWithNamespace(namespace string) ([]model.KubeCluster, error) {
-	var clusters []model.KubeCluster
+func (r *LocalClusterRepo) GetAllWithNamespace(namespace string) ([]domain.KubeCluster, error) {
+	var clusters []domain.KubeCluster
 
 	allClusters, err := r.GetAll()
 	if err != nil {

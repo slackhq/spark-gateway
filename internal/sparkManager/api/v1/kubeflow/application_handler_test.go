@@ -13,7 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package handler
+package v1kubeflow
 
 import (
 	"bytes"
@@ -31,7 +31,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/slackhq/spark-gateway/pkg/gatewayerrors"
+	"github.com/slackhq/spark-gateway/internal/shared/gatewayerrors"
 )
 
 var expectedSparkApplication v1beta2.SparkApplication = v1beta2.SparkApplication{

@@ -23,50 +23,50 @@ import (
 
 	"k8s.io/klog/v2"
 
-	"github.com/slackhq/spark-gateway/internal/gateway/application/handler"
-	clusterPkg "github.com/slackhq/spark-gateway/internal/gateway/cluster"
-	"github.com/slackhq/spark-gateway/pkg/config"
-	"github.com/slackhq/spark-gateway/pkg/util"
+	"github.com/slackhq/spark-gateway/internal/domain"
+	v1kubeflow "github.com/slackhq/spark-gateway/internal/gateway/api/v1/kubeflow"
+	clusterPkg "github.com/slackhq/spark-gateway/internal/gateway/repository"
+	"github.com/slackhq/spark-gateway/internal/shared/config"
+	"github.com/slackhq/spark-gateway/internal/shared/util"
 
 	"github.com/kubeflow/spark-operator/v2/api/v1beta2"
 
-	"github.com/slackhq/spark-gateway/internal/gateway/router"
-	"github.com/slackhq/spark-gateway/pkg/gatewayerrors"
-	"github.com/slackhq/spark-gateway/pkg/model"
+	"github.com/slackhq/spark-gateway/internal/gateway/clusterrouter"
+	"github.com/slackhq/spark-gateway/internal/shared/gatewayerrors"
 )
 
 //go:generate moq -rm  -out mocksparkapplicationrepository.go . SparkApplicationRepository
 
 type SparkApplicationRepository interface {
-	Get(ctx context.Context, cluster model.KubeCluster, namespace string, name string) (*v1beta2.SparkApplication, error)
-	List(ctx context.Context, cluster model.KubeCluster, namespace string) ([]*model.SparkManagerApplicationMeta, error)
-	Status(ctx context.Context, cluster model.KubeCluster, namespace string, name string) (*v1beta2.SparkApplicationStatus, error)
-	Logs(ctx context.Context, cluster model.KubeCluster, namespace string, name string, tailLines int) (*string, error)
-	Create(ctx context.Context, cluster model.KubeCluster, application *v1beta2.SparkApplication) (*v1beta2.SparkApplication, error)
-	Delete(ctx context.Context, cluster model.KubeCluster, namespace string, name string) error
+	Get(ctx context.Context, cluster domain.KubeCluster, namespace string, name string) (*v1beta2.SparkApplication, error)
+	List(ctx context.Context, cluster domain.KubeCluster, namespace string) ([]*domain.SparkManagerApplicationMeta, error)
+	Status(ctx context.Context, cluster domain.KubeCluster, namespace string, name string) (*v1beta2.SparkApplicationStatus, error)
+	Logs(ctx context.Context, cluster domain.KubeCluster, namespace string, name string, tailLines int) (*string, error)
+	Create(ctx context.Context, cluster domain.KubeCluster, application *v1beta2.SparkApplication) (*v1beta2.SparkApplication, error)
+	Delete(ctx context.Context, cluster domain.KubeCluster, namespace string, name string) error
 }
 
 type service struct {
 	sparkAppRepo          SparkApplicationRepository
 	clusterRepository     clusterPkg.ClusterRepository
-	clusterRouter         router.ClusterRouter
-	fallbackClusterRouter router.ClusterRouter
+	clusterRouter         clusterrouter.ClusterRouter
+	fallbackClusterRouter clusterrouter.ClusterRouter
 	config                config.GatewayConfig
 	selectorKey           string
 	selectorValue         string
-	gatewayIdGenerator    model.GatewayIdGenerator
+	gatewayIdGenerator    domain.GatewayIdGenerator
 }
 
 func NewApplicationService(
 	sparkAppRepo SparkApplicationRepository,
 	clusterRepository clusterPkg.ClusterRepository,
-	clusterRouter router.ClusterRouter,
-	fallbackClusterRouter router.ClusterRouter,
+	clusterRouter clusterrouter.ClusterRouter,
+	fallbackClusterRouter clusterrouter.ClusterRouter,
 	config config.GatewayConfig,
 	selectorKey string,
 	selectorValue string,
-	gatewayIdGenerator model.GatewayIdGenerator,
-) handler.GatewayApplicationService {
+	gatewayIdGenerator domain.GatewayIdGenerator,
+) v1kubeflow.GatewayApplicationService {
 	return &service{
 		sparkAppRepo:          sparkAppRepo,
 		clusterRepository:     clusterRepository,
@@ -79,7 +79,7 @@ func NewApplicationService(
 	}
 }
 
-func (s *service) GetClusterNamespaceFromGatewayId(gatewayId string) (*model.KubeCluster, string, error) {
+func (s *service) GetClusterNamespaceFromGatewayId(gatewayId string) (*domain.KubeCluster, string, error) {
 	clusterId := strings.Split(gatewayId, "-")[0]
 	kubeCluster, err := s.clusterRepository.GetById(clusterId)
 
@@ -96,7 +96,7 @@ func (s *service) GetClusterNamespaceFromGatewayId(gatewayId string) (*model.Kub
 	return kubeCluster, namespace.Name, nil
 }
 
-func (s *service) Get(ctx context.Context, gatewayId string) (*model.GatewayApplication, error) {
+func (s *service) Get(ctx context.Context, gatewayId string) (*domain.GatewayApplication, error) {
 
 	cluster, namespace, err := s.GetClusterNamespaceFromGatewayId(gatewayId)
 	if err != nil {
@@ -109,12 +109,12 @@ func (s *service) Get(ctx context.Context, gatewayId string) (*model.GatewayAppl
 		return nil, gatewayerrors.NewFrom(fmt.Errorf("error getting SparkApplication '%s': %w", gatewayId, err))
 	}
 
-	user, ok := sparkApp.Labels[model.GATEWAY_USER_LABEL]
+	user, ok := sparkApp.Labels[domain.GATEWAY_USER_LABEL]
 	if !ok {
 		return nil, gatewayerrors.NewFrom(errors.New("no gateway user associated with this application, possibly not created through spark-gateway?"))
 	}
 
-	gatewayApp := &model.GatewayApplication{
+	gatewayApp := &domain.GatewayApplication{
 		SparkApplication: sparkApp,
 		GatewayId:        sparkApp.Name,
 		Cluster:          cluster.Name,
@@ -126,7 +126,7 @@ func (s *service) Get(ctx context.Context, gatewayId string) (*model.GatewayAppl
 }
 
 // List retrieves `num` number of GatewayApplications from specified namespace `namespace` in cluster `cluster`
-func (s *service) List(ctx context.Context, cluster string, namespace string) ([]*model.GatewayApplicationMeta, error) {
+func (s *service) List(ctx context.Context, cluster string, namespace string) ([]*domain.GatewayApplicationMeta, error) {
 
 	kubeCluster, err := s.clusterRepository.GetByName(cluster)
 
@@ -147,7 +147,7 @@ func (s *service) List(ctx context.Context, cluster string, namespace string) ([
 		}
 	}
 
-	var appMetaList []*model.GatewayApplicationMeta
+	var appMetaList []*domain.GatewayApplicationMeta
 	for _, ns := range namespaces {
 		nsAppMetas, err := s.sparkAppRepo.List(ctx, *kubeCluster, ns)
 		if err != nil {
@@ -155,7 +155,7 @@ func (s *service) List(ctx context.Context, cluster string, namespace string) ([
 		}
 
 		for _, appMeta := range nsAppMetas {
-			appMetaList = append(appMetaList, model.NewGatewayApplicationMeta(appMeta, cluster))
+			appMetaList = append(appMetaList, domain.NewGatewayApplicationMeta(appMeta, cluster))
 		}
 
 	}
@@ -164,7 +164,7 @@ func (s *service) List(ctx context.Context, cluster string, namespace string) ([
 
 }
 
-func (s *service) Create(ctx context.Context, application *v1beta2.SparkApplication, user string) (*model.GatewayApplication, error) {
+func (s *service) Create(ctx context.Context, application *v1beta2.SparkApplication, user string) (*domain.GatewayApplication, error) {
 
 	errors := s.SparkApplicationValidator(application)
 	if len(errors) > 0 {
@@ -198,7 +198,7 @@ func (s *service) Create(ctx context.Context, application *v1beta2.SparkApplicat
 		return nil, gatewayerrors.NewFrom(fmt.Errorf("error creating SparkApplication '%s/%s': %w", application.Namespace, application.Name, err))
 	}
 
-	gatewayApp := &model.GatewayApplication{
+	gatewayApp := &domain.GatewayApplication{
 		SparkApplication: sparkApp,
 		GatewayId:        sparkApp.Name,
 		Cluster:          cluster.Name,
@@ -250,7 +250,7 @@ func (s *service) Delete(ctx context.Context, gatewayId string) error {
 	return nil
 }
 
-func GetRenderedURLs(templates model.StatusUrlTemplates, sparkApp *v1beta2.SparkApplication) model.SparkLogURLs {
+func GetRenderedURLs(templates domain.StatusUrlTemplates, sparkApp *v1beta2.SparkApplication) domain.SparkLogURLs {
 	// Render URLs
 	sparkUI, err := util.RenderTemplate(templates.SparkUI, sparkApp)
 	if err != nil {
@@ -270,7 +270,7 @@ func GetRenderedURLs(templates model.StatusUrlTemplates, sparkApp *v1beta2.Spark
 		sparkHistoryUI = new(string)
 	}
 
-	return model.SparkLogURLs{
+	return domain.SparkLogURLs{
 		SparkUI:        *sparkUI,
 		LogsUI:         *logsUI,
 		SparkHistoryUI: *sparkHistoryUI,
@@ -315,7 +315,7 @@ func (s *service) SparkApplicationOverrides(application *v1beta2.SparkApplicatio
 
 	// Set default gateway labels
 	gatewayLabels := map[string]string{
-		model.GATEWAY_USER_LABEL: user,
+		domain.GATEWAY_USER_LABEL: user,
 	}
 
 	// Set selector label

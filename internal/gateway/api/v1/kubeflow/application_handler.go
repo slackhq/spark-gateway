@@ -13,23 +13,24 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package handler
+package v1kubeflow
 
 import (
 	"context"
 	"errors"
 	"fmt"
-	swaggerDocs "github.com/slackhq/spark-gateway/docs/swagger"
-	swaggerFiles "github.com/swaggo/files"
-	ginSwagger "github.com/swaggo/gin-swagger"
 	"net/http"
 	"strconv"
 
+	swaggerDocs "github.com/slackhq/spark-gateway/docs/swagger"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
+
 	"github.com/gin-gonic/gin"
 	"github.com/kubeflow/spark-operator/v2/api/v1beta2"
-	"github.com/slackhq/spark-gateway/pkg/gatewayerrors"
-	pkgHttp "github.com/slackhq/spark-gateway/pkg/http"
-	"github.com/slackhq/spark-gateway/pkg/model"
+	"github.com/slackhq/spark-gateway/internal/domain"
+	"github.com/slackhq/spark-gateway/internal/shared/gatewayerrors"
+	pkgHttp "github.com/slackhq/spark-gateway/internal/shared/http"
 )
 
 //  Swagger General	API Info
@@ -46,9 +47,9 @@ const sparkApplicationPathName = "applications"
 //go:generate moq -rm  -out mockgatewayapplicationservice.go . GatewayApplicationService
 
 type GatewayApplicationService interface {
-	Get(ctx context.Context, gatewayId string) (*model.GatewayApplication, error)
-	List(ctx context.Context, cluster string, namespace string) ([]*model.GatewayApplicationMeta, error)
-	Create(ctx context.Context, application *v1beta2.SparkApplication, user string) (*model.GatewayApplication, error)
+	Get(ctx context.Context, gatewayId string) (*domain.GatewayApplication, error)
+	List(ctx context.Context, cluster string, namespace string) ([]*domain.GatewayApplicationMeta, error)
+	Create(ctx context.Context, application *v1beta2.SparkApplication, user string) (*domain.GatewayApplication, error)
 	Status(ctx context.Context, gatewayId string) (*v1beta2.SparkApplicationStatus, error)
 	Logs(ctx context.Context, gatewayId string, tailLines int) (*string, error)
 	Delete(ctx context.Context, gatewayId string) error
@@ -90,7 +91,7 @@ func (h *ApplicationHandler) RegisterRoutes(rg *gin.RouterGroup) {
 // @Security BasicAuth
 // @Param cluster query string true "Cluster name"
 // @Param namespace query string false "Namespace (optional)"
-// @Success 200 {array} model.GatewayApplicationMeta "List of SparkApplication metadata"
+// @Success 200 {array} domain.GatewayApplicationMeta "List of SparkApplication metadata"
 // @Router / [get]
 func (h *ApplicationHandler) List(c *gin.Context) {
 
@@ -120,7 +121,7 @@ func (h *ApplicationHandler) List(c *gin.Context) {
 // @Produce json
 // @Security BasicAuth
 // @Param gatewayId path string true "SparkApplication Name"
-// @Success 200 {object} model.GatewayApplication "SparkApplication resource"
+// @Success 200 {object} domain.GatewayApplication "SparkApplication resource"
 // @Router /{gatewayId} [get]
 func (h *ApplicationHandler) Get(c *gin.Context) {
 
@@ -197,7 +198,7 @@ func (h *ApplicationHandler) Logs(c *gin.Context) {
 // @Produce json
 // @Security BasicAuth
 // @Param SparkApplication body v1beta2.SparkApplication true "v1beta2.SparkApplication resource"
-// @Success 201 {object} model.GatewayApplication "SparkApplication Created"
+// @Success 201 {object} domain.GatewayApplication "SparkApplication Created"
 // @Router / [post]
 func (h *ApplicationHandler) Create(c *gin.Context) {
 

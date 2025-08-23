@@ -21,17 +21,16 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/slackhq/spark-gateway/pkg/config"
+	"github.com/slackhq/spark-gateway/internal/domain"
+	"github.com/slackhq/spark-gateway/internal/shared/config"
 
-	"github.com/slackhq/spark-gateway/internal/gateway/cluster"
-	"github.com/slackhq/spark-gateway/internal/gateway/router"
-	"github.com/slackhq/spark-gateway/pkg/gatewayerrors"
+	"github.com/slackhq/spark-gateway/internal/gateway/clusterrouter"
+	"github.com/slackhq/spark-gateway/internal/gateway/repository"
+	"github.com/slackhq/spark-gateway/internal/shared/gatewayerrors"
 
 	"github.com/kubeflow/spark-operator/v2/api/v1beta2"
 	"github.com/stretchr/testify/assert"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
-	"github.com/slackhq/spark-gateway/pkg/model"
 )
 
 var sgConfig config.SparkGatewayConfig = config.SparkGatewayConfig{
@@ -40,14 +39,14 @@ var sgConfig config.SparkGatewayConfig = config.SparkGatewayConfig{
 }
 
 var gatewayConfig config.GatewayConfig = config.GatewayConfig{
-	StatusUrlTemplates: model.StatusUrlTemplates{
+	StatusUrlTemplates: domain.StatusUrlTemplates{
 		SparkUI:        "{{.Status.DriverInfo.WebUIIngressAddress}}",
 		SparkHistoryUI: "https://spark-history-{{.ObjectMeta.Namespace}}.test.com/history/{{.Status.SparkApplicationID}}/jobs",
 		LogsUI:         "https://logs.test.com/app/discover#/?_g=(_a=(interval:auto,query:(language:lucene,query:'host:%20%22{{.ObjectMeta.Name}}-driver%22')",
 	},
 }
 
-var testIdGen = model.GatewayIdGenerator{
+var testIdGen = domain.GatewayIdGenerator{
 	UuidGenerator: func() (string, error) {
 		return "testid", nil
 	},
@@ -56,16 +55,16 @@ var testIdGen = model.GatewayIdGenerator{
 func TestServiceGetNotFound(t *testing.T) {
 	appService := service{
 		sparkAppRepo: &SparkApplicationRepositoryMock{
-			GetFunc: func(ctx context.Context, cluster model.KubeCluster, namespace string, name string) (*v1beta2.SparkApplication, error) {
+			GetFunc: func(ctx context.Context, cluster domain.KubeCluster, namespace string, name string) (*v1beta2.SparkApplication, error) {
 				return nil, gatewayerrors.NewNotFound(fmt.Errorf("error getting SparkApplication '%s'", name))
 			},
 		},
-		clusterRepository: &cluster.ClusterRepositoryMock{
-			GetByIdFunc: func(clusterId string) (*model.KubeCluster, error) {
-				return &model.KubeCluster{
+		clusterRepository: &repository.ClusterRepositoryMock{
+			GetByIdFunc: func(clusterId string) (*domain.KubeCluster, error) {
+				return &domain.KubeCluster{
 					Name:      "cluster",
 					ClusterId: "clusterid",
-					Namespaces: []model.KubeNamespace{
+					Namespaces: []domain.KubeNamespace{
 						{
 							Name:        "namespace",
 							NamespaceId: "nsid",
@@ -74,12 +73,12 @@ func TestServiceGetNotFound(t *testing.T) {
 				}, nil
 			},
 		},
-		clusterRouter: &router.ClusterRouterMock{
-			GetClusterFunc: func(ctx context.Context, namespace string) (*model.KubeCluster, error) {
-				return &model.KubeCluster{
+		clusterRouter: &clusterrouter.ClusterRouterMock{
+			GetClusterFunc: func(ctx context.Context, namespace string) (*domain.KubeCluster, error) {
+				return &domain.KubeCluster{
 					Name:      "cluster",
 					ClusterId: "clusterid",
-					Namespaces: []model.KubeNamespace{
+					Namespaces: []domain.KubeNamespace{
 						{
 							Name:        "namespace",
 							NamespaceId: "nsid",
@@ -93,22 +92,22 @@ func TestServiceGetNotFound(t *testing.T) {
 
 	gatewayApp, err := appService.Get(context.Background(), "clusterid-nsid-testid")
 
-	assert.Equal(t, (*model.GatewayApplication)(nil), gatewayApp, "returned GatewayApplication should be nil")
+	assert.Equal(t, (*domain.GatewayApplication)(nil), gatewayApp, "returned GatewayApplication should be nil")
 	assert.Contains(t, err.Error(), "error getting SparkApplication 'clusterid-nsid-testid'", "error should match")
 
 }
 func TestServiceGetNoUserFound(t *testing.T) {
 
 	appService := service{
-		sparkAppRepo: &SparkApplicationRepositoryMock{GetFunc: func(ctx context.Context, cluster model.KubeCluster, namespace string, name string) (*v1beta2.SparkApplication, error) {
+		sparkAppRepo: &SparkApplicationRepositoryMock{GetFunc: func(ctx context.Context, cluster domain.KubeCluster, namespace string, name string) (*v1beta2.SparkApplication, error) {
 			return &v1beta2.SparkApplication{}, gatewayerrors.NewNotFound(fmt.Errorf("error getting SparkApplication '%s':", name))
 		}},
-		clusterRepository: &cluster.ClusterRepositoryMock{
-			GetByIdFunc: func(clusterId string) (*model.KubeCluster, error) {
-				return &model.KubeCluster{
+		clusterRepository: &repository.ClusterRepositoryMock{
+			GetByIdFunc: func(clusterId string) (*domain.KubeCluster, error) {
+				return &domain.KubeCluster{
 					Name:      "cluster",
 					ClusterId: "clusterid",
-					Namespaces: []model.KubeNamespace{
+					Namespaces: []domain.KubeNamespace{
 						{
 							Name:        "namespace",
 							NamespaceId: "nsid",
@@ -117,12 +116,12 @@ func TestServiceGetNoUserFound(t *testing.T) {
 				}, nil
 			},
 		},
-		clusterRouter: &router.ClusterRouterMock{
-			GetClusterFunc: func(ctx context.Context, namespace string) (*model.KubeCluster, error) {
-				return &model.KubeCluster{
+		clusterRouter: &clusterrouter.ClusterRouterMock{
+			GetClusterFunc: func(ctx context.Context, namespace string) (*domain.KubeCluster, error) {
+				return &domain.KubeCluster{
 					Name:      "cluster",
 					ClusterId: "clusterid",
-					Namespaces: []model.KubeNamespace{
+					Namespaces: []domain.KubeNamespace{
 						{
 							Name:        "namespace",
 							NamespaceId: "nsid",
@@ -136,13 +135,13 @@ func TestServiceGetNoUserFound(t *testing.T) {
 
 	gatewayApp, err := appService.Get(context.Background(), "clusterid-nsid-testid")
 
-	assert.Equal(t, (*model.GatewayApplication)(nil), gatewayApp, "returned GatewayApplication should be nil")
+	assert.Equal(t, (*domain.GatewayApplication)(nil), gatewayApp, "returned GatewayApplication should be nil")
 	assert.Contains(t, err.Error(), "error getting SparkApplication 'clusterid-nsid-testid':", "error should match")
 
 }
 func TestServiceGet(t *testing.T) {
 	appService := service{
-		sparkAppRepo: &SparkApplicationRepositoryMock{GetFunc: func(ctx context.Context, cluster model.KubeCluster, namespace string, name string) (*v1beta2.SparkApplication, error) {
+		sparkAppRepo: &SparkApplicationRepositoryMock{GetFunc: func(ctx context.Context, cluster domain.KubeCluster, namespace string, name string) (*v1beta2.SparkApplication, error) {
 			return &v1beta2.SparkApplication{
 				ObjectMeta: v1.ObjectMeta{
 					Name:      "clusterid-nsid-testid",
@@ -156,12 +155,12 @@ func TestServiceGet(t *testing.T) {
 					},
 				}}, nil
 		}},
-		clusterRepository: &cluster.ClusterRepositoryMock{
-			GetByIdFunc: func(clusterId string) (*model.KubeCluster, error) {
-				return &model.KubeCluster{
+		clusterRepository: &repository.ClusterRepositoryMock{
+			GetByIdFunc: func(clusterId string) (*domain.KubeCluster, error) {
+				return &domain.KubeCluster{
 					Name:      "cluster",
 					ClusterId: "clusterid",
-					Namespaces: []model.KubeNamespace{
+					Namespaces: []domain.KubeNamespace{
 						{
 							Name:        "namespace",
 							NamespaceId: "nsid",
@@ -170,12 +169,12 @@ func TestServiceGet(t *testing.T) {
 				}, nil
 			},
 		},
-		clusterRouter: &router.ClusterRouterMock{
-			GetClusterFunc: func(ctx context.Context, namespace string) (*model.KubeCluster, error) {
-				return &model.KubeCluster{
+		clusterRouter: &clusterrouter.ClusterRouterMock{
+			GetClusterFunc: func(ctx context.Context, namespace string) (*domain.KubeCluster, error) {
+				return &domain.KubeCluster{
 					Name:      "cluster",
 					ClusterId: "clusterid",
-					Namespaces: []model.KubeNamespace{
+					Namespaces: []domain.KubeNamespace{
 						{
 							Name:        "namespace",
 							NamespaceId: "nsid",
@@ -187,7 +186,7 @@ func TestServiceGet(t *testing.T) {
 		config: gatewayConfig,
 	}
 
-	expected := &model.GatewayApplication{
+	expected := &domain.GatewayApplication{
 		SparkApplication: &v1beta2.SparkApplication{
 			ObjectMeta: v1.ObjectMeta{
 				Name:      "clusterid-nsid-testid",
@@ -205,7 +204,7 @@ func TestServiceGet(t *testing.T) {
 		GatewayId: "clusterid-nsid-testid",
 		Cluster:   "cluster",
 		User:      "user",
-		SparkLogURLs: model.SparkLogURLs{
+		SparkLogURLs: domain.SparkLogURLs{
 			SparkUI:        "http://spark-ui-dev.test.com/sparkApp",
 			LogsUI:         "https://logs.test.com/app/discover#/?_g=(_a=(interval:auto,query:(language:lucene,query:'host:%20%22clusterid-nsid-testid-driver%22')",
 			SparkHistoryUI: "https://spark-history-namespace.test.com/history/spark-64edcd63474d4ed93fec4766471eedad/jobs",
@@ -223,7 +222,7 @@ func TestServiceCreateNoLabels(t *testing.T) {
 	localApps := map[string]*v1beta2.SparkApplication{}
 	appService := service{
 		sparkAppRepo: &SparkApplicationRepositoryMock{
-			CreateFunc: func(ctx context.Context, cluster model.KubeCluster, application *v1beta2.SparkApplication) (*v1beta2.SparkApplication, error) {
+			CreateFunc: func(ctx context.Context, cluster domain.KubeCluster, application *v1beta2.SparkApplication) (*v1beta2.SparkApplication, error) {
 				application.Status = v1beta2.SparkApplicationStatus{
 					SparkApplicationID: "spark-64edcd63474d4ed93fec4766471eedad",
 					DriverInfo: v1beta2.DriverInfo{
@@ -233,16 +232,16 @@ func TestServiceCreateNoLabels(t *testing.T) {
 				localApps[application.Name] = application
 				return localApps[application.Name], nil
 			},
-			GetFunc: func(ctx context.Context, cluster model.KubeCluster, namespace string, name string) (*v1beta2.SparkApplication, error) {
+			GetFunc: func(ctx context.Context, cluster domain.KubeCluster, namespace string, name string) (*v1beta2.SparkApplication, error) {
 				return localApps[name], nil
 			},
 		},
-		clusterRepository: &cluster.ClusterRepositoryMock{
-			GetByIdFunc: func(clusterId string) (*model.KubeCluster, error) {
-				return &model.KubeCluster{
+		clusterRepository: &repository.ClusterRepositoryMock{
+			GetByIdFunc: func(clusterId string) (*domain.KubeCluster, error) {
+				return &domain.KubeCluster{
 					Name:      "cluster",
 					ClusterId: "clusterid",
-					Namespaces: []model.KubeNamespace{
+					Namespaces: []domain.KubeNamespace{
 						{
 							Name:        "namespace",
 							NamespaceId: "nsid",
@@ -251,12 +250,12 @@ func TestServiceCreateNoLabels(t *testing.T) {
 				}, nil
 			},
 		},
-		clusterRouter: &router.ClusterRouterMock{
-			GetClusterFunc: func(ctx context.Context, namespace string) (*model.KubeCluster, error) {
-				return &model.KubeCluster{
+		clusterRouter: &clusterrouter.ClusterRouterMock{
+			GetClusterFunc: func(ctx context.Context, namespace string) (*domain.KubeCluster, error) {
+				return &domain.KubeCluster{
 					Name:      "cluster",
 					ClusterId: "clusterid",
-					Namespaces: []model.KubeNamespace{
+					Namespaces: []domain.KubeNamespace{
 						{
 							Name:        "namespace",
 							NamespaceId: "nsid",
@@ -277,7 +276,7 @@ func TestServiceCreateNoLabels(t *testing.T) {
 		},
 	}
 
-	expected := &model.GatewayApplication{
+	expected := &domain.GatewayApplication{
 		SparkApplication: &v1beta2.SparkApplication{
 			ObjectMeta: v1.ObjectMeta{
 				Name:        "clusterid-nsid-testid",
@@ -298,7 +297,7 @@ func TestServiceCreateNoLabels(t *testing.T) {
 		GatewayId: "clusterid-nsid-testid",
 		Cluster:   "cluster",
 		User:      username,
-		SparkLogURLs: model.SparkLogURLs{
+		SparkLogURLs: domain.SparkLogURLs{
 			SparkUI:        "http://spark-ui-dev.test.com/sparkApp",
 			LogsUI:         "https://logs.test.com/app/discover#/?_g=(_a=(interval:auto,query:(language:lucene,query:'host:%20%22clusterid-nsid-testid-driver%22')",
 			SparkHistoryUI: "https://spark-history-namespace.test.com/history/spark-64edcd63474d4ed93fec4766471eedad/jobs",
@@ -315,7 +314,7 @@ func TestServiceCreateLabelsExist(t *testing.T) {
 	localApps := map[string]*v1beta2.SparkApplication{}
 	appService := service{
 		sparkAppRepo: &SparkApplicationRepositoryMock{
-			CreateFunc: func(ctx context.Context, cluster model.KubeCluster, application *v1beta2.SparkApplication) (*v1beta2.SparkApplication, error) {
+			CreateFunc: func(ctx context.Context, cluster domain.KubeCluster, application *v1beta2.SparkApplication) (*v1beta2.SparkApplication, error) {
 				application.Status = v1beta2.SparkApplicationStatus{
 					SparkApplicationID: "spark-64edcd63474d4ed93fec4766471eedad",
 					DriverInfo: v1beta2.DriverInfo{
@@ -325,16 +324,16 @@ func TestServiceCreateLabelsExist(t *testing.T) {
 				localApps[application.Name] = application
 				return localApps[application.Name], nil
 			},
-			GetFunc: func(ctx context.Context, cluster model.KubeCluster, namespace string, name string) (*v1beta2.SparkApplication, error) {
+			GetFunc: func(ctx context.Context, cluster domain.KubeCluster, namespace string, name string) (*v1beta2.SparkApplication, error) {
 				return localApps[name], nil
 			},
 		},
-		clusterRepository: &cluster.ClusterRepositoryMock{
-			GetByIdFunc: func(clusterId string) (*model.KubeCluster, error) {
-				return &model.KubeCluster{
+		clusterRepository: &repository.ClusterRepositoryMock{
+			GetByIdFunc: func(clusterId string) (*domain.KubeCluster, error) {
+				return &domain.KubeCluster{
 					Name:      "cluster",
 					ClusterId: "clusterid",
-					Namespaces: []model.KubeNamespace{
+					Namespaces: []domain.KubeNamespace{
 						{
 							Name:        "namespace",
 							NamespaceId: "nsid",
@@ -343,12 +342,12 @@ func TestServiceCreateLabelsExist(t *testing.T) {
 				}, nil
 			},
 		},
-		clusterRouter: &router.ClusterRouterMock{
-			GetClusterFunc: func(ctx context.Context, namespace string) (*model.KubeCluster, error) {
-				return &model.KubeCluster{
+		clusterRouter: &clusterrouter.ClusterRouterMock{
+			GetClusterFunc: func(ctx context.Context, namespace string) (*domain.KubeCluster, error) {
+				return &domain.KubeCluster{
 					Name:      "cluster",
 					ClusterId: "clusterid",
-					Namespaces: []model.KubeNamespace{
+					Namespaces: []domain.KubeNamespace{
 						{
 							Name:        "namespace",
 							NamespaceId: "nsid",
@@ -371,7 +370,7 @@ func TestServiceCreateLabelsExist(t *testing.T) {
 		},
 	}
 
-	expected := &model.GatewayApplication{
+	expected := &domain.GatewayApplication{
 		SparkApplication: &v1beta2.SparkApplication{
 			ObjectMeta: v1.ObjectMeta{
 				Name:      "clusterid-nsid-testid",
@@ -396,7 +395,7 @@ func TestServiceCreateLabelsExist(t *testing.T) {
 		GatewayId: "clusterid-nsid-testid",
 		Cluster:   "cluster",
 		User:      username,
-		SparkLogURLs: model.SparkLogURLs{
+		SparkLogURLs: domain.SparkLogURLs{
 			SparkUI:        "http://spark-ui-dev.test.com/sparkApp",
 			LogsUI:         "https://logs.test.com/app/discover#/?_g=(_a=(interval:auto,query:(language:lucene,query:'host:%20%22clusterid-nsid-testid-driver%22')",
 			SparkHistoryUI: "https://spark-history-namespace.test.com/history/spark-64edcd63474d4ed93fec4766471eedad/jobs",
@@ -413,7 +412,7 @@ func TestServiceCreateNoName(t *testing.T) {
 	localApps := map[string]*v1beta2.SparkApplication{}
 	appService := service{
 		sparkAppRepo: &SparkApplicationRepositoryMock{
-			CreateFunc: func(ctx context.Context, cluster model.KubeCluster, application *v1beta2.SparkApplication) (*v1beta2.SparkApplication, error) {
+			CreateFunc: func(ctx context.Context, cluster domain.KubeCluster, application *v1beta2.SparkApplication) (*v1beta2.SparkApplication, error) {
 				application.Status = v1beta2.SparkApplicationStatus{
 					SparkApplicationID: "spark-64edcd63474d4ed93fec4766471eedad",
 					DriverInfo: v1beta2.DriverInfo{
@@ -423,16 +422,16 @@ func TestServiceCreateNoName(t *testing.T) {
 				localApps[application.Name] = application
 				return localApps[application.Name], nil
 			},
-			GetFunc: func(ctx context.Context, cluster model.KubeCluster, namespace string, name string) (*v1beta2.SparkApplication, error) {
+			GetFunc: func(ctx context.Context, cluster domain.KubeCluster, namespace string, name string) (*v1beta2.SparkApplication, error) {
 				return localApps[name], nil
 			},
 		},
-		clusterRepository: &cluster.ClusterRepositoryMock{
-			GetByIdFunc: func(clusterId string) (*model.KubeCluster, error) {
-				return &model.KubeCluster{
+		clusterRepository: &repository.ClusterRepositoryMock{
+			GetByIdFunc: func(clusterId string) (*domain.KubeCluster, error) {
+				return &domain.KubeCluster{
 					Name:      "cluster",
 					ClusterId: "clusterid",
-					Namespaces: []model.KubeNamespace{
+					Namespaces: []domain.KubeNamespace{
 						{
 							Name:        "namespace",
 							NamespaceId: "nsid",
@@ -441,12 +440,12 @@ func TestServiceCreateNoName(t *testing.T) {
 				}, nil
 			},
 		},
-		clusterRouter: &router.ClusterRouterMock{
-			GetClusterFunc: func(ctx context.Context, namespace string) (*model.KubeCluster, error) {
-				return &model.KubeCluster{
+		clusterRouter: &clusterrouter.ClusterRouterMock{
+			GetClusterFunc: func(ctx context.Context, namespace string) (*domain.KubeCluster, error) {
+				return &domain.KubeCluster{
 					Name:      "cluster",
 					ClusterId: "clusterid",
-					Namespaces: []model.KubeNamespace{
+					Namespaces: []domain.KubeNamespace{
 						{
 							Name:        "namespace",
 							NamespaceId: "nsid",
@@ -468,7 +467,7 @@ func TestServiceCreateNoName(t *testing.T) {
 		},
 	}
 
-	expected := &model.GatewayApplication{
+	expected := &domain.GatewayApplication{
 		SparkApplication: &v1beta2.SparkApplication{
 			ObjectMeta: v1.ObjectMeta{
 				Name:      "clusterid-nsid-testid",
@@ -493,7 +492,7 @@ func TestServiceCreateNoName(t *testing.T) {
 		GatewayId: "clusterid-nsid-testid",
 		Cluster:   "cluster",
 		User:      username,
-		SparkLogURLs: model.SparkLogURLs{
+		SparkLogURLs: domain.SparkLogURLs{
 			SparkUI:        "http://spark-ui-dev.test.com/sparkApp",
 			LogsUI:         "https://logs.test.com/app/discover#/?_g=(_a=(interval:auto,query:(language:lucene,query:'host:%20%22clusterid-nsid-testid-driver%22')",
 			SparkHistoryUI: "https://spark-history-namespace.test.com/history/spark-64edcd63474d4ed93fec4766471eedad/jobs",
@@ -510,16 +509,16 @@ func TestServiceCreateError(t *testing.T) {
 
 	appService := service{
 		sparkAppRepo: &SparkApplicationRepositoryMock{
-			CreateFunc: func(ctx context.Context, cluster model.KubeCluster, application *v1beta2.SparkApplication) (*v1beta2.SparkApplication, error) {
+			CreateFunc: func(ctx context.Context, cluster domain.KubeCluster, application *v1beta2.SparkApplication) (*v1beta2.SparkApplication, error) {
 				return nil, errors.New("test error")
 			},
 		},
-		clusterRepository: &cluster.ClusterRepositoryMock{
-			GetByIdFunc: func(clusterId string) (*model.KubeCluster, error) {
-				return &model.KubeCluster{
+		clusterRepository: &repository.ClusterRepositoryMock{
+			GetByIdFunc: func(clusterId string) (*domain.KubeCluster, error) {
+				return &domain.KubeCluster{
 					Name:      "cluster",
 					ClusterId: "clusterid",
-					Namespaces: []model.KubeNamespace{
+					Namespaces: []domain.KubeNamespace{
 						{
 							Name:        "namespace",
 							NamespaceId: "nsid",
@@ -528,12 +527,12 @@ func TestServiceCreateError(t *testing.T) {
 				}, nil
 			},
 		},
-		clusterRouter: &router.ClusterRouterMock{
-			GetClusterFunc: func(ctx context.Context, namespace string) (*model.KubeCluster, error) {
-				return &model.KubeCluster{
+		clusterRouter: &clusterrouter.ClusterRouterMock{
+			GetClusterFunc: func(ctx context.Context, namespace string) (*domain.KubeCluster, error) {
+				return &domain.KubeCluster{
 					Name:      "cluster",
 					ClusterId: "clusterid",
-					Namespaces: []model.KubeNamespace{
+					Namespaces: []domain.KubeNamespace{
 						{
 							Name:        "namespace",
 							NamespaceId: "nsid",
@@ -550,7 +549,7 @@ func TestServiceCreateError(t *testing.T) {
 
 	gatewayApp, err := appService.Create(context.Background(), inApp, "")
 
-	assert.Equal(t, (*model.GatewayApplication)(nil), gatewayApp, "returned GatewayApplication should be nil")
+	assert.Equal(t, (*domain.GatewayApplication)(nil), gatewayApp, "returned GatewayApplication should be nil")
 	assert.Contains(t, err.Error(), "error creating SparkApplication 'namespace/clusterid-nsid-testid': test error", "err should match")
 }
 
@@ -558,8 +557,8 @@ func TestServiceCreateNoNamespace_SparkApplicationValidator(t *testing.T) {
 	username := "user"
 	appService := service{
 		sparkAppRepo:       &SparkApplicationRepositoryMock{},
-		clusterRepository:  &cluster.ClusterRepositoryMock{},
-		clusterRouter:      &router.ClusterRouterMock{},
+		clusterRepository:  &repository.ClusterRepositoryMock{},
+		clusterRouter:      &clusterrouter.ClusterRouterMock{},
 		gatewayIdGenerator: testIdGen,
 		config:             gatewayConfig,
 		selectorKey:        sgConfig.SelectorKey,
@@ -570,7 +569,7 @@ func TestServiceCreateNoNamespace_SparkApplicationValidator(t *testing.T) {
 
 	gatewayApp, err := appService.Create(context.Background(), inApp, username)
 
-	assert.Equal(t, (*model.GatewayApplication)(nil), gatewayApp, "returned GatewayApplication should be nil")
+	assert.Equal(t, (*domain.GatewayApplication)(nil), gatewayApp, "returned GatewayApplication should be nil")
 	if assert.Error(t, err, "Should throw error due to missing namespace in SparkApplication") {
 		assert.Equal(t, "submitted SparkApplication is invalid: [namespace should not be empty]", err.Error())
 	}
@@ -579,16 +578,16 @@ func TestServiceCreateNoNamespace_SparkApplicationValidator(t *testing.T) {
 func TestServiceStatusError(t *testing.T) {
 	appService := service{
 		sparkAppRepo: &SparkApplicationRepositoryMock{
-			GetFunc: func(ctx context.Context, cluster model.KubeCluster, namespace string, name string) (*v1beta2.SparkApplication, error) {
+			GetFunc: func(ctx context.Context, cluster domain.KubeCluster, namespace string, name string) (*v1beta2.SparkApplication, error) {
 				return nil, errors.New("test error")
 			},
 		},
-		clusterRepository: &cluster.ClusterRepositoryMock{
-			GetByIdFunc: func(clusterId string) (*model.KubeCluster, error) {
-				return &model.KubeCluster{
+		clusterRepository: &repository.ClusterRepositoryMock{
+			GetByIdFunc: func(clusterId string) (*domain.KubeCluster, error) {
+				return &domain.KubeCluster{
 					Name:      "cluster",
 					ClusterId: "clusterid",
-					Namespaces: []model.KubeNamespace{
+					Namespaces: []domain.KubeNamespace{
 						{
 							Name:        "namespace",
 							NamespaceId: "nsid",
@@ -597,12 +596,12 @@ func TestServiceStatusError(t *testing.T) {
 				}, nil
 			},
 		},
-		clusterRouter: &router.ClusterRouterMock{
-			GetClusterFunc: func(ctx context.Context, namespace string) (*model.KubeCluster, error) {
-				return &model.KubeCluster{
+		clusterRouter: &clusterrouter.ClusterRouterMock{
+			GetClusterFunc: func(ctx context.Context, namespace string) (*domain.KubeCluster, error) {
+				return &domain.KubeCluster{
 					Name:      "cluster",
 					ClusterId: "clusterid",
-					Namespaces: []model.KubeNamespace{
+					Namespaces: []domain.KubeNamespace{
 						{
 							Name:        "namespace",
 							NamespaceId: "nsid",
@@ -635,16 +634,16 @@ func TestServiceStatus(t *testing.T) {
 
 	appService := service{
 		sparkAppRepo: &SparkApplicationRepositoryMock{
-			GetFunc: func(ctx context.Context, cluster model.KubeCluster, namespace string, name string) (*v1beta2.SparkApplication, error) {
+			GetFunc: func(ctx context.Context, cluster domain.KubeCluster, namespace string, name string) (*v1beta2.SparkApplication, error) {
 				return retApp, nil
 			},
 		},
-		clusterRepository: &cluster.ClusterRepositoryMock{
-			GetByIdFunc: func(clusterId string) (*model.KubeCluster, error) {
-				return &model.KubeCluster{
+		clusterRepository: &repository.ClusterRepositoryMock{
+			GetByIdFunc: func(clusterId string) (*domain.KubeCluster, error) {
+				return &domain.KubeCluster{
 					Name:      "cluster",
 					ClusterId: "clusterid",
-					Namespaces: []model.KubeNamespace{
+					Namespaces: []domain.KubeNamespace{
 						{
 							Name:        "namespace",
 							NamespaceId: "nsid",
@@ -653,12 +652,12 @@ func TestServiceStatus(t *testing.T) {
 				}, nil
 			},
 		},
-		clusterRouter: &router.ClusterRouterMock{
-			GetClusterFunc: func(ctx context.Context, namespace string) (*model.KubeCluster, error) {
-				return &model.KubeCluster{
+		clusterRouter: &clusterrouter.ClusterRouterMock{
+			GetClusterFunc: func(ctx context.Context, namespace string) (*domain.KubeCluster, error) {
+				return &domain.KubeCluster{
 					Name:      "cluster",
 					ClusterId: "clusterid",
-					Namespaces: []model.KubeNamespace{
+					Namespaces: []domain.KubeNamespace{
 						{
 							Name:        "namespace",
 							NamespaceId: "nsid",
@@ -681,16 +680,16 @@ func TestServiceDeleteError(t *testing.T) {
 
 	appService := service{
 		sparkAppRepo: &SparkApplicationRepositoryMock{
-			DeleteFunc: func(ctx context.Context, cluster model.KubeCluster, namespace string, name string) error {
+			DeleteFunc: func(ctx context.Context, cluster domain.KubeCluster, namespace string, name string) error {
 				return errors.New("test error")
 			},
 		},
-		clusterRepository: &cluster.ClusterRepositoryMock{
-			GetByIdFunc: func(clusterId string) (*model.KubeCluster, error) {
-				return &model.KubeCluster{
+		clusterRepository: &repository.ClusterRepositoryMock{
+			GetByIdFunc: func(clusterId string) (*domain.KubeCluster, error) {
+				return &domain.KubeCluster{
 					Name:      "cluster",
 					ClusterId: "clusterid",
-					Namespaces: []model.KubeNamespace{
+					Namespaces: []domain.KubeNamespace{
 						{
 							Name:        "namespace",
 							NamespaceId: "nsid",
@@ -699,12 +698,12 @@ func TestServiceDeleteError(t *testing.T) {
 				}, nil
 			},
 		},
-		clusterRouter: &router.ClusterRouterMock{
-			GetClusterFunc: func(ctx context.Context, namespace string) (*model.KubeCluster, error) {
-				return &model.KubeCluster{
+		clusterRouter: &clusterrouter.ClusterRouterMock{
+			GetClusterFunc: func(ctx context.Context, namespace string) (*domain.KubeCluster, error) {
+				return &domain.KubeCluster{
 					Name:      "cluster",
 					ClusterId: "clusterid",
-					Namespaces: []model.KubeNamespace{
+					Namespaces: []domain.KubeNamespace{
 						{
 							Name:        "namespace",
 							NamespaceId: "nsid",

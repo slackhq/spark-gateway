@@ -24,14 +24,14 @@ import (
 
 	"time"
 
-	"github.com/slackhq/spark-gateway/pkg/util"
+	"github.com/slackhq/spark-gateway/internal/shared/config"
+	"github.com/slackhq/spark-gateway/internal/shared/util"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/kubeflow/spark-operator/v2/api/v1beta2"
 
-	"github.com/slackhq/spark-gateway/pkg/config"
-	"github.com/slackhq/spark-gateway/pkg/gatewayerrors"
+	"github.com/slackhq/spark-gateway/internal/shared/gatewayerrors"
 )
 
 //go:generate moq -rm -out mockdatabaserepository.go . DatabaseRepository

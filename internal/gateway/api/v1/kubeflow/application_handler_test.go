@@ -13,7 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package handler
+package v1kubeflow
 
 import (
 	"bytes"
@@ -27,9 +27,9 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/kubeflow/spark-operator/v2/api/v1beta2"
-	"github.com/slackhq/spark-gateway/pkg/gatewayerrors"
-	pkgHttp "github.com/slackhq/spark-gateway/pkg/http"
-	"github.com/slackhq/spark-gateway/pkg/model"
+	"github.com/slackhq/spark-gateway/internal/domain"
+	"github.com/slackhq/spark-gateway/internal/shared/gatewayerrors"
+	pkgHttp "github.com/slackhq/spark-gateway/internal/shared/http"
 	"github.com/stretchr/testify/assert"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -92,7 +92,7 @@ func TestApplicationHandlerGet(t *testing.T) {
 	root := router.Group("apiVersion")
 	router.Use(pkgHttp.ApplicationErrorHandler)
 
-	retApp := &model.GatewayApplication{
+	retApp := &domain.GatewayApplication{
 		SparkApplication: &v1beta2.SparkApplication{
 			ObjectMeta: v1.ObjectMeta{
 				Name:      "clusterid-testid",
@@ -104,7 +104,7 @@ func TestApplicationHandlerGet(t *testing.T) {
 	}
 
 	handler := NewApplicationHandler(&GatewayApplicationServiceMock{
-		GetFunc: func(ctx context.Context, gatewayId string) (*model.GatewayApplication, error) {
+		GetFunc: func(ctx context.Context, gatewayId string) (*domain.GatewayApplication, error) {
 			return retApp, nil
 		},
 	}, 100)
@@ -115,7 +115,7 @@ func TestApplicationHandlerGet(t *testing.T) {
 	w := httptest.NewRecorder()
 	router.ServeHTTP(w, req)
 
-	var gotApp model.GatewayApplication
+	var gotApp domain.GatewayApplication
 	json.Unmarshal(w.Body.Bytes(), &gotApp)
 
 	assert.Equal(t, http.StatusOK, w.Code, "codes should match")
@@ -127,8 +127,8 @@ func TestApplicationHandlerGetError(t *testing.T) {
 	router.Use(pkgHttp.ApplicationErrorHandler)
 
 	handler := NewApplicationHandler(&GatewayApplicationServiceMock{
-		GetFunc: func(ctx context.Context, gatewayId string) (*model.GatewayApplication, error) {
-			return &model.GatewayApplication{}, gatewayerrors.NewNotFound(errors.New("error getting SparkApplication 'clusterid-testid'"))
+		GetFunc: func(ctx context.Context, gatewayId string) (*domain.GatewayApplication, error) {
+			return &domain.GatewayApplication{}, gatewayerrors.NewNotFound(errors.New("error getting SparkApplication 'clusterid-testid'"))
 		},
 	}, 100)
 
@@ -140,7 +140,7 @@ func TestApplicationHandlerGetError(t *testing.T) {
 
 	resp := `{"error":"error getting SparkApplication 'clusterid-testid'"}`
 
-	var gotApp model.GatewayApplication
+	var gotApp domain.GatewayApplication
 	json.Unmarshal(w.Body.Bytes(), &gotApp)
 
 	responseData, _ := io.ReadAll(w.Body)
@@ -207,7 +207,7 @@ func TestApplicationHandlerCreate(t *testing.T) {
 		ctx.Next()
 	})
 
-	retApp := &model.GatewayApplication{
+	retApp := &domain.GatewayApplication{
 		SparkApplication: &v1beta2.SparkApplication{
 			ObjectMeta: v1.ObjectMeta{
 				Name:      "clusterid-testid",
@@ -219,7 +219,7 @@ func TestApplicationHandlerCreate(t *testing.T) {
 	}
 
 	handler := NewApplicationHandler(&GatewayApplicationServiceMock{
-		CreateFunc: func(ctx context.Context, application *v1beta2.SparkApplication, user string) (*model.GatewayApplication, error) {
+		CreateFunc: func(ctx context.Context, application *v1beta2.SparkApplication, user string) (*domain.GatewayApplication, error) {
 			return retApp, nil
 		},
 	}, 100)
@@ -238,7 +238,7 @@ func TestApplicationHandlerCreate(t *testing.T) {
 	w := httptest.NewRecorder()
 	router.ServeHTTP(w, req)
 
-	var gotApp model.GatewayApplication
+	var gotApp domain.GatewayApplication
 	json.Unmarshal(w.Body.Bytes(), &gotApp)
 
 	assert.Equal(t, http.StatusCreated, w.Code, "codes should match")
@@ -250,7 +250,7 @@ func TestApplicationHandlerCreateBadRequest(t *testing.T) {
 	router.Use(pkgHttp.ApplicationErrorHandler)
 
 	handler := NewApplicationHandler(&GatewayApplicationServiceMock{
-		CreateFunc: func(ctx context.Context, application *v1beta2.SparkApplication, user string) (*model.GatewayApplication, error) {
+		CreateFunc: func(ctx context.Context, application *v1beta2.SparkApplication, user string) (*domain.GatewayApplication, error) {
 			return nil, nil
 		},
 	}, 100)
@@ -278,7 +278,7 @@ func TestApplicationHandlerCreateAlreadyExists(t *testing.T) {
 	})
 
 	handler := NewApplicationHandler(&GatewayApplicationServiceMock{
-		CreateFunc: func(ctx context.Context, application *v1beta2.SparkApplication, user string) (*model.GatewayApplication, error) {
+		CreateFunc: func(ctx context.Context, application *v1beta2.SparkApplication, user string) (*domain.GatewayApplication, error) {
 			return nil, gatewayerrors.NewAlreadyExists(errors.New("resource.group \"test\" already exists"))
 		},
 	}, 100)
@@ -321,7 +321,7 @@ func TestApplicationHandlerDelete(t *testing.T) {
 	w := httptest.NewRecorder()
 	router.ServeHTTP(w, req)
 
-	var gotApp model.GatewayApplication
+	var gotApp domain.GatewayApplication
 	json.Unmarshal(w.Body.Bytes(), &gotApp)
 
 	resp := `{"status":"success"}`
@@ -347,7 +347,7 @@ func TestApplicationHandlerDeleteError(t *testing.T) {
 	w := httptest.NewRecorder()
 	router.ServeHTTP(w, req)
 
-	var gotApp model.GatewayApplication
+	var gotApp domain.GatewayApplication
 	json.Unmarshal(w.Body.Bytes(), &gotApp)
 
 	resp := `{"error":"error getting SparkApplication 'clusterid-testid'"}`

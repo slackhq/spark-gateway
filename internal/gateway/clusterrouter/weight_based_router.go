@@ -13,7 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package router
+package clusterrouter
 
 import (
 	"context"
@@ -26,12 +26,12 @@ import (
 	"github.com/prometheus/common/expfmt"
 	"k8s.io/klog/v2"
 
-	"github.com/slackhq/spark-gateway/internal/gateway/cluster"
-	cfgPkg "github.com/slackhq/spark-gateway/pkg/config"
-	"github.com/slackhq/spark-gateway/pkg/gatewayerrors"
-	pkgHttp "github.com/slackhq/spark-gateway/pkg/http"
-	"github.com/slackhq/spark-gateway/pkg/model"
-	"github.com/slackhq/spark-gateway/pkg/util"
+	"github.com/slackhq/spark-gateway/internal/domain"
+	"github.com/slackhq/spark-gateway/internal/gateway/repository"
+	cfgPkg "github.com/slackhq/spark-gateway/internal/shared/config"
+	"github.com/slackhq/spark-gateway/internal/shared/gatewayerrors"
+	pkgHttp "github.com/slackhq/spark-gateway/internal/shared/http"
+	"github.com/slackhq/spark-gateway/internal/shared/util"
 )
 
 const (
@@ -48,7 +48,7 @@ type metric struct {
 }
 
 type WeightBasedRouter struct {
-	clusterRepository            cluster.ClusterRepository
+	clusterRepository            repository.ClusterRepository
 	clusterRouterConfig          cfgPkg.ClusterRouter
 	sparkManagerHostnameTemplate string
 	metricsServerConfig          cfgPkg.MetricsServer
@@ -56,7 +56,7 @@ type WeightBasedRouter struct {
 }
 
 func NewWeightBasedRouter(
-	clusterRepository cluster.ClusterRepository,
+	clusterRepository repository.ClusterRepository,
 	clusterRouterConfig cfgPkg.ClusterRouter,
 	sparkManagerHostnameTemplate string,
 	metricsServerConfig cfgPkg.MetricsServer,
@@ -107,7 +107,7 @@ func NewWeightBasedRouter(
 	chosen_cluster = max_difference(cluster A difference, cluster C difference) = max(0.04, -0.06) = cluster A
 	return cluster A
 */
-func (r *WeightBasedRouter) GetCluster(ctx context.Context, namespace string) (*model.KubeCluster, error) {
+func (r *WeightBasedRouter) GetCluster(ctx context.Context, namespace string) (*domain.KubeCluster, error) {
 
 	clustersList, err := r.clusterRepository.GetAllWithNamespace(namespace)
 	if err != nil {
@@ -197,7 +197,7 @@ func chooseClusterID(metricsMap map[string]*metric, totalMetric float64) string 
 	return chosenClusterId
 }
 
-func ReadWeightConfigs(metricsMap map[string]*metric, clusters []model.KubeCluster, routerConfig cfgPkg.ClusterRouter, namespace string) (map[string]*metric, *float64) {
+func ReadWeightConfigs(metricsMap map[string]*metric, clusters []domain.KubeCluster, routerConfig cfgPkg.ClusterRouter, namespace string) (map[string]*metric, *float64) {
 	// Determine routing weights for relevant clusters and namespaces
 	// Include:
 	// - cluster dimension: cluster routingWeights for clusters that contain SparkApp's namespace
@@ -254,7 +254,7 @@ func GetTargetLabels(clusterRouterConfig cfgPkg.ClusterRouter, clusterName strin
 
 func GetClusterMetricFamilies(
 	ctx context.Context,
-	c model.KubeCluster,
+	c domain.KubeCluster,
 	sparkManagerHostnameTemplate string,
 	metricsServerPort,
 	metricsServerEndpoint string,

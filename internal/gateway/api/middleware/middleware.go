@@ -21,7 +21,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/knadh/koanf/providers/confmap"
 	"github.com/knadh/koanf/v2"
-	"github.com/slackhq/spark-gateway/pkg/config"
+	"github.com/slackhq/spark-gateway/internal/shared/config"
 	"k8s.io/klog/v2"
 )
 

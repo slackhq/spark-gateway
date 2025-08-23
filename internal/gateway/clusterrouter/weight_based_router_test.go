@@ -13,18 +13,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package router
+package clusterrouter
 
 import (
 	"testing"
 
-	"github.com/slackhq/spark-gateway/pkg/util"
+	"github.com/slackhq/spark-gateway/internal/domain"
+	"github.com/slackhq/spark-gateway/internal/shared/util"
 
 	io_prometheus_client "github.com/prometheus/client_model/go"
 	"github.com/stretchr/testify/assert"
 
-	cfgPkg "github.com/slackhq/spark-gateway/pkg/config"
-	"github.com/slackhq/spark-gateway/pkg/model"
+	cfgPkg "github.com/slackhq/spark-gateway/internal/shared/config"
 )
 
 func TestGenerateMap(t *testing.T) {
@@ -327,7 +327,7 @@ func TestReadWeightConfigs(t *testing.T) {
 	tests := []struct {
 		name                string
 		metricsMap          map[string]*metric
-		clusters            []model.KubeCluster
+		clusters            []domain.KubeCluster
 		routerConfig        cfgPkg.ClusterRouter
 		namespace           string
 		expectedMetricsMap  map[string]*metric
@@ -337,13 +337,13 @@ func TestReadWeightConfigs(t *testing.T) {
 		{
 			name:       "cluster dimension",
 			metricsMap: make(map[string]*metric),
-			clusters: []model.KubeCluster{
-				model.KubeCluster{
+			clusters: []domain.KubeCluster{
+				domain.KubeCluster{
 					Name:          "ctra",
 					ClusterId:     "a",
 					RoutingWeight: float64(10),
-					Namespaces: []model.KubeNamespace{
-						model.KubeNamespace{
+					Namespaces: []domain.KubeNamespace{
+						domain.KubeNamespace{
 							Name:          "ns1",
 							RoutingWeight: float64(8),
 						},
@@ -365,13 +365,13 @@ func TestReadWeightConfigs(t *testing.T) {
 		{
 			name:       "namespace dimension",
 			metricsMap: make(map[string]*metric),
-			clusters: []model.KubeCluster{
-				model.KubeCluster{
+			clusters: []domain.KubeCluster{
+				domain.KubeCluster{
 					Name:          "ctra",
 					ClusterId:     "a",
 					RoutingWeight: float64(10),
-					Namespaces: []model.KubeNamespace{
-						model.KubeNamespace{
+					Namespaces: []domain.KubeNamespace{
+						domain.KubeNamespace{
 							Name:          "ns2",
 							RoutingWeight: float64(5),
 						},
@@ -393,24 +393,24 @@ func TestReadWeightConfigs(t *testing.T) {
 		{
 			name:       "cluster dimension, multiple clusters",
 			metricsMap: make(map[string]*metric),
-			clusters: []model.KubeCluster{
-				model.KubeCluster{
+			clusters: []domain.KubeCluster{
+				domain.KubeCluster{
 					Name:          "ctra",
 					ClusterId:     "a",
 					RoutingWeight: float64(5),
-					Namespaces: []model.KubeNamespace{
-						model.KubeNamespace{
+					Namespaces: []domain.KubeNamespace{
+						domain.KubeNamespace{
 							Name:          "ns2",
 							RoutingWeight: float64(5),
 						},
 					},
 				},
-				model.KubeCluster{
+				domain.KubeCluster{
 					Name:          "ctrb",
 					ClusterId:     "b",
 					RoutingWeight: float64(20),
-					Namespaces: []model.KubeNamespace{
-						model.KubeNamespace{
+					Namespaces: []domain.KubeNamespace{
+						domain.KubeNamespace{
 							Name:          "ns2",
 							RoutingWeight: float64(5),
 						},
@@ -436,35 +436,35 @@ func TestReadWeightConfigs(t *testing.T) {
 		{
 			name:       "namespace dimension, multiple clusters",
 			metricsMap: make(map[string]*metric),
-			clusters: []model.KubeCluster{
-				model.KubeCluster{
+			clusters: []domain.KubeCluster{
+				domain.KubeCluster{
 					Name:          "ctra",
 					ClusterId:     "a",
 					RoutingWeight: float64(5),
-					Namespaces: []model.KubeNamespace{
-						model.KubeNamespace{
+					Namespaces: []domain.KubeNamespace{
+						domain.KubeNamespace{
 							Name:          "ns2",
 							RoutingWeight: float64(15),
 						},
 					},
 				},
-				model.KubeCluster{
+				domain.KubeCluster{
 					Name:          "ctrb",
 					ClusterId:     "b",
 					RoutingWeight: float64(20),
-					Namespaces: []model.KubeNamespace{
-						model.KubeNamespace{
+					Namespaces: []domain.KubeNamespace{
+						domain.KubeNamespace{
 							Name:          "ns2",
 							RoutingWeight: float64(5),
 						},
 					},
 				},
-				model.KubeCluster{
+				domain.KubeCluster{
 					Name:          "ctrc",
 					ClusterId:     "c",
 					RoutingWeight: float64(10),
-					Namespaces: []model.KubeNamespace{
-						model.KubeNamespace{
+					Namespaces: []domain.KubeNamespace{
+						domain.KubeNamespace{
 							Name:          "ns1",
 							RoutingWeight: float64(5),
 						},
@@ -490,24 +490,24 @@ func TestReadWeightConfigs(t *testing.T) {
 		{
 			name:       "namespace dimension, namespace doesn't exist in ctra so only ctrb in metricsMap",
 			metricsMap: make(map[string]*metric),
-			clusters: []model.KubeCluster{
-				model.KubeCluster{
+			clusters: []domain.KubeCluster{
+				domain.KubeCluster{
 					Name:          "ctra",
 					ClusterId:     "a",
 					RoutingWeight: float64(10),
-					Namespaces: []model.KubeNamespace{
-						model.KubeNamespace{
+					Namespaces: []domain.KubeNamespace{
+						domain.KubeNamespace{
 							Name:          "ns2",
 							RoutingWeight: float64(5),
 						},
 					},
 				},
-				model.KubeCluster{
+				domain.KubeCluster{
 					Name:          "ctrb",
 					ClusterId:     "b",
 					RoutingWeight: float64(10),
-					Namespaces: []model.KubeNamespace{
-						model.KubeNamespace{
+					Namespaces: []domain.KubeNamespace{
+						domain.KubeNamespace{
 							Name:          "special-ns",
 							RoutingWeight: float64(5),
 						},

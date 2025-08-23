@@ -22,9 +22,9 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/slackhq/spark-gateway/pkg/gatewayerrors"
-	"github.com/slackhq/spark-gateway/pkg/kube"
-	"github.com/slackhq/spark-gateway/pkg/util"
+	"github.com/slackhq/spark-gateway/internal/shared/gatewayerrors"
+	"github.com/slackhq/spark-gateway/internal/shared/util"
+	"github.com/slackhq/spark-gateway/internal/sparkManager/kube"
 
 	"github.com/kubeflow/spark-operator/v2/api/v1beta2"
 	sparkClientSet "github.com/kubeflow/spark-operator/v2/pkg/client/clientset/versioned"

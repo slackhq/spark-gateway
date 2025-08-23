@@ -13,25 +13,26 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package router
+package clusterrouter
 
 import (
 	"context"
 	"fmt"
-	"github.com/slackhq/spark-gateway/internal/gateway/cluster"
-	cfgPkg "github.com/slackhq/spark-gateway/pkg/config"
-	"github.com/slackhq/spark-gateway/pkg/gatewayerrors"
-	"github.com/slackhq/spark-gateway/pkg/model"
 	"math/rand"
+
+	"github.com/slackhq/spark-gateway/internal/domain"
+	"github.com/slackhq/spark-gateway/internal/gateway/repository"
+	cfgPkg "github.com/slackhq/spark-gateway/internal/shared/config"
+	"github.com/slackhq/spark-gateway/internal/shared/gatewayerrors"
 )
 
 type WeightBasedRandomRouter struct {
-	clusterRepository   cluster.ClusterRepository
+	clusterRepository   repository.ClusterRepository
 	clusterRouterConfig cfgPkg.ClusterRouter
 }
 
 func NewWeightBasedRandomRouter(
-	clusterRepository cluster.ClusterRepository,
+	clusterRepository repository.ClusterRepository,
 	clusterRouterConfig cfgPkg.ClusterRouter,
 ) ClusterRouter {
 	return &WeightBasedRandomRouter{
@@ -76,7 +77,7 @@ func NewWeightBasedRandomRouter(
 
 	return chosenCluster
 */
-func (r *WeightBasedRandomRouter) GetCluster(ctx context.Context, namespace string) (*model.KubeCluster, error) {
+func (r *WeightBasedRandomRouter) GetCluster(ctx context.Context, namespace string) (*domain.KubeCluster, error) {
 
 	clustersList, err := r.clusterRepository.GetAllWithNamespace(namespace)
 	if err != nil {

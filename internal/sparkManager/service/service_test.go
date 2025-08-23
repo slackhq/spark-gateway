@@ -25,8 +25,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/slackhq/spark-gateway/pkg/gatewayerrors"
-	"github.com/slackhq/spark-gateway/pkg/model"
+	"github.com/slackhq/spark-gateway/internal/domain"
+	"github.com/slackhq/spark-gateway/internal/shared/gatewayerrors"
 )
 
 var expectedSparkApplication v1beta2.SparkApplication = v1beta2.SparkApplication{
@@ -40,11 +40,11 @@ var expectedSparkApplication v1beta2.SparkApplication = v1beta2.SparkApplication
 
 var logString string = "testlogstring"
 
-var testCluster model.KubeCluster = model.KubeCluster{
+var testCluster domain.KubeCluster = domain.KubeCluster{
 	Name:      "test-cluster",
 	MasterURL: "masterUrl",
 	ClusterId: "id",
-	Namespaces: []model.KubeNamespace{
+	Namespaces: []domain.KubeNamespace{
 		{
 			Name:        "testNamespace",
 			NamespaceId: "nsid",

@@ -13,26 +13,25 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package router
+package clusterrouter
 
 import (
 	"context"
 	"fmt"
 
-	"github.com/slackhq/spark-gateway/internal/gateway/cluster"
-	cfg "github.com/slackhq/spark-gateway/pkg/config"
-
-	"github.com/slackhq/spark-gateway/pkg/model"
+	"github.com/slackhq/spark-gateway/internal/domain"
+	"github.com/slackhq/spark-gateway/internal/gateway/repository"
+	cfg "github.com/slackhq/spark-gateway/internal/shared/config"
 )
 
 //go:generate moq -rm  -out mockclusterrouter.go . ClusterRouter
 type ClusterRouter interface {
-	GetCluster(ctx context.Context, namespace string) (*model.KubeCluster, error)
+	GetCluster(ctx context.Context, namespace string) (*domain.KubeCluster, error)
 }
 
 func GetClusterRouter(
 	routerType cfg.ClusterRouterType,
-	localClusterRepo cluster.ClusterRepository,
+	localClusterRepo repository.ClusterRepository,
 	clusterRouterConfig cfg.ClusterRouter,
 	sparkManagerHostnameTemplate string,
 	metricsServerConfig cfg.MetricsServer,

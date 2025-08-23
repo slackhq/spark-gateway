@@ -20,7 +20,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/slackhq/spark-gateway/pkg/gatewayerrors"
+	"github.com/slackhq/spark-gateway/internal/shared/gatewayerrors"
 )
 
 // Middleware function

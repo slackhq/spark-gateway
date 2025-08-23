@@ -6,7 +6,7 @@ package service
 import (
 	"context"
 	"github.com/kubeflow/spark-operator/v2/api/v1beta2"
-	"github.com/slackhq/spark-gateway/pkg/model"
+	"github.com/slackhq/spark-gateway/internal/domain"
 	"sync"
 )
 
@@ -20,22 +20,22 @@ var _ SparkApplicationRepository = &SparkApplicationRepositoryMock{}
 //
 //		// make and configure a mocked SparkApplicationRepository
 //		mockedSparkApplicationRepository := &SparkApplicationRepositoryMock{
-//			CreateFunc: func(ctx context.Context, cluster model.KubeCluster, application *v1beta2.SparkApplication) (*v1beta2.SparkApplication, error) {
+//			CreateFunc: func(ctx context.Context, cluster domain.KubeCluster, application *v1beta2.SparkApplication) (*v1beta2.SparkApplication, error) {
 //				panic("mock out the Create method")
 //			},
-//			DeleteFunc: func(ctx context.Context, cluster model.KubeCluster, namespace string, name string) error {
+//			DeleteFunc: func(ctx context.Context, cluster domain.KubeCluster, namespace string, name string) error {
 //				panic("mock out the Delete method")
 //			},
-//			GetFunc: func(ctx context.Context, cluster model.KubeCluster, namespace string, name string) (*v1beta2.SparkApplication, error) {
+//			GetFunc: func(ctx context.Context, cluster domain.KubeCluster, namespace string, name string) (*v1beta2.SparkApplication, error) {
 //				panic("mock out the Get method")
 //			},
-//			ListFunc: func(ctx context.Context, cluster model.KubeCluster, namespace string) ([]*model.SparkManagerApplicationMeta, error) {
+//			ListFunc: func(ctx context.Context, cluster domain.KubeCluster, namespace string) ([]*domain.SparkManagerApplicationMeta, error) {
 //				panic("mock out the List method")
 //			},
-//			LogsFunc: func(ctx context.Context, cluster model.KubeCluster, namespace string, name string, tailLines int) (*string, error) {
+//			LogsFunc: func(ctx context.Context, cluster domain.KubeCluster, namespace string, name string, tailLines int) (*string, error) {
 //				panic("mock out the Logs method")
 //			},
-//			StatusFunc: func(ctx context.Context, cluster model.KubeCluster, namespace string, name string) (*v1beta2.SparkApplicationStatus, error) {
+//			StatusFunc: func(ctx context.Context, cluster domain.KubeCluster, namespace string, name string) (*v1beta2.SparkApplicationStatus, error) {
 //				panic("mock out the Status method")
 //			},
 //		}
@@ -46,22 +46,22 @@ var _ SparkApplicationRepository = &SparkApplicationRepositoryMock{}
 //	}
 type SparkApplicationRepositoryMock struct {
 	// CreateFunc mocks the Create method.
-	CreateFunc func(ctx context.Context, cluster model.KubeCluster, application *v1beta2.SparkApplication) (*v1beta2.SparkApplication, error)
+	CreateFunc func(ctx context.Context, cluster domain.KubeCluster, application *v1beta2.SparkApplication) (*v1beta2.SparkApplication, error)
 
 	// DeleteFunc mocks the Delete method.
-	DeleteFunc func(ctx context.Context, cluster model.KubeCluster, namespace string, name string) error
+	DeleteFunc func(ctx context.Context, cluster domain.KubeCluster, namespace string, name string) error
 
 	// GetFunc mocks the Get method.
-	GetFunc func(ctx context.Context, cluster model.KubeCluster, namespace string, name string) (*v1beta2.SparkApplication, error)
+	GetFunc func(ctx context.Context, cluster domain.KubeCluster, namespace string, name string) (*v1beta2.SparkApplication, error)
 
 	// ListFunc mocks the List method.
-	ListFunc func(ctx context.Context, cluster model.KubeCluster, namespace string) ([]*model.SparkManagerApplicationMeta, error)
+	ListFunc func(ctx context.Context, cluster domain.KubeCluster, namespace string) ([]*domain.SparkManagerApplicationMeta, error)
 
 	// LogsFunc mocks the Logs method.
-	LogsFunc func(ctx context.Context, cluster model.KubeCluster, namespace string, name string, tailLines int) (*string, error)
+	LogsFunc func(ctx context.Context, cluster domain.KubeCluster, namespace string, name string, tailLines int) (*string, error)
 
 	// StatusFunc mocks the Status method.
-	StatusFunc func(ctx context.Context, cluster model.KubeCluster, namespace string, name string) (*v1beta2.SparkApplicationStatus, error)
+	StatusFunc func(ctx context.Context, cluster domain.KubeCluster, namespace string, name string) (*v1beta2.SparkApplicationStatus, error)
 
 	// calls tracks calls to the methods.
 	calls struct {
@@ -70,7 +70,7 @@ type SparkApplicationRepositoryMock struct {
 			// Ctx is the ctx argument value.
 			Ctx context.Context
 			// Cluster is the cluster argument value.
-			Cluster model.KubeCluster
+			Cluster domain.KubeCluster
 			// Application is the application argument value.
 			Application *v1beta2.SparkApplication
 		}
@@ -79,7 +79,7 @@ type SparkApplicationRepositoryMock struct {
 			// Ctx is the ctx argument value.
 			Ctx context.Context
 			// Cluster is the cluster argument value.
-			Cluster model.KubeCluster
+			Cluster domain.KubeCluster
 			// Namespace is the namespace argument value.
 			Namespace string
 			// Name is the name argument value.
@@ -90,7 +90,7 @@ type SparkApplicationRepositoryMock struct {
 			// Ctx is the ctx argument value.
 			Ctx context.Context
 			// Cluster is the cluster argument value.
-			Cluster model.KubeCluster
+			Cluster domain.KubeCluster
 			// Namespace is the namespace argument value.
 			Namespace string
 			// Name is the name argument value.
@@ -101,7 +101,7 @@ type SparkApplicationRepositoryMock struct {
 			// Ctx is the ctx argument value.
 			Ctx context.Context
 			// Cluster is the cluster argument value.
-			Cluster model.KubeCluster
+			Cluster domain.KubeCluster
 			// Namespace is the namespace argument value.
 			Namespace string
 		}
@@ -110,7 +110,7 @@ type SparkApplicationRepositoryMock struct {
 			// Ctx is the ctx argument value.
 			Ctx context.Context
 			// Cluster is the cluster argument value.
-			Cluster model.KubeCluster
+			Cluster domain.KubeCluster
 			// Namespace is the namespace argument value.
 			Namespace string
 			// Name is the name argument value.
@@ -123,7 +123,7 @@ type SparkApplicationRepositoryMock struct {
 			// Ctx is the ctx argument value.
 			Ctx context.Context
 			// Cluster is the cluster argument value.
-			Cluster model.KubeCluster
+			Cluster domain.KubeCluster
 			// Namespace is the namespace argument value.
 			Namespace string
 			// Name is the name argument value.
@@ -139,13 +139,13 @@ type SparkApplicationRepositoryMock struct {
 }
 
 // Create calls CreateFunc.
-func (mock *SparkApplicationRepositoryMock) Create(ctx context.Context, cluster model.KubeCluster, application *v1beta2.SparkApplication) (*v1beta2.SparkApplication, error) {
+func (mock *SparkApplicationRepositoryMock) Create(ctx context.Context, cluster domain.KubeCluster, application *v1beta2.SparkApplication) (*v1beta2.SparkApplication, error) {
 	if mock.CreateFunc == nil {
 		panic("SparkApplicationRepositoryMock.CreateFunc: method is nil but SparkApplicationRepository.Create was just called")
 	}
 	callInfo := struct {
 		Ctx         context.Context
-		Cluster     model.KubeCluster
+		Cluster     domain.KubeCluster
 		Application *v1beta2.SparkApplication
 	}{
 		Ctx:         ctx,
@@ -164,12 +164,12 @@ func (mock *SparkApplicationRepositoryMock) Create(ctx context.Context, cluster 
 //	len(mockedSparkApplicationRepository.CreateCalls())
 func (mock *SparkApplicationRepositoryMock) CreateCalls() []struct {
 	Ctx         context.Context
-	Cluster     model.KubeCluster
+	Cluster     domain.KubeCluster
 	Application *v1beta2.SparkApplication
 } {
 	var calls []struct {
 		Ctx         context.Context
-		Cluster     model.KubeCluster
+		Cluster     domain.KubeCluster
 		Application *v1beta2.SparkApplication
 	}
 	mock.lockCreate.RLock()
@@ -179,13 +179,13 @@ func (mock *SparkApplicationRepositoryMock) CreateCalls() []struct {
 }
 
 // Delete calls DeleteFunc.
-func (mock *SparkApplicationRepositoryMock) Delete(ctx context.Context, cluster model.KubeCluster, namespace string, name string) error {
+func (mock *SparkApplicationRepositoryMock) Delete(ctx context.Context, cluster domain.KubeCluster, namespace string, name string) error {
 	if mock.DeleteFunc == nil {
 		panic("SparkApplicationRepositoryMock.DeleteFunc: method is nil but SparkApplicationRepository.Delete was just called")
 	}
 	callInfo := struct {
 		Ctx       context.Context
-		Cluster   model.KubeCluster
+		Cluster   domain.KubeCluster
 		Namespace string
 		Name      string
 	}{
@@ -206,13 +206,13 @@ func (mock *SparkApplicationRepositoryMock) Delete(ctx context.Context, cluster 
 //	len(mockedSparkApplicationRepository.DeleteCalls())
 func (mock *SparkApplicationRepositoryMock) DeleteCalls() []struct {
 	Ctx       context.Context
-	Cluster   model.KubeCluster
+	Cluster   domain.KubeCluster
 	Namespace string
 	Name      string
 } {
 	var calls []struct {
 		Ctx       context.Context
-		Cluster   model.KubeCluster
+		Cluster   domain.KubeCluster
 		Namespace string
 		Name      string
 	}
@@ -223,13 +223,13 @@ func (mock *SparkApplicationRepositoryMock) DeleteCalls() []struct {
 }
 
 // Get calls GetFunc.
-func (mock *SparkApplicationRepositoryMock) Get(ctx context.Context, cluster model.KubeCluster, namespace string, name string) (*v1beta2.SparkApplication, error) {
+func (mock *SparkApplicationRepositoryMock) Get(ctx context.Context, cluster domain.KubeCluster, namespace string, name string) (*v1beta2.SparkApplication, error) {
 	if mock.GetFunc == nil {
 		panic("SparkApplicationRepositoryMock.GetFunc: method is nil but SparkApplicationRepository.Get was just called")
 	}
 	callInfo := struct {
 		Ctx       context.Context
-		Cluster   model.KubeCluster
+		Cluster   domain.KubeCluster
 		Namespace string
 		Name      string
 	}{
@@ -250,13 +250,13 @@ func (mock *SparkApplicationRepositoryMock) Get(ctx context.Context, cluster mod
 //	len(mockedSparkApplicationRepository.GetCalls())
 func (mock *SparkApplicationRepositoryMock) GetCalls() []struct {
 	Ctx       context.Context
-	Cluster   model.KubeCluster
+	Cluster   domain.KubeCluster
 	Namespace string
 	Name      string
 } {
 	var calls []struct {
 		Ctx       context.Context
-		Cluster   model.KubeCluster
+		Cluster   domain.KubeCluster
 		Namespace string
 		Name      string
 	}
@@ -267,13 +267,13 @@ func (mock *SparkApplicationRepositoryMock) GetCalls() []struct {
 }
 
 // List calls ListFunc.
-func (mock *SparkApplicationRepositoryMock) List(ctx context.Context, cluster model.KubeCluster, namespace string) ([]*model.SparkManagerApplicationMeta, error) {
+func (mock *SparkApplicationRepositoryMock) List(ctx context.Context, cluster domain.KubeCluster, namespace string) ([]*domain.SparkManagerApplicationMeta, error) {
 	if mock.ListFunc == nil {
 		panic("SparkApplicationRepositoryMock.ListFunc: method is nil but SparkApplicationRepository.List was just called")
 	}
 	callInfo := struct {
 		Ctx       context.Context
-		Cluster   model.KubeCluster
+		Cluster   domain.KubeCluster
 		Namespace string
 	}{
 		Ctx:       ctx,
@@ -292,12 +292,12 @@ func (mock *SparkApplicationRepositoryMock) List(ctx context.Context, cluster mo
 //	len(mockedSparkApplicationRepository.ListCalls())
 func (mock *SparkApplicationRepositoryMock) ListCalls() []struct {
 	Ctx       context.Context
-	Cluster   model.KubeCluster
+	Cluster   domain.KubeCluster
 	Namespace string
 } {
 	var calls []struct {
 		Ctx       context.Context
-		Cluster   model.KubeCluster
+		Cluster   domain.KubeCluster
 		Namespace string
 	}
 	mock.lockList.RLock()
@@ -307,13 +307,13 @@ func (mock *SparkApplicationRepositoryMock) ListCalls() []struct {
 }
 
 // Logs calls LogsFunc.
-func (mock *SparkApplicationRepositoryMock) Logs(ctx context.Context, cluster model.KubeCluster, namespace string, name string, tailLines int) (*string, error) {
+func (mock *SparkApplicationRepositoryMock) Logs(ctx context.Context, cluster domain.KubeCluster, namespace string, name string, tailLines int) (*string, error) {
 	if mock.LogsFunc == nil {
 		panic("SparkApplicationRepositoryMock.LogsFunc: method is nil but SparkApplicationRepository.Logs was just called")
 	}
 	callInfo := struct {
 		Ctx       context.Context
-		Cluster   model.KubeCluster
+		Cluster   domain.KubeCluster
 		Namespace string
 		Name      string
 		TailLines int
@@ -336,14 +336,14 @@ func (mock *SparkApplicationRepositoryMock) Logs(ctx context.Context, cluster mo
 //	len(mockedSparkApplicationRepository.LogsCalls())
 func (mock *SparkApplicationRepositoryMock) LogsCalls() []struct {
 	Ctx       context.Context
-	Cluster   model.KubeCluster
+	Cluster   domain.KubeCluster
 	Namespace string
 	Name      string
 	TailLines int
 } {
 	var calls []struct {
 		Ctx       context.Context
-		Cluster   model.KubeCluster
+		Cluster   domain.KubeCluster
 		Namespace string
 		Name      string
 		TailLines int
@@ -355,13 +355,13 @@ func (mock *SparkApplicationRepositoryMock) LogsCalls() []struct {
 }
 
 // Status calls StatusFunc.
-func (mock *SparkApplicationRepositoryMock) Status(ctx context.Context, cluster model.KubeCluster, namespace string, name string) (*v1beta2.SparkApplicationStatus, error) {
+func (mock *SparkApplicationRepositoryMock) Status(ctx context.Context, cluster domain.KubeCluster, namespace string, name string) (*v1beta2.SparkApplicationStatus, error) {
 	if mock.StatusFunc == nil {
 		panic("SparkApplicationRepositoryMock.StatusFunc: method is nil but SparkApplicationRepository.Status was just called")
 	}
 	callInfo := struct {
 		Ctx       context.Context
-		Cluster   model.KubeCluster
+		Cluster   domain.KubeCluster
 		Namespace string
 		Name      string
 	}{
@@ -382,13 +382,13 @@ func (mock *SparkApplicationRepositoryMock) Status(ctx context.Context, cluster 
 //	len(mockedSparkApplicationRepository.StatusCalls())
 func (mock *SparkApplicationRepositoryMock) StatusCalls() []struct {
 	Ctx       context.Context
-	Cluster   model.KubeCluster
+	Cluster   domain.KubeCluster
 	Namespace string
 	Name      string
 } {
 	var calls []struct {
 		Ctx       context.Context
-		Cluster   model.KubeCluster
+		Cluster   domain.KubeCluster
 		Namespace string
 		Name      string
 	}

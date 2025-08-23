@@ -24,8 +24,8 @@ import (
 	"github.com/knadh/koanf/providers/file"
 	"github.com/knadh/koanf/v2"
 
-	"github.com/slackhq/spark-gateway/pkg/model"
-	"github.com/slackhq/spark-gateway/pkg/util"
+	"github.com/slackhq/spark-gateway/internal/domain"
+	"github.com/slackhq/spark-gateway/internal/shared/util"
 )
 
 const (
@@ -109,11 +109,11 @@ type MiddlewareDefinition struct {
 }
 
 type GatewayConfig struct {
-	GatewayApiVersion  string                   `koanf:"gatewayApiVersion"`
-	GatewayPort        string                   `koanf:"gatewayPort"`
-	Middleware         []MiddlewareDefinition   `koanf:"middleware"`
-	StatusUrlTemplates model.StatusUrlTemplates `koanf:"statusUrlTemplates"`
-	EnableSwaggerUI    bool                     `koanf:"enableSwaggerUI"`
+	GatewayApiVersion  string                    `koanf:"gatewayApiVersion"`
+	GatewayPort        string                    `koanf:"gatewayPort"`
+	Middleware         []MiddlewareDefinition    `koanf:"middleware"`
+	StatusUrlTemplates domain.StatusUrlTemplates `koanf:"statusUrlTemplates"`
+	EnableSwaggerUI    bool                      `koanf:"enableSwaggerUI"`
 }
 
 func (g *GatewayConfig) Key() string {
@@ -170,7 +170,7 @@ type DebugPort struct {
 }
 
 type SparkGatewayConfig struct {
-	KubeClusters       []model.KubeCluster  `koanf:"clusters"`
+	KubeClusters       []domain.KubeCluster `koanf:"clusters"`
 	ClusterRouter      ClusterRouter        `koanf:"clusterRouter"`
 	DefaultLogLines    int                  `koanf:"defaultLogLines"`
 	Mode               string               `koanf:"mode"`
@@ -215,7 +215,7 @@ func (c *SparkGatewayConfig) Validate() (errorMessages []string) {
 
 		seenClusterIds[cluster.ClusterId] = true
 
-		errs := model.ValidateCluster(cluster)
+		errs := domain.ValidateCluster(cluster)
 		errorMessages = append(errorMessages, errs...)
 	}
 
@@ -254,7 +254,7 @@ func (c *SparkGatewayConfig) KubeClustersDefaulter() {
 	}
 }
 
-func (c *SparkGatewayConfig) GetKubeCluster(clusterName string) *model.KubeCluster {
+func (c *SparkGatewayConfig) GetKubeCluster(clusterName string) *domain.KubeCluster {
 	for _, cluster := range c.KubeClusters {
 		if cluster.Name == clusterName {
 			return &cluster

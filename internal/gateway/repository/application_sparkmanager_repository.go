@@ -25,19 +25,19 @@ import (
 	"k8s.io/apimachinery/pkg/util/json"
 	"k8s.io/klog/v2"
 
-	"github.com/slackhq/spark-gateway/pkg/config"
-	"github.com/slackhq/spark-gateway/pkg/gatewayerrors"
-	pkgHttp "github.com/slackhq/spark-gateway/pkg/http"
-	"github.com/slackhq/spark-gateway/pkg/kube"
-	"github.com/slackhq/spark-gateway/pkg/model"
-	"github.com/slackhq/spark-gateway/pkg/util"
+	"github.com/slackhq/spark-gateway/internal/domain"
+	"github.com/slackhq/spark-gateway/internal/shared/config"
+	"github.com/slackhq/spark-gateway/internal/shared/gatewayerrors"
+	pkgHttp "github.com/slackhq/spark-gateway/internal/shared/http"
+	"github.com/slackhq/spark-gateway/internal/shared/util"
+	"github.com/slackhq/spark-gateway/internal/sparkManager/kube"
 )
 
 type SparkManagerRepository struct {
 	ClusterEndpoints map[string]string
 }
 
-func NewSparkManagerRepository(clusters []model.KubeCluster, sparkManagerHostnameTemplate string, sparkManagerPort string, debugPorts map[string]config.DebugPort) (*SparkManagerRepository, error) {
+func NewSparkManagerRepository(clusters []domain.KubeCluster, sparkManagerHostnameTemplate string, sparkManagerPort string, debugPorts map[string]config.DebugPort) (*SparkManagerRepository, error) {
 
 	hostNameF := "http://%s:%s"
 	clusterEndpoints := map[string]string{}
@@ -70,7 +70,7 @@ func NewSparkManagerRepository(clusters []model.KubeCluster, sparkManagerHostnam
 	}, nil
 }
 
-func (r *SparkManagerRepository) Get(ctx context.Context, cluster model.KubeCluster, namespace string, name string) (*v1beta2.SparkApplication, error) {
+func (r *SparkManagerRepository) Get(ctx context.Context, cluster domain.KubeCluster, namespace string, name string) (*v1beta2.SparkApplication, error) {
 
 	clusterEndpoint := r.ClusterEndpoints[cluster.Name]
 	// Url: http://host:port/namespace/name
@@ -99,7 +99,7 @@ func (r *SparkManagerRepository) Get(ctx context.Context, cluster model.KubeClus
 	return kube.Sanitize(&app), nil
 }
 
-func (r *SparkManagerRepository) List(ctx context.Context, cluster model.KubeCluster, namespace string) ([]*model.SparkManagerApplicationMeta, error) {
+func (r *SparkManagerRepository) List(ctx context.Context, cluster domain.KubeCluster, namespace string) ([]*domain.SparkManagerApplicationMeta, error) {
 
 	clusterEndpoint := r.ClusterEndpoints[cluster.Name]
 	// Url: http://host:port/namespace
@@ -120,7 +120,7 @@ func (r *SparkManagerRepository) List(ctx context.Context, cluster model.KubeClu
 		return nil, gatewayerrors.NewFrom(err)
 	}
 
-	var appMetaList []*model.SparkManagerApplicationMeta
+	var appMetaList []*domain.SparkManagerApplicationMeta
 	if err := json.Unmarshal(*respBody, &appMetaList); err != nil {
 		return nil, fmt.Errorf("failed to Unmarshal JSON response: %w", err)
 	}
@@ -128,7 +128,7 @@ func (r *SparkManagerRepository) List(ctx context.Context, cluster model.KubeClu
 	return appMetaList, nil
 }
 
-func (r *SparkManagerRepository) Status(ctx context.Context, cluster model.KubeCluster, namespace string, name string) (*v1beta2.SparkApplicationStatus, error) {
+func (r *SparkManagerRepository) Status(ctx context.Context, cluster domain.KubeCluster, namespace string, name string) (*v1beta2.SparkApplicationStatus, error) {
 
 	clusterEndpoint := r.ClusterEndpoints[cluster.Name]
 	// Url: http://host:port/namespace/name/status
@@ -157,7 +157,7 @@ func (r *SparkManagerRepository) Status(ctx context.Context, cluster model.KubeC
 	return &appStatus, nil
 }
 
-func (r *SparkManagerRepository) Logs(ctx context.Context, cluster model.KubeCluster, namespace string, name string, tailLines int) (*string, error) {
+func (r *SparkManagerRepository) Logs(ctx context.Context, cluster domain.KubeCluster, namespace string, name string, tailLines int) (*string, error) {
 
 	clusterEndpoint := r.ClusterEndpoints[cluster.Name]
 	// Url: http://host:port/namespace/name/logs?lines=lineCount
@@ -186,7 +186,7 @@ func (r *SparkManagerRepository) Logs(ctx context.Context, cluster model.KubeClu
 	return &logString, nil
 }
 
-func (r *SparkManagerRepository) Create(ctx context.Context, cluster model.KubeCluster, sparkApplication *v1beta2.SparkApplication) (*v1beta2.SparkApplication, error) {
+func (r *SparkManagerRepository) Create(ctx context.Context, cluster domain.KubeCluster, sparkApplication *v1beta2.SparkApplication) (*v1beta2.SparkApplication, error) {
 
 	clusterEndpoint := r.ClusterEndpoints[cluster.Name]
 	// Url: http://host:port/namespace/name
@@ -221,7 +221,7 @@ func (r *SparkManagerRepository) Create(ctx context.Context, cluster model.KubeC
 	return kube.Sanitize(&sparkApp), nil
 }
 
-func (r *SparkManagerRepository) Delete(ctx context.Context, cluster model.KubeCluster, namespace string, name string) error {
+func (r *SparkManagerRepository) Delete(ctx context.Context, cluster domain.KubeCluster, namespace string, name string) error {
 
 	clusterEndpoint := r.ClusterEndpoints[cluster.Name]
 	// Url: http://host:port/namespace/name

@@ -13,27 +13,27 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package router
+package clusterrouter
 
 import (
 	"context"
 	"fmt"
 	"math/rand"
 
-	"github.com/slackhq/spark-gateway/internal/gateway/cluster"
-	"github.com/slackhq/spark-gateway/pkg/model"
+	"github.com/slackhq/spark-gateway/internal/domain"
+	"github.com/slackhq/spark-gateway/internal/gateway/repository"
 )
 
 // RandomClusterRouter picks a SparkCluster randomly from it's configured SparkClusters.
 type RandomClusterRouter struct {
-	clusterRepository cluster.ClusterRepository
+	clusterRepository repository.ClusterRepository
 }
 
-func NewRandomClusterRouter(repo cluster.ClusterRepository) ClusterRouter {
+func NewRandomClusterRouter(repo repository.ClusterRepository) ClusterRouter {
 	return &RandomClusterRouter{clusterRepository: repo}
 }
 
-func (r *RandomClusterRouter) GetCluster(ctx context.Context, namespace string) (*model.KubeCluster, error) {
+func (r *RandomClusterRouter) GetCluster(ctx context.Context, namespace string) (*domain.KubeCluster, error) {
 	clusters, err := r.clusterRepository.GetAllWithNamespace(namespace)
 	if err != nil || len(clusters) == 0 {
 		return nil, fmt.Errorf("error listing clusters: %w", err)

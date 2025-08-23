@@ -29,9 +29,9 @@ import (
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/klog/v2"
 
-	dbRepository "github.com/slackhq/spark-gateway/pkg/database/repository"
-	"github.com/slackhq/spark-gateway/pkg/gatewayerrors"
-	"github.com/slackhq/spark-gateway/pkg/model"
+	"github.com/slackhq/spark-gateway/internal/domain"
+	"github.com/slackhq/spark-gateway/internal/shared/gatewayerrors"
+	dbRepository "github.com/slackhq/spark-gateway/internal/sparkManager/database/repository"
 )
 
 // SparkController is a type of Kubernetes controller. The difference between SparkController and a typical
@@ -132,7 +132,7 @@ func (c *SparkController) onUpdate(oldObj interface{}, newObj interface{}) {
 		return
 	}
 
-	gatewayIdUid, err := model.ParseGatewayIdUUID(newSparkApp.Name)
+	gatewayIdUid, err := domain.ParseGatewayIdUUID(newSparkApp.Name)
 	if err != nil {
 		klog.ErrorS(err, "Failed to parse the gateway UUID, skipping onUpdate", "gatewayId", newSparkApp.Name)
 		return
