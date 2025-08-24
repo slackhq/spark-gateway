@@ -19,26 +19,17 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"net/http"
-	"reflect"
-
-	"k8s.io/klog/v2"
-
+	"github.com/google/uuid"
 	"github.com/slackhq/spark-gateway/internal/domain"
-	v1kubeflow "github.com/slackhq/spark-gateway/internal/gateway/api/v1/kubeflow"
+	"github.com/slackhq/spark-gateway/internal/gateway/api"
+	"github.com/slackhq/spark-gateway/internal/gateway/clusterrouter"
 	"github.com/slackhq/spark-gateway/internal/gateway/repository"
 	"github.com/slackhq/spark-gateway/internal/gateway/service"
-
-	"time"
-
-	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
-
-	"github.com/slackhq/spark-gateway/internal/gateway/api/middleware"
-	"github.com/slackhq/spark-gateway/internal/gateway/clusterrouter"
 	cfg "github.com/slackhq/spark-gateway/internal/shared/config"
-
-	"github.com/slackhq/spark-gateway/internal/gateway/api/health"
+	"k8s.io/klog/v2"
+	"net/http"
+	"reflect"
+	"time"
 )
 
 type GatewayServer struct {
@@ -57,8 +48,6 @@ func GenUUIDv7() (string, error) {
 }
 
 func NewGateway(ctx context.Context, sgConfig *cfg.SparkGatewayConfig, sparkManagerHostnameTemplate string) (*GatewayServer, error) {
-
-	ginRouter := gin.Default()
 
 	//Repos
 	sparkManagerRepo, err := repository.NewSparkManagerRepository(sgConfig.KubeClusters, sparkManagerHostnameTemplate, sgConfig.SparkManagerPort, sgConfig.DebugPorts)
@@ -107,32 +96,13 @@ func NewGateway(ctx context.Context, sgConfig *cfg.SparkGatewayConfig, sparkMana
 		domain.GatewayIdGenerator{UuidGenerator: GenUUIDv7},
 	)
 
-	healthService := health.NewHealthService()
-
-	// Handlers
-	appHandler := v1kubeflow.NewApplicationHandler(appService, sgConfig.DefaultLogLines)
-
-	healthHandler := health.NewHealthHandler(healthService)
-
-	/// Authed
-	/// Auth middlewares
-	mwHandlerChain, err := middleware.AddMiddleware(sgConfig.GatewayConfig.Middleware)
-
-	/// Register unversioned handlers
-	rootGroup := ginRouter.Group("")
-	healthHandler.RegisterRoutes(rootGroup)
-
-	// Swagger UI
-	if sgConfig.GatewayConfig.EnableSwaggerUI {
-		v1kubeflow.RegisterSwaggerDocs(rootGroup, sgConfig.GatewayConfig.GatewayApiVersion)
+	router, err := api.NewRouter(sgConfig, appService)
+	if err != nil {
+		return nil, err
 	}
 
-	/// Register versioned handlers
-	versionGroup := ginRouter.Group(fmt.Sprintf("/%s", sgConfig.GatewayConfig.GatewayApiVersion), mwHandlerChain...)
-	appHandler.RegisterRoutes(versionGroup)
-
 	// Log the routes after all routes are registered
-	routes := ginRouter.Routes()
+	routes := router.Routes()
 	klog.Infof("Registered Routes:")
 	for _, route := range routes {
 		klog.Infof("%s %s\n", route.Method, route.Path)
@@ -140,7 +110,7 @@ func NewGateway(ctx context.Context, sgConfig *cfg.SparkGatewayConfig, sparkMana
 
 	server := http.Server{
 		Addr:    fmt.Sprintf(":%s", sgConfig.GatewayConfig.GatewayPort),
-		Handler: ginRouter,
+		Handler: router,
 	}
 
 	return &GatewayServer{
