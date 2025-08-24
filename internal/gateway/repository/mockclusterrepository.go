@@ -4,9 +4,8 @@
 package repository
 
 import (
-	"sync"
-
 	"github.com/slackhq/spark-gateway/internal/domain"
+	"sync"
 )
 
 // Ensure, that ClusterRepositoryMock does implement ClusterRepository.
