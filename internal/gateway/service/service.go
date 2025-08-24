@@ -24,7 +24,6 @@ import (
 	"k8s.io/klog/v2"
 
 	"github.com/slackhq/spark-gateway/internal/domain"
-	v1kubeflow "github.com/slackhq/spark-gateway/internal/gateway/api/v1/kubeflow"
 	clusterPkg "github.com/slackhq/spark-gateway/internal/gateway/repository"
 	"github.com/slackhq/spark-gateway/internal/shared/config"
 	"github.com/slackhq/spark-gateway/internal/shared/util"
@@ -44,6 +43,17 @@ type SparkApplicationRepository interface {
 	Logs(ctx context.Context, cluster domain.KubeCluster, namespace string, name string, tailLines int) (*string, error)
 	Create(ctx context.Context, cluster domain.KubeCluster, application *v1beta2.SparkApplication) (*v1beta2.SparkApplication, error)
 	Delete(ctx context.Context, cluster domain.KubeCluster, namespace string, name string) error
+}
+
+//go:generate moq -rm  -out mockgatewayapplicationservice.go . GatewayApplicationService
+
+type GatewayApplicationService interface {
+	Get(ctx context.Context, gatewayId string) (*domain.GatewayApplication, error)
+	List(ctx context.Context, cluster string, namespace string) ([]*domain.GatewayApplicationMeta, error)
+	Create(ctx context.Context, application *v1beta2.SparkApplication, user string) (*domain.GatewayApplication, error)
+	Status(ctx context.Context, gatewayId string) (*v1beta2.SparkApplicationStatus, error)
+	Logs(ctx context.Context, gatewayId string, tailLines int) (*string, error)
+	Delete(ctx context.Context, gatewayId string) error
 }
 
 type service struct {
@@ -66,7 +76,7 @@ func NewApplicationService(
 	selectorKey string,
 	selectorValue string,
 	gatewayIdGenerator domain.GatewayIdGenerator,
-) v1kubeflow.GatewayApplicationService {
+) GatewayApplicationService {
 	return &service{
 		sparkAppRepo:          sparkAppRepo,
 		clusterRepository:     clusterRepository,
