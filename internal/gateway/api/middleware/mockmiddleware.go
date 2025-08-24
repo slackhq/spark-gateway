@@ -18,14 +18,8 @@ var _ GatewayMiddleware = &GatewayMiddlewareMock{}
 //
 //		// make and configure a mocked GatewayMiddleware
 //		mockedGatewayMiddleware := &GatewayMiddlewareMock{
-//			ConfigFunc: func(conf MiddlewareConfMap) error {
-//				panic("mock out the Config method")
-//			},
 //			HandlerFunc: func(c *gin.Context)  {
 //				panic("mock out the Handler method")
-//			},
-//			NameFunc: func() string {
-//				panic("mock out the Name method")
 //			},
 //		}
 //
@@ -34,66 +28,18 @@ var _ GatewayMiddleware = &GatewayMiddlewareMock{}
 //
 //	}
 type GatewayMiddlewareMock struct {
-	// ConfigFunc mocks the Config method.
-	ConfigFunc func(conf MiddlewareConfMap) error
-
 	// HandlerFunc mocks the Handler method.
 	HandlerFunc func(c *gin.Context)
 
-	// NameFunc mocks the Name method.
-	NameFunc func() string
-
 	// calls tracks calls to the methods.
 	calls struct {
-		// Config holds details about calls to the Config method.
-		Config []struct {
-			// Conf is the conf argument value.
-			Conf MiddlewareConfMap
-		}
 		// Handler holds details about calls to the Handler method.
 		Handler []struct {
 			// C is the c argument value.
 			C *gin.Context
 		}
-		// Name holds details about calls to the Name method.
-		Name []struct {
-		}
 	}
-	lockConfig  sync.RWMutex
 	lockHandler sync.RWMutex
-	lockName    sync.RWMutex
-}
-
-// Config calls ConfigFunc.
-func (mock *GatewayMiddlewareMock) Config(conf MiddlewareConfMap) error {
-	if mock.ConfigFunc == nil {
-		panic("GatewayMiddlewareMock.ConfigFunc: method is nil but GatewayMiddleware.Config was just called")
-	}
-	callInfo := struct {
-		Conf MiddlewareConfMap
-	}{
-		Conf: conf,
-	}
-	mock.lockConfig.Lock()
-	mock.calls.Config = append(mock.calls.Config, callInfo)
-	mock.lockConfig.Unlock()
-	return mock.ConfigFunc(conf)
-}
-
-// ConfigCalls gets all the calls that were made to Config.
-// Check the length with:
-//
-//	len(mockedGatewayMiddleware.ConfigCalls())
-func (mock *GatewayMiddlewareMock) ConfigCalls() []struct {
-	Conf MiddlewareConfMap
-} {
-	var calls []struct {
-		Conf MiddlewareConfMap
-	}
-	mock.lockConfig.RLock()
-	calls = mock.calls.Config
-	mock.lockConfig.RUnlock()
-	return calls
 }
 
 // Handler calls HandlerFunc.
@@ -125,32 +71,5 @@ func (mock *GatewayMiddlewareMock) HandlerCalls() []struct {
 	mock.lockHandler.RLock()
 	calls = mock.calls.Handler
 	mock.lockHandler.RUnlock()
-	return calls
-}
-
-// Name calls NameFunc.
-func (mock *GatewayMiddlewareMock) Name() string {
-	if mock.NameFunc == nil {
-		panic("GatewayMiddlewareMock.NameFunc: method is nil but GatewayMiddleware.Name was just called")
-	}
-	callInfo := struct {
-	}{}
-	mock.lockName.Lock()
-	mock.calls.Name = append(mock.calls.Name, callInfo)
-	mock.lockName.Unlock()
-	return mock.NameFunc()
-}
-
-// NameCalls gets all the calls that were made to Name.
-// Check the length with:
-//
-//	len(mockedGatewayMiddleware.NameCalls())
-func (mock *GatewayMiddlewareMock) NameCalls() []struct {
-} {
-	var calls []struct {
-	}
-	mock.lockName.RLock()
-	calls = mock.calls.Name
-	mock.lockName.RUnlock()
 	return calls
 }
