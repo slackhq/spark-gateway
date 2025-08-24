@@ -23,7 +23,9 @@ import (
 	"github.com/slackhq/spark-gateway/internal/shared/gatewayerrors"
 )
 
-// Middleware function
+// ApplicationErrorHandler attempts to coerce the last error within gin.Context.Errors.Last to a
+// GatewayError for proper HttpStatus attribution. If the error casting fails, it aborts the connection
+// with the Error message and a 500 error
 func ApplicationErrorHandler(c *gin.Context) {
 	// Before request
 	c.Next()

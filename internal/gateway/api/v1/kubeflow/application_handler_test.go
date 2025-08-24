@@ -29,7 +29,7 @@ import (
 	"github.com/kubeflow/spark-operator/v2/api/v1beta2"
 	"github.com/slackhq/spark-gateway/internal/domain"
 	"github.com/slackhq/spark-gateway/internal/shared/gatewayerrors"
-	sharedHttp "github.com/slackhq/spark-gateway/internal/shared/http"
+	sgHttp "github.com/slackhq/spark-gateway/internal/shared/http"
 	"github.com/stretchr/testify/assert"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -69,7 +69,7 @@ func TestApplicationHandlerErrorHandler(t *testing.T) {
 	for _, test := range errorHandlerTests {
 		t.Run(test.test, func(t *testing.T) {
 			router := gin.New()
-			router.Use(sharedHttp.ApplicationErrorHandler)
+			router.Use(sgHttp.ApplicationErrorHandler)
 			router.Use(func(ctx *gin.Context) {
 				ctx.Error(test.err)
 				return
@@ -90,7 +90,7 @@ func TestApplicationHandlerErrorHandler(t *testing.T) {
 func TestApplicationHandlerGet(t *testing.T) {
 	router := gin.New()
 	root := router.Group("apiVersion")
-	router.Use(sharedHttp.ApplicationErrorHandler)
+	router.Use(sgHttp.ApplicationErrorHandler)
 
 	retApp := &domain.GatewayApplication{
 		SparkApplication: &v1beta2.SparkApplication{
@@ -124,7 +124,7 @@ func TestApplicationHandlerGet(t *testing.T) {
 func TestApplicationHandlerGetError(t *testing.T) {
 	router := gin.New()
 	root := router.Group("apiVersion")
-	router.Use(sharedHttp.ApplicationErrorHandler)
+	router.Use(sgHttp.ApplicationErrorHandler)
 
 	handler := NewApplicationHandler(&GatewayApplicationServiceMock{
 		GetFunc: func(ctx context.Context, gatewayId string) (*domain.GatewayApplication, error) {
@@ -150,7 +150,7 @@ func TestApplicationHandlerGetError(t *testing.T) {
 func TestApplicationHandlerStatus(t *testing.T) {
 	router := gin.New()
 	root := router.Group("apiVersion")
-	router.Use(sharedHttp.ApplicationErrorHandler)
+	router.Use(sgHttp.ApplicationErrorHandler)
 
 	retResp := &v1beta2.SparkApplicationStatus{
 		SubmissionID: "submissionId",
@@ -177,7 +177,7 @@ func TestApplicationHandlerStatus(t *testing.T) {
 func TestApplicationHandlerStatusError(t *testing.T) {
 	router := gin.New()
 	root := router.Group("apiVersion")
-	router.Use(sharedHttp.ApplicationErrorHandler)
+	router.Use(sgHttp.ApplicationErrorHandler)
 
 	handler := NewApplicationHandler(&GatewayApplicationServiceMock{
 		StatusFunc: func(ctx context.Context, gatewayId string) (*v1beta2.SparkApplicationStatus, error) {
@@ -201,7 +201,7 @@ func TestApplicationHandlerStatusError(t *testing.T) {
 func TestApplicationHandlerCreate(t *testing.T) {
 	router := gin.New()
 	root := router.Group("apiVersion")
-	router.Use(sharedHttp.ApplicationErrorHandler)
+	router.Use(sgHttp.ApplicationErrorHandler)
 	root.Use(func(ctx *gin.Context) {
 		ctx.Set("user", "user")
 		ctx.Next()
@@ -247,7 +247,7 @@ func TestApplicationHandlerCreate(t *testing.T) {
 func TestApplicationHandlerCreateBadRequest(t *testing.T) {
 	router := gin.New()
 	root := router.Group("apiVersion")
-	router.Use(sharedHttp.ApplicationErrorHandler)
+	router.Use(sgHttp.ApplicationErrorHandler)
 
 	handler := NewApplicationHandler(&GatewayApplicationServiceMock{
 		CreateFunc: func(ctx context.Context, application *v1beta2.SparkApplication, user string) (*domain.GatewayApplication, error) {
@@ -271,7 +271,7 @@ func TestApplicationHandlerCreateBadRequest(t *testing.T) {
 func TestApplicationHandlerCreateAlreadyExists(t *testing.T) {
 	router := gin.New()
 	root := router.Group("apiVersion")
-	router.Use(sharedHttp.ApplicationErrorHandler)
+	router.Use(sgHttp.ApplicationErrorHandler)
 	root.Use(func(ctx *gin.Context) {
 		ctx.Set("user", "user")
 		ctx.Next()
@@ -307,7 +307,7 @@ func TestApplicationHandlerCreateAlreadyExists(t *testing.T) {
 func TestApplicationHandlerDelete(t *testing.T) {
 	router := gin.New()
 	root := router.Group("apiVersion")
-	router.Use(sharedHttp.ApplicationErrorHandler)
+	router.Use(sgHttp.ApplicationErrorHandler)
 
 	handler := NewApplicationHandler(&GatewayApplicationServiceMock{
 		DeleteFunc: func(ctx context.Context, gatewayId string) error {
@@ -333,7 +333,7 @@ func TestApplicationHandlerDelete(t *testing.T) {
 func TestApplicationHandlerDeleteError(t *testing.T) {
 	router := gin.New()
 	root := router.Group("apiVersion")
-	router.Use(sharedHttp.ApplicationErrorHandler)
+	router.Use(sgHttp.ApplicationErrorHandler)
 
 	handler := NewApplicationHandler(&GatewayApplicationServiceMock{
 		DeleteFunc: func(ctx context.Context, gatewayId string) error {
