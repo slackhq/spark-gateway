@@ -5,9 +5,8 @@ package clusterrouter
 
 import (
 	"context"
-	"sync"
-
 	"github.com/slackhq/spark-gateway/internal/domain"
+	"sync"
 )
 
 // Ensure, that ClusterRouterMock does implement ClusterRouter.
