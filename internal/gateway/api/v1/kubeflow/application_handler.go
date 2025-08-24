@@ -17,13 +17,8 @@ package v1kubeflow
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
 	"strconv"
-
-	swaggerDocs "github.com/slackhq/spark-gateway/docs/swagger"
-	swaggerFiles "github.com/swaggo/files"
-	ginSwagger "github.com/swaggo/gin-swagger"
 
 	"github.com/gin-gonic/gin"
 	"github.com/kubeflow/spark-operator/v2/api/v1beta2"
@@ -217,16 +212,4 @@ func (h *ApplicationHandler) Delete(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"status": "success"})
-}
-
-func RegisterSwaggerDocs(rg *gin.RouterGroup, gatewayApiVersion string) {
-	swaggerDocs.SwaggerInfo.BasePath = fmt.Sprintf("/%s/%s", gatewayApiVersion, sparkApplicationPathName)
-
-	// Swagger UI on /swagger/index.html
-	rg.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler, ginSwagger.DefaultModelsExpandDepth(-1)))
-	// Redirect /doc and /docs/ to /swagger/index.html
-	rg.GET("/docs", func(ctx *gin.Context) {
-		ctx.Redirect(http.StatusMovedPermanently, "/swagger/index.html")
-	})
-
 }
