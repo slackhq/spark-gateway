@@ -26,7 +26,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/kubeflow/spark-operator/v2/api/v1beta2"
 
-	sharedHttp "github.com/slackhq/spark-gateway/internal/shared/http"
+	sgHttp "github.com/slackhq/spark-gateway/internal/shared/http"
 )
 
 //go:generate moq -rm -out mocksparkapplicationservice.go . SparkApplicationService
@@ -53,7 +53,7 @@ func NewSparkApplicationHandler(sparkApplicationService SparkApplicationService,
 
 func (h *SparkApplicationHandler) RegisterRoutes(rg *gin.RouterGroup) {
 	nsGroup := rg.Group("")
-	nsGroup.Use(sharedHttp.ApplicationErrorHandler)
+	nsGroup.Use(sgHttp.ApplicationErrorHandler)
 	{
 		nsGroup.GET("/:namespace", h.List)
 
