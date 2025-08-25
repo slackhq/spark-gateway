@@ -7,7 +7,7 @@ import (
 )
 
 // RegisterKubeflowApplicationRoutes registers routes handling Kubeflow SparkOperator SparkApplication submissions
-func RegisterKubeflowApplicationRoutes(rg *gin.RouterGroup, sgConf *config.SparkGatewayConfig, appService service.GatewayApplicationService) {
+func RegisterKubeflowApplicationRoutes(rg *gin.RouterGroup, sgConf *config.SparkGatewayConfig, appService service.SparkApplicationService) {
 
 	h := NewKubeflowApplicationHandler(appService, sgConf.DefaultLogLines)
 

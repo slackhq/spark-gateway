@@ -36,11 +36,11 @@ import (
 //  @license.url	http://www.apache.org/licenses/LICENSE-2.0.html
 
 type ApplicationHandler struct {
-	service         service.GatewayApplicationService
+	service         service.SparkApplicationService
 	defaultLogLines int
 }
 
-func NewKubeflowApplicationHandler(service service.GatewayApplicationService, defaultLogLines int) *ApplicationHandler {
+func NewKubeflowApplicationHandler(service service.SparkApplicationService, defaultLogLines int) *ApplicationHandler {
 	return &ApplicationHandler{service: service, defaultLogLines: defaultLogLines}
 }
 
