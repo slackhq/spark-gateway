@@ -27,18 +27,14 @@ import (
 
 	"github.com/slackhq/spark-gateway/internal/shared/config"
 	"github.com/slackhq/spark-gateway/internal/shared/gatewayerrors"
-	"github.com/slackhq/spark-gateway/internal/sparkManager/api/v1/kubeflow"
-	appRepo "github.com/slackhq/spark-gateway/internal/sparkManager/repository"
-	"github.com/slackhq/spark-gateway/internal/sparkManager/service"
+	"github.com/slackhq/spark-gateway/internal/sparkManager/api"
 	dbRepo "github.com/slackhq/spark-gateway/internal/sparkManager/database/repository"
 	"github.com/slackhq/spark-gateway/internal/sparkManager/kube"
 	"github.com/slackhq/spark-gateway/internal/sparkManager/metrics"
+	appRepo "github.com/slackhq/spark-gateway/internal/sparkManager/repository"
+	"github.com/slackhq/spark-gateway/internal/sparkManager/service"
 
 	"time"
-
-	"github.com/gin-gonic/gin"
-
-	"github.com/slackhq/spark-gateway/internal/sparkManager/api/health"
 )
 
 type SparkManager struct {
@@ -53,10 +49,6 @@ func NewSparkManager(ctx context.Context, sgConfig *config.SparkGatewayConfig, c
 	if kubeCluster == nil {
 		return nil, fmt.Errorf("%s cluster information not found in config file", cluster)
 	}
-
-	// Creates a gin router with default middleware:
-	// logger and recovery (crash-free) middleware
-	ginRouter := gin.Default()
 
 	// Create DB Repo
 	var database dbRepo.DatabaseRepository = nil
@@ -101,21 +93,19 @@ func NewSparkManager(ctx context.Context, sgConfig *config.SparkGatewayConfig, c
 	// Initialize services
 	sparkApplicationService := service.NewSparkApplicationService(sparkAppRepo, database, *kubeCluster)
 	metricsService := metrics.NewService(metricsRepo, kubeCluster)
-	healthService := health.NewHealthService()
 
-	// Init handlers
-	sparkAppHandler := v1kubeflow.NewSparkApplicationHandler(sparkApplicationService, sgConfig.DefaultLogLines)
+	// Init metrics
 	metricsServer := metrics.NewHandler(metricsService, sgConfig.SparkManagerConfig.MetricsServer)
-	healthHandler := health.NewHealthHandler(healthService)
 
 	// Register routes
-	rootGroup := ginRouter.Group("")
-	sparkAppHandler.RegisterRoutes(rootGroup)
-	healthHandler.RegisterRoutes(rootGroup)
+	router, err := api.NewRouter(sgConfig, sparkApplicationService)
+	if err != nil {
+		return nil, err
+	}
 
 	server := http.Server{
 		Addr:    fmt.Sprintf(":%s", sgConfig.SparkManagerPort),
-		Handler: ginRouter,
+		Handler: router,
 	}
 
 	return &SparkManager{

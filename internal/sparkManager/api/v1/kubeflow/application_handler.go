@@ -16,54 +16,25 @@
 package v1kubeflow
 
 import (
-	"context"
 	"fmt"
 	"net/http"
 	"strconv"
 
-	"github.com/slackhq/spark-gateway/internal/domain"
-
 	"github.com/gin-gonic/gin"
 	"github.com/kubeflow/spark-operator/v2/api/v1beta2"
 
-	sharedHttp "github.com/slackhq/spark-gateway/internal/shared/http"
+	"github.com/slackhq/spark-gateway/internal/sparkManager/service"
 )
 
-//go:generate moq -rm -out mocksparkapplicationservice.go . SparkApplicationService
-
-type SparkApplicationService interface {
-	Get(namespace string, name string) (*v1beta2.SparkApplication, error)
-	List(namespace string) ([]*domain.SparkManagerApplicationMeta, error)
-	Status(namespace string, name string) (*v1beta2.SparkApplicationStatus, error)
-	Logs(namespace string, name string, tailLines int64) (*string, error)
-	Create(ctx context.Context, application *v1beta2.SparkApplication) (*v1beta2.SparkApplication, error)
-	Delete(ctx context.Context, namespace string, name string) error
-}
-
 type SparkApplicationHandler struct {
-	sparkApplicationService SparkApplicationService
+	sparkApplicationService service.SparkApplicationService
 	defaultLogLines         int
 }
 
-func NewSparkApplicationHandler(sparkApplicationService SparkApplicationService, defaultLogLines int) *SparkApplicationHandler {
+func NewSparkApplicationHandler(sparkApplicationService service.SparkApplicationService, defaultLogLines int) *SparkApplicationHandler {
 
 	sparkApplicationHandler := SparkApplicationHandler{sparkApplicationService: sparkApplicationService, defaultLogLines: defaultLogLines}
 	return &sparkApplicationHandler
-}
-
-func (h *SparkApplicationHandler) RegisterRoutes(rg *gin.RouterGroup) {
-	nsGroup := rg.Group("")
-	nsGroup.Use(sharedHttp.ApplicationErrorHandler)
-	{
-		nsGroup.GET("/:namespace", h.List)
-
-		nsGroup.POST("/:namespace/:name", h.Create)
-		nsGroup.GET("/:namespace/:name", h.Get)
-		nsGroup.GET("/:namespace/:name/status", h.Status)
-		nsGroup.GET("/:namespace/:name/logs", h.Logs)
-
-		nsGroup.DELETE("/:namespace/:name", h.Delete)
-	}
 }
 
 func (h *SparkApplicationHandler) Get(c *gin.Context) {

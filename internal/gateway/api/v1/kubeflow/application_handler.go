@@ -16,21 +16,14 @@
 package v1kubeflow
 
 import (
-	"context"
 	"errors"
-	"fmt"
 	"net/http"
 	"strconv"
 
-	swaggerDocs "github.com/slackhq/spark-gateway/docs/swagger"
-	swaggerFiles "github.com/swaggo/files"
-	ginSwagger "github.com/swaggo/gin-swagger"
-
 	"github.com/gin-gonic/gin"
 	"github.com/kubeflow/spark-operator/v2/api/v1beta2"
-	"github.com/slackhq/spark-gateway/internal/domain"
+	"github.com/slackhq/spark-gateway/internal/gateway/service"
 	"github.com/slackhq/spark-gateway/internal/shared/gatewayerrors"
-	sharedHttp "github.com/slackhq/spark-gateway/internal/shared/http"
 )
 
 //  Swagger General	API Info
@@ -42,44 +35,13 @@ import (
 //  @license.name	Apache 2.0
 //  @license.url	http://www.apache.org/licenses/LICENSE-2.0.html
 
-const sparkApplicationPathName = "applications"
-
-//go:generate moq -rm  -out mockgatewayapplicationservice.go . GatewayApplicationService
-
-type GatewayApplicationService interface {
-	Get(ctx context.Context, gatewayId string) (*domain.GatewayApplication, error)
-	List(ctx context.Context, cluster string, namespace string) ([]*domain.GatewayApplicationMeta, error)
-	Create(ctx context.Context, application *v1beta2.SparkApplication, user string) (*domain.GatewayApplication, error)
-	Status(ctx context.Context, gatewayId string) (*v1beta2.SparkApplicationStatus, error)
-	Logs(ctx context.Context, gatewayId string, tailLines int) (*string, error)
-	Delete(ctx context.Context, gatewayId string) error
-}
-
 type ApplicationHandler struct {
-	service         GatewayApplicationService
+	service         service.SparkApplicationService
 	defaultLogLines int
 }
 
-func NewApplicationHandler(service GatewayApplicationService, defaultLogLines int) *ApplicationHandler {
+func NewKubeflowApplicationHandler(service service.SparkApplicationService, defaultLogLines int) *ApplicationHandler {
 	return &ApplicationHandler{service: service, defaultLogLines: defaultLogLines}
-}
-
-func (h *ApplicationHandler) RegisterRoutes(rg *gin.RouterGroup) {
-
-	appGroup := rg.Group(fmt.Sprintf("/%s", sparkApplicationPathName))
-	appGroup.Use(sharedHttp.ApplicationErrorHandler)
-	{
-
-		appGroup.GET("", h.List)
-		appGroup.POST("", h.Create)
-
-		appGroup.GET("/:gatewayId", h.Get)
-		appGroup.DELETE("/:gatewayId", h.Delete)
-
-		appGroup.GET("/:gatewayId/status", h.Status)
-		appGroup.GET("/:gatewayId/logs", h.Logs)
-
-	}
 }
 
 // ListSparkApplications godoc
@@ -214,6 +176,7 @@ func (h *ApplicationHandler) Create(c *gin.Context) {
 	gotUser, exists := c.Get("user")
 	if !exists {
 		c.Error(errors.New("no user set, congratulations you've encountered a bug that should never happen"))
+		return
 	}
 	user := gotUser.(string)
 
@@ -247,16 +210,4 @@ func (h *ApplicationHandler) Delete(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"status": "success"})
-}
-
-func RegisterSwaggerDocs(rg *gin.RouterGroup, gatewayApiVersion string) {
-	swaggerDocs.SwaggerInfo.BasePath = fmt.Sprintf("/%s/%s", gatewayApiVersion, sparkApplicationPathName)
-
-	// Swagger UI on /swagger/index.html
-	rg.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler, ginSwagger.DefaultModelsExpandDepth(-1)))
-	// Redirect /doc and /docs/ to /swagger/index.html
-	rg.GET("/docs", func(ctx *gin.Context) {
-		ctx.Redirect(http.StatusMovedPermanently, "/swagger/index.html")
-	})
-
 }
