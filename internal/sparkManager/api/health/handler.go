@@ -16,34 +16,18 @@
 package health
 
 import (
-	"context"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
 
-type HealthService interface {
-	Health(ctx context.Context) HealthResponse
+type HealthResponse struct {
+	Status string `json:"status"`
 }
 
-type HealthHandler struct {
-	service HealthService
-}
-
-func NewHealthHandler(service HealthService) *HealthHandler {
-	healthHandler := HealthHandler{service: service}
-	return &healthHandler
-}
-
-func (h *HealthHandler) RegisterRoutes(rg *gin.RouterGroup) {
-	healthGroup := rg.Group("")
-
-	healthGroup.GET("/health", h.Health)
-}
+type HealthHandler struct{}
 
 func (h *HealthHandler) Health(c *gin.Context) {
 
-	health := h.service.Health(c)
-
-	c.JSON(http.StatusOK, health)
+	c.JSON(http.StatusOK, HealthResponse{Status: "OK"})
 }
