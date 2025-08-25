@@ -112,7 +112,7 @@ func TestApplicationHandlerGet(t *testing.T) {
 		User:    "user",
 	}
 
-	service := &service.GatewayApplicationServiceMock{
+	service := &service.SparkApplicationServiceMock{
 		GetFunc: func(ctx context.Context, gatewayId string) (*domain.GatewayApplication, error) {
 			return retApp, nil
 		},
@@ -134,7 +134,7 @@ func TestApplicationHandlerGet(t *testing.T) {
 
 func TestApplicationHandlerGetError(t *testing.T) {
 
-	service := &service.GatewayApplicationServiceMock{
+	service := &service.SparkApplicationServiceMock{
 		GetFunc: func(ctx context.Context, gatewayId string) (*domain.GatewayApplication, error) {
 			return &domain.GatewayApplication{}, gatewayerrors.NewNotFound(errors.New("error getting SparkApplication 'clusterid-testid'"))
 		},
@@ -162,7 +162,7 @@ func TestApplicationHandlerStatus(t *testing.T) {
 		SubmissionID: "submissionId",
 	}
 
-	service := &service.GatewayApplicationServiceMock{
+	service := &service.SparkApplicationServiceMock{
 		StatusFunc: func(ctx context.Context, gatewayId string) (*v1beta2.SparkApplicationStatus, error) {
 			return retResp, nil
 		},
@@ -183,7 +183,7 @@ func TestApplicationHandlerStatus(t *testing.T) {
 }
 func TestApplicationHandlerStatusError(t *testing.T) {
 
-	service := &service.GatewayApplicationServiceMock{
+	service := &service.SparkApplicationServiceMock{
 		StatusFunc: func(ctx context.Context, gatewayId string) (*v1beta2.SparkApplicationStatus, error) {
 			return &v1beta2.SparkApplicationStatus{}, gatewayerrors.NewNotFound(errors.New("error getting SparkApplication 'clusterid-testid'"))
 		},
@@ -222,7 +222,7 @@ func TestApplicationHandlerCreate(t *testing.T) {
 		User:    "user",
 	}
 
-	service := &service.GatewayApplicationServiceMock{
+	service := &service.SparkApplicationServiceMock{
 		CreateFunc: func(ctx context.Context, application *v1beta2.SparkApplication, user string) (*domain.GatewayApplication, error) {
 			return retApp, nil
 		},
@@ -250,7 +250,7 @@ func TestApplicationHandlerCreate(t *testing.T) {
 }
 func TestApplicationHandlerCreateBadRequest(t *testing.T) {
 
-	service := &service.GatewayApplicationServiceMock{
+	service := &service.SparkApplicationServiceMock{
 		CreateFunc: func(ctx context.Context, application *v1beta2.SparkApplication, user string) (*domain.GatewayApplication, error) {
 			return nil, nil
 		},
@@ -278,7 +278,7 @@ func TestApplicationHandlerCreateAlreadyExists(t *testing.T) {
 		ctx.Next()
 	})
 
-	service := &service.GatewayApplicationServiceMock{
+	service := &service.SparkApplicationServiceMock{
 		CreateFunc: func(ctx context.Context, application *v1beta2.SparkApplication, user string) (*domain.GatewayApplication, error) {
 			return nil, gatewayerrors.NewAlreadyExists(errors.New("resource.group \"test\" already exists"))
 		},
@@ -307,7 +307,7 @@ func TestApplicationHandlerCreateAlreadyExists(t *testing.T) {
 
 func TestApplicationHandlerDelete(t *testing.T) {
 
-	service := &service.GatewayApplicationServiceMock{
+	service := &service.SparkApplicationServiceMock{
 		DeleteFunc: func(ctx context.Context, gatewayId string) error {
 			return nil
 		},
@@ -331,7 +331,7 @@ func TestApplicationHandlerDelete(t *testing.T) {
 }
 func TestApplicationHandlerDeleteError(t *testing.T) {
 
-	service := &service.GatewayApplicationServiceMock{
+	service := &service.SparkApplicationServiceMock{
 		DeleteFunc: func(ctx context.Context, gatewayId string) error {
 			return gatewayerrors.NewNotFound(errors.New("error getting SparkApplication 'clusterid-testid'"))
 		},

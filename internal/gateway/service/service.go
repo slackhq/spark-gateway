@@ -45,9 +45,9 @@ type SparkApplicationRepository interface {
 	Delete(ctx context.Context, cluster domain.KubeCluster, namespace string, name string) error
 }
 
-//go:generate moq -rm  -out mockgatewayapplicationservice.go . GatewayApplicationService
+//go:generate moq -rm  -out mockgatewayapplicationservice.go . SparkApplicationService
 
-type GatewayApplicationService interface {
+type SparkApplicationService interface {
 	Get(ctx context.Context, gatewayId string) (*domain.GatewayApplication, error)
 	List(ctx context.Context, cluster string, namespace string) ([]*domain.GatewayApplicationMeta, error)
 	Create(ctx context.Context, application *v1beta2.SparkApplication, user string) (*domain.GatewayApplication, error)
@@ -76,7 +76,7 @@ func NewApplicationService(
 	selectorKey string,
 	selectorValue string,
 	gatewayIdGenerator domain.GatewayIdGenerator,
-) GatewayApplicationService {
+) SparkApplicationService {
 	return &service{
 		sparkAppRepo:          sparkAppRepo,
 		clusterRepository:     clusterRepository,

@@ -13,7 +13,7 @@ import (
 	sgHttp "github.com/slackhq/spark-gateway/internal/shared/http"
 )
 
-func NewRouter(sgConf *config.SparkGatewayConfig, appService service.GatewayApplicationService) (*gin.Engine, error) {
+func NewRouter(sgConf *config.SparkGatewayConfig, appService service.SparkApplicationService) (*gin.Engine, error) {
 
 	router := gin.Default()
 	router.Use(sgHttp.ApplicationErrorHandler)
