@@ -23,9 +23,6 @@ func NewRouter(sgConf *config.SparkGatewayConfig, appService service.Application
 
 	// Versioned routes
 	v1Group := router.Group("/v1")
-	if err := middleware.AddMiddleware(sgConf.GatewayConfig.Middleware, v1Group); err != nil {
-		return nil, fmt.Errorf("error adding middlewares to routes: %w", err)
-	}
 
 	v1kubeflow.RegisterKubeflowApplicationRoutes(v1Group, sgConf, appService)
 
