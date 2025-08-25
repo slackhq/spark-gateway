@@ -10,13 +10,13 @@ import (
 	v1kubeflow "github.com/slackhq/spark-gateway/internal/gateway/api/v1/kubeflow"
 	"github.com/slackhq/spark-gateway/internal/gateway/service"
 	"github.com/slackhq/spark-gateway/internal/shared/config"
-	sgHttp "github.com/slackhq/spark-gateway/internal/shared/http"
+	sgMiddleware "github.com/slackhq/spark-gateway/internal/shared/middleware"
 )
 
 func NewRouter(sgConf *config.SparkGatewayConfig, appService service.SparkApplicationService) (*gin.Engine, error) {
 
 	router := gin.Default()
-	router.Use(sgHttp.ApplicationErrorHandler)
+	router.Use(sgMiddleware.ApplicationErrorHandler)
 
 	// Root group for unversioned routes
 	rootGroup := router.Group("")
