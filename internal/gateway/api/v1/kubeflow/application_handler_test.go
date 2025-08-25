@@ -31,7 +31,7 @@ import (
 	"github.com/slackhq/spark-gateway/internal/gateway/service"
 	"github.com/slackhq/spark-gateway/internal/shared/config"
 	"github.com/slackhq/spark-gateway/internal/shared/gatewayerrors"
-	sgHttp "github.com/slackhq/spark-gateway/internal/shared/http"
+	sgMiddleware "github.com/slackhq/spark-gateway/internal/shared/middleware"
 	"github.com/stretchr/testify/assert"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -46,7 +46,7 @@ func init() {
 func NewV1Router() (*gin.Engine, *gin.RouterGroup) {
 	router := gin.Default()
 	v1Group := router.Group("/api/v1")
-	v1Group.Use(sgHttp.ApplicationErrorHandler)
+	v1Group.Use(sgMiddleware.ApplicationErrorHandler)
 
 	return router, v1Group
 }
@@ -82,7 +82,7 @@ func TestApplicationHandlerErrorHandler(t *testing.T) {
 	for _, test := range errorHandlerTests {
 		t.Run(test.test, func(t *testing.T) {
 			router := gin.New()
-			router.Use(sgHttp.ApplicationErrorHandler)
+			router.Use(sgMiddleware.ApplicationErrorHandler)
 			router.Use(func(ctx *gin.Context) {
 				ctx.Error(test.err)
 			})
