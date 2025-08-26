@@ -70,9 +70,9 @@ func NewSparkManagerRepository(clusters []model.KubeCluster, sparkManagerHostnam
 	}, nil
 }
 
-func (r *SparkManagerRepository) Get(ctx context.Context, cluster model.KubeCluster, namespace string, name string) (*v1beta2.SparkApplication, error) {
+func (r *SparkManagerRepository) Get(ctx context.Context, cluster string, namespace string, name string) (*v1beta2.SparkApplication, error) {
 
-	clusterEndpoint := r.ClusterEndpoints[cluster.Name]
+	clusterEndpoint := r.ClusterEndpoints[cluster]
 	// Url: http://host:port/namespace/name
 	url := fmt.Sprintf("%s/%s/%s", clusterEndpoint, namespace, name)
 
@@ -99,9 +99,9 @@ func (r *SparkManagerRepository) Get(ctx context.Context, cluster model.KubeClus
 	return kube.Sanitize(&app), nil
 }
 
-func (r *SparkManagerRepository) List(ctx context.Context, cluster model.KubeCluster, namespace string) ([]*model.SparkManagerApplicationMeta, error) {
+func (r *SparkManagerRepository) List(ctx context.Context, cluster string, namespace string) ([]*model.SparkManagerApplicationMeta, error) {
 
-	clusterEndpoint := r.ClusterEndpoints[cluster.Name]
+	clusterEndpoint := r.ClusterEndpoints[cluster]
 	// Url: http://host:port/namespace
 	url := fmt.Sprintf("%s/%s", clusterEndpoint, namespace)
 
@@ -128,9 +128,9 @@ func (r *SparkManagerRepository) List(ctx context.Context, cluster model.KubeClu
 	return appMetaList, nil
 }
 
-func (r *SparkManagerRepository) Status(ctx context.Context, cluster model.KubeCluster, namespace string, name string) (*v1beta2.SparkApplicationStatus, error) {
+func (r *SparkManagerRepository) Status(ctx context.Context, cluster string, namespace string, name string) (*v1beta2.SparkApplicationStatus, error) {
 
-	clusterEndpoint := r.ClusterEndpoints[cluster.Name]
+	clusterEndpoint := r.ClusterEndpoints[cluster]
 	// Url: http://host:port/namespace/name/status
 	url := fmt.Sprintf("%s/%s/%s/status", clusterEndpoint, namespace, name)
 
@@ -157,9 +157,9 @@ func (r *SparkManagerRepository) Status(ctx context.Context, cluster model.KubeC
 	return &appStatus, nil
 }
 
-func (r *SparkManagerRepository) Logs(ctx context.Context, cluster model.KubeCluster, namespace string, name string, tailLines int) (*string, error) {
+func (r *SparkManagerRepository) Logs(ctx context.Context, cluster string, namespace string, name string, tailLines int) (*string, error) {
 
-	clusterEndpoint := r.ClusterEndpoints[cluster.Name]
+	clusterEndpoint := r.ClusterEndpoints[cluster]
 	// Url: http://host:port/namespace/name/logs?lines=lineCount
 	url := fmt.Sprintf("%s/%s/%s/logs?lines=%d", clusterEndpoint, namespace, name, tailLines)
 
@@ -186,9 +186,9 @@ func (r *SparkManagerRepository) Logs(ctx context.Context, cluster model.KubeClu
 	return &logString, nil
 }
 
-func (r *SparkManagerRepository) Create(ctx context.Context, cluster model.KubeCluster, sparkApplication *v1beta2.SparkApplication) (*v1beta2.SparkApplication, error) {
+func (r *SparkManagerRepository) Create(ctx context.Context, cluster string, sparkApplication *v1beta2.SparkApplication) (*v1beta2.SparkApplication, error) {
 
-	clusterEndpoint := r.ClusterEndpoints[cluster.Name]
+	clusterEndpoint := r.ClusterEndpoints[cluster]
 	// Url: http://host:port/namespace/name
 	url := fmt.Sprintf("%s/%s/%s", clusterEndpoint, sparkApplication.Namespace, sparkApplication.Name)
 
@@ -221,9 +221,9 @@ func (r *SparkManagerRepository) Create(ctx context.Context, cluster model.KubeC
 	return kube.Sanitize(&sparkApp), nil
 }
 
-func (r *SparkManagerRepository) Delete(ctx context.Context, cluster model.KubeCluster, namespace string, name string) error {
+func (r *SparkManagerRepository) Delete(ctx context.Context, cluster string, namespace string, name string) error {
 
-	clusterEndpoint := r.ClusterEndpoints[cluster.Name]
+	clusterEndpoint := r.ClusterEndpoints[cluster]
 	// Url: http://host:port/namespace/name
 	url := fmt.Sprintf("%s/%s/%s", clusterEndpoint, namespace, name)
 

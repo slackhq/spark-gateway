@@ -19,11 +19,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/http"
+	"strconv"
+
 	swaggerDocs "github.com/slackhq/spark-gateway/docs/swagger"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
-	"net/http"
-	"strconv"
+	"k8s.io/klog/v2"
 
 	"github.com/gin-gonic/gin"
 	"github.com/kubeflow/spark-operator/v2/api/v1beta2"
@@ -83,24 +85,30 @@ func (h *ApplicationHandler) RegisterRoutes(rg *gin.RouterGroup) {
 
 // ListSparkApplications godoc
 // @Summary List SparkApplications
-// @Description Lists SparkApplications metadata in the specified cluster. Optionally filter by namespace.
+// @Description Lists SparkApplications metadata for specified clusters and namespaces.
 // @Tags Applications
 // @Accept json
 // @Produce json
 // @Security BasicAuth
-// @Param cluster query string true "Cluster name"
-// @Param namespace query string false "Namespace (optional)"
+// @Param cluster query string true "Kube cluster name. Use 'all' to fetch from all configured clusters."
+// @Param namespace query string true "Namespace name. Use 'all' to fetch from all configured namespaces."
 // @Success 200 {array} model.GatewayApplicationMeta "List of SparkApplication metadata"
 // @Router / [get]
 func (h *ApplicationHandler) List(c *gin.Context) {
 
 	cluster := c.Query("cluster")
 	if cluster == "" {
-		c.Error(gatewayerrors.NewBadRequest(errors.New("must provide 'cluster' query parameter and/or 'namespace' query parameter")))
+		c.Error(gatewayerrors.NewBadRequest(errors.New("must provide 'cluster' query parameter")))
 		return
 	}
 
 	namespace := c.Query("namespace")
+	if cluster == "" {
+		c.Error(gatewayerrors.NewBadRequest(errors.New("must provide 'namespace' query parameter")))
+		return
+	}
+
+	klog.Infof("List call for %s cluster and %s namespace", cluster, namespace)
 
 	appMetaList, err := h.service.List(c, cluster, namespace)
 

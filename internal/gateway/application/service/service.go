@@ -20,6 +20,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"time"
 
 	"k8s.io/klog/v2"
 
@@ -38,12 +39,12 @@ import (
 //go:generate moq -rm  -out mocksparkapplicationrepository.go . SparkApplicationRepository
 
 type SparkApplicationRepository interface {
-	Get(ctx context.Context, cluster model.KubeCluster, namespace string, name string) (*v1beta2.SparkApplication, error)
-	List(ctx context.Context, cluster model.KubeCluster, namespace string) ([]*model.SparkManagerApplicationMeta, error)
-	Status(ctx context.Context, cluster model.KubeCluster, namespace string, name string) (*v1beta2.SparkApplicationStatus, error)
-	Logs(ctx context.Context, cluster model.KubeCluster, namespace string, name string, tailLines int) (*string, error)
-	Create(ctx context.Context, cluster model.KubeCluster, application *v1beta2.SparkApplication) (*v1beta2.SparkApplication, error)
-	Delete(ctx context.Context, cluster model.KubeCluster, namespace string, name string) error
+	Get(ctx context.Context, cluster string, namespace string, name string) (*v1beta2.SparkApplication, error)
+	List(ctx context.Context, cluster string, namespace string) ([]*model.SparkManagerApplicationMeta, error)
+	Status(ctx context.Context, cluster string, namespace string, name string) (*v1beta2.SparkApplicationStatus, error)
+	Logs(ctx context.Context, cluster string, namespace string, name string, tailLines int) (*string, error)
+	Create(ctx context.Context, cluster string, application *v1beta2.SparkApplication) (*v1beta2.SparkApplication, error)
+	Delete(ctx context.Context, cluster string, namespace string, name string) error
 }
 
 type service struct {
@@ -82,7 +83,6 @@ func NewApplicationService(
 func (s *service) GetClusterNamespaceFromGatewayId(gatewayId string) (*model.KubeCluster, string, error) {
 	clusterId := strings.Split(gatewayId, "-")[0]
 	kubeCluster, err := s.clusterRepository.GetById(clusterId)
-
 	if err != nil {
 		return nil, "", gatewayerrors.NewInternal(fmt.Errorf("error getting cluster parsed from gatewayId: %w", err))
 	}
@@ -103,7 +103,7 @@ func (s *service) Get(ctx context.Context, gatewayId string) (*model.GatewayAppl
 		return nil, err
 	}
 
-	sparkApp, err := s.sparkAppRepo.Get(ctx, *cluster, namespace, gatewayId)
+	sparkApp, err := s.sparkAppRepo.Get(ctx, cluster.Name, namespace, gatewayId)
 
 	if err != nil {
 		return nil, gatewayerrors.NewFrom(fmt.Errorf("error getting SparkApplication '%s': %w", gatewayId, err))
@@ -125,42 +125,110 @@ func (s *service) Get(ctx context.Context, gatewayId string) (*model.GatewayAppl
 	return gatewayApp, nil
 }
 
-// List retrieves `num` number of GatewayApplications from specified namespace `namespace` in cluster `cluster`
+// List retrieves a list of GatewayApplicationMeta for all SparkApplications in the specified namespace and cluster.
 func (s *service) List(ctx context.Context, cluster string, namespace string) ([]*model.GatewayApplicationMeta, error) {
 
-	kubeCluster, err := s.clusterRepository.GetByName(cluster)
+	var kubeClusters []model.KubeCluster
+	var err error
 
-	if err != nil {
-		return nil, gatewayerrors.NewFrom(fmt.Errorf("error getting cluster: %w", err))
-	}
-
-	namespaces := []string{}
-	// Get all apps in cluster if namespace is blank
-	if namespace != "" {
-		if _, err := kubeCluster.GetNamespaceByName(namespace); err != nil {
-			return nil, gatewayerrors.NewFrom(fmt.Errorf("error getting namespace: %w", err))
-		}
-		namespaces = append(namespaces, namespace)
-	} else {
-		for _, kubeNamespace := range kubeCluster.Namespaces {
-			namespaces = append(namespaces, kubeNamespace.Name)
-		}
-	}
-
-	var appMetaList []*model.GatewayApplicationMeta
-	for _, ns := range namespaces {
-		nsAppMetas, err := s.sparkAppRepo.List(ctx, *kubeCluster, ns)
+	if cluster == "all" {
+		kubeClusters, err = s.clusterRepository.GetAll()
 		if err != nil {
-			return nil, gatewayerrors.NewFrom(fmt.Errorf("error getting applications: %w", err))
+			return nil, gatewayerrors.NewFrom(fmt.Errorf("error getting all clusters: %w", err))
 		}
-
-		for _, appMeta := range nsAppMetas {
-			appMetaList = append(appMetaList, model.NewGatewayApplicationMeta(appMeta, cluster))
+	} else {
+		kubeCluster, err := s.clusterRepository.GetByName(cluster)
+		if err != nil {
+			return nil, gatewayerrors.NewFrom(fmt.Errorf("error getting cluster: %w", err))
 		}
-
+		kubeClusters = []model.KubeCluster{*kubeCluster}
 	}
 
-	return appMetaList, nil
+	namespacesMap := make(map[string][]string)
+
+	for _, cluster := range kubeClusters {
+		namespaceList := []string{}
+		if namespace == "all" {
+			for _, ns := range cluster.Namespaces {
+				namespaceList = append(namespaceList, ns.Name)
+			}
+		} else {
+			if _, err := cluster.GetNamespaceByName(namespace); err != nil {
+				return nil, gatewayerrors.NewFrom(fmt.Errorf("error getting namespace: %w", err))
+			}
+			namespaceList = append(namespaceList, namespace)
+		}
+		namespacesMap[cluster.Name] = namespaceList
+	}
+
+	fetchSparkAppMeta := func(ctx context.Context, cluster string, namespaceList []string, outputChan chan []*model.GatewayApplicationMeta, outputErrChan chan error) {
+		appMetaList := []*model.GatewayApplicationMeta{}
+
+		for _, ns := range namespaceList {
+			// Check if parent context is done
+			select {
+			case <-ctx.Done():
+				return
+			default:
+			}
+
+			nsAppMetas, err := s.sparkAppRepo.List(ctx, cluster, ns)
+			if err != nil {
+				select {
+				case outputErrChan <- fmt.Errorf("error getting applications for %s cluster and %s namespace: %w", cluster, ns, err):
+				case <-ctx.Done():
+				}
+				return
+			}
+
+			for _, appMeta := range nsAppMetas {
+				appMetaList = append(appMetaList, model.NewGatewayApplicationMeta(appMeta, cluster))
+			}
+		}
+
+		select {
+		case outputChan <- appMetaList:
+		case <-ctx.Done():
+		}
+	}
+
+	receiveChan := make(chan []*model.GatewayApplicationMeta)
+	receiveErrChan := make(chan error)
+
+	// close channels when ctx is cancelled
+	go func() {
+		<-ctx.Done()
+		close(receiveChan)
+		close(receiveErrChan)
+	}()
+
+	// Create a routine per cluster
+	for cluster, namespaceList := range namespacesMap {
+		go fetchSparkAppMeta(ctx, cluster, namespaceList, receiveChan, receiveErrChan)
+	}
+
+	var totalAppMetaList []*model.GatewayApplicationMeta
+
+	timeoutSeconds := 60 * time.Second
+	listTimeout := time.After(timeoutSeconds)
+
+	// Fetch responses
+	for range len(namespacesMap) {
+		select {
+		case appMetaList := <-receiveChan:
+			totalAppMetaList = append(totalAppMetaList, appMetaList...)
+		case err := <-receiveErrChan:
+			return nil, gatewayerrors.NewInternal(fmt.Errorf("List call to SparkManager returned error: %w", err))
+		case <-listTimeout:
+			return nil, gatewayerrors.NewInternal(fmt.Errorf("Timeout reached for list calls to SparkManager. Timeout: %v", timeoutSeconds))
+		case <-ctx.Done():
+			return nil, gatewayerrors.NewInternal(errors.New("Context is cancelled"))
+		}
+	}
+
+	close(receiveChan)
+	close(receiveErrChan)
+	return totalAppMetaList, nil
 
 }
 
@@ -193,7 +261,7 @@ func (s *service) Create(ctx context.Context, application *v1beta2.SparkApplicat
 	application = s.SparkApplicationOverrides(application, user, appName)
 
 	// Create SparkApp
-	sparkApp, err := s.sparkAppRepo.Create(ctx, *cluster, application)
+	sparkApp, err := s.sparkAppRepo.Create(ctx, cluster.Name, application)
 	if err != nil {
 		return nil, gatewayerrors.NewFrom(fmt.Errorf("error creating SparkApplication '%s/%s': %w", application.Namespace, application.Name, err))
 	}
@@ -215,7 +283,7 @@ func (s *service) Status(ctx context.Context, gatewayId string) (*v1beta2.SparkA
 		return nil, err
 	}
 
-	sparkApp, err := s.sparkAppRepo.Get(ctx, *cluster, namespace, gatewayId)
+	sparkApp, err := s.sparkAppRepo.Get(ctx, cluster.Name, namespace, gatewayId)
 	if err != nil {
 		return nil, gatewayerrors.NewFrom(fmt.Errorf("error getting status for SparkApplication '%s': %w", gatewayId, err))
 	}
@@ -229,7 +297,7 @@ func (s *service) Logs(ctx context.Context, gatewayId string, tailLines int) (*s
 		return nil, err
 	}
 
-	logString, err := s.sparkAppRepo.Logs(ctx, *cluster, namespace, gatewayId, tailLines)
+	logString, err := s.sparkAppRepo.Logs(ctx, cluster.Name, namespace, gatewayId, tailLines)
 	if err != nil {
 		return nil, gatewayerrors.NewFrom(fmt.Errorf("error getting Logs for SparkApplication '%s': %w", gatewayId, err))
 	}
@@ -243,7 +311,7 @@ func (s *service) Delete(ctx context.Context, gatewayId string) error {
 		return err
 	}
 
-	if err := s.sparkAppRepo.Delete(ctx, *cluster, namespace, gatewayId); err != nil {
+	if err := s.sparkAppRepo.Delete(ctx, cluster.Name, namespace, gatewayId); err != nil {
 		return gatewayerrors.NewFrom(fmt.Errorf("error deleting SparkApplication '%s': %w", gatewayId, err))
 	}
 
