@@ -20,6 +20,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/kubeflow/spark-operator/v2/api/v1beta2"
 	"k8s.io/apimachinery/pkg/util/json"
@@ -34,10 +35,11 @@ import (
 )
 
 type SparkManagerRepository struct {
-	ClusterEndpoints map[string]string
+	ClusterEndpoints        map[string]string
+	operationTimeoutSeconds config.OperationTimeoutSeconds
 }
 
-func NewSparkManagerRepository(clusters []model.KubeCluster, sparkManagerHostnameTemplate string, sparkManagerPort string, debugPorts map[string]config.DebugPort) (*SparkManagerRepository, error) {
+func NewSparkManagerRepository(clusters []model.KubeCluster, sparkManagerHostnameTemplate string, sparkManagerPort string, debugPorts map[string]config.DebugPort, operationTimeoutSeconds config.OperationTimeoutSeconds) (*SparkManagerRepository, error) {
 
 	hostNameF := "http://%s:%s"
 	clusterEndpoints := map[string]string{}
@@ -66,7 +68,8 @@ func NewSparkManagerRepository(clusters []model.KubeCluster, sparkManagerHostnam
 	}
 
 	return &SparkManagerRepository{
-		ClusterEndpoints: clusterEndpoints,
+		ClusterEndpoints:        clusterEndpoints,
+		operationTimeoutSeconds: operationTimeoutSeconds,
 	}, nil
 }
 
@@ -81,7 +84,10 @@ func (r *SparkManagerRepository) Get(ctx context.Context, cluster model.KubeClus
 		return nil, gatewayerrors.NewFrom(fmt.Errorf("error creating %s request: %w", http.MethodGet, err))
 	}
 
-	resp, respBody, err := pkgHttp.HttpRequest(ctx, &http.Client{}, request)
+	timeoutCtx, cancel := context.WithTimeout(ctx, time.Second*r.operationTimeoutSeconds.Get)
+	defer cancel()
+
+	resp, respBody, err := pkgHttp.HttpRequest(timeoutCtx, &http.Client{}, request)
 	if err != nil {
 		return nil, gatewayerrors.NewFrom(err)
 	}
@@ -110,7 +116,10 @@ func (r *SparkManagerRepository) List(ctx context.Context, cluster model.KubeClu
 		return nil, gatewayerrors.NewFrom(fmt.Errorf("error creating %s request: %w", http.MethodGet, err))
 	}
 
-	resp, respBody, err := pkgHttp.HttpRequest(ctx, &http.Client{}, request)
+	timeoutCtx, cancel := context.WithTimeout(ctx, time.Second*r.operationTimeoutSeconds.List)
+	defer cancel()
+
+	resp, respBody, err := pkgHttp.HttpRequest(timeoutCtx, &http.Client{}, request)
 	if err != nil {
 		return nil, gatewayerrors.NewFrom(err)
 	}
@@ -139,7 +148,10 @@ func (r *SparkManagerRepository) Status(ctx context.Context, cluster model.KubeC
 		return nil, gatewayerrors.NewFrom(fmt.Errorf("error creating %s request: %w", http.MethodGet, err))
 	}
 
-	resp, respBody, err := pkgHttp.HttpRequest(ctx, &http.Client{}, request)
+	timeoutCtx, cancel := context.WithTimeout(ctx, time.Second*r.operationTimeoutSeconds.Get)
+	defer cancel()
+
+	resp, respBody, err := pkgHttp.HttpRequest(timeoutCtx, &http.Client{}, request)
 	if err != nil {
 		return nil, gatewayerrors.NewFrom(err)
 	}
@@ -168,7 +180,10 @@ func (r *SparkManagerRepository) Logs(ctx context.Context, cluster model.KubeClu
 		return nil, gatewayerrors.NewFrom(fmt.Errorf("error creating %s request: %w", http.MethodGet, err))
 	}
 
-	resp, respBody, err := pkgHttp.HttpRequest(ctx, &http.Client{}, request)
+	timeoutCtx, cancel := context.WithTimeout(ctx, time.Second*r.operationTimeoutSeconds.Get)
+	defer cancel()
+
+	resp, respBody, err := pkgHttp.HttpRequest(timeoutCtx, &http.Client{}, request)
 	if err != nil {
 		return nil, gatewayerrors.NewFrom(err)
 	}
@@ -203,7 +218,10 @@ func (r *SparkManagerRepository) Create(ctx context.Context, cluster model.KubeC
 	}
 	request.Header.Set("Content-Type", "application/json")
 
-	resp, respBody, err := pkgHttp.HttpRequest(ctx, &http.Client{}, request)
+	timeoutCtx, cancel := context.WithTimeout(ctx, time.Second*r.operationTimeoutSeconds.Create)
+	defer cancel()
+
+	resp, respBody, err := pkgHttp.HttpRequest(timeoutCtx, &http.Client{}, request)
 	if err != nil {
 		return nil, gatewayerrors.NewFrom(err)
 	}
@@ -232,7 +250,10 @@ func (r *SparkManagerRepository) Delete(ctx context.Context, cluster model.KubeC
 		return gatewayerrors.NewFrom(fmt.Errorf("error creating %s request: %w", http.MethodDelete, err))
 	}
 
-	resp, respBody, err := pkgHttp.HttpRequest(ctx, &http.Client{}, request)
+	timeoutCtx, cancel := context.WithTimeout(ctx, time.Second*r.operationTimeoutSeconds.Delete)
+	defer cancel()
+
+	resp, respBody, err := pkgHttp.HttpRequest(timeoutCtx, &http.Client{}, request)
 	if err != nil {
 		return gatewayerrors.NewFrom(err)
 	}

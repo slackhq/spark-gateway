@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/knadh/koanf/parsers/yaml"
 	"github.com/knadh/koanf/providers/file"
@@ -108,12 +109,20 @@ type MiddlewareDefinition struct {
 	Conf map[string]any `koanf:"conf"`
 }
 
+type OperationTimeoutSeconds struct {
+	List   time.Duration `koanf:"list"`
+	Get    time.Duration `koanf:"get"`
+	Create time.Duration `koanf:"create"`
+	Delete time.Duration `koanf:"delete"`
+}
+
 type GatewayConfig struct {
-	GatewayApiVersion  string                   `koanf:"gatewayApiVersion"`
-	GatewayPort        string                   `koanf:"gatewayPort"`
-	Middleware         []MiddlewareDefinition   `koanf:"middleware"`
-	StatusUrlTemplates model.StatusUrlTemplates `koanf:"statusUrlTemplates"`
-	EnableSwaggerUI    bool                     `koanf:"enableSwaggerUI"`
+	GatewayApiVersion       string                   `koanf:"gatewayApiVersion"`
+	GatewayPort             string                   `koanf:"gatewayPort"`
+	Middleware              []MiddlewareDefinition   `koanf:"middleware"`
+	StatusUrlTemplates      model.StatusUrlTemplates `koanf:"statusUrlTemplates"`
+	EnableSwaggerUI         bool                     `koanf:"enableSwaggerUI"`
+	OperationTimeoutSeconds OperationTimeoutSeconds  `koanf:"operationTimeoutSeconds"`
 }
 
 func (g *GatewayConfig) Key() string {
