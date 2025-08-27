@@ -165,7 +165,7 @@ func (s *service) List(ctx context.Context, cluster string, namespace string) ([
 		appMetaList := []*model.GatewayApplicationMeta{}
 
 		for _, ns := range namespaceList {
-			// Check if parent context is done
+			// Check if context is done
 			select {
 			case <-ctx.Done():
 				return
@@ -197,6 +197,7 @@ func (s *service) List(ctx context.Context, cluster string, namespace string) ([
 
 	// close channels when ctx is cancelled
 	go func() {
+		// context comes from gin request and should be cancelled after the response is sent
 		<-ctx.Done()
 		close(receiveChan)
 		close(receiveErrChan)
@@ -226,8 +227,6 @@ func (s *service) List(ctx context.Context, cluster string, namespace string) ([
 		}
 	}
 
-	close(receiveChan)
-	close(receiveErrChan)
 	return totalAppMetaList, nil
 
 }
