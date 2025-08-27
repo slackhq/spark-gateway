@@ -195,7 +195,7 @@ func (s *service) List(ctx context.Context, cluster string, namespace string) ([
 	receiveChan := make(chan []*model.GatewayApplicationMeta)
 	receiveErrChan := make(chan error)
 
-	// close channels when ctx is cancelled
+	// close channels when ctx is Done
 	go func() {
 		// context comes from gin request and should be cancelled after the response is sent
 		<-ctx.Done()
