@@ -52,6 +52,12 @@ gateway:
 
   enableSwaggerUI: true
 
+  operationTimeoutSeconds:
+    list: 60
+    get: 60
+    create: 60
+    delete: 60
+
 sparkManager:
   clusterAuthType: kubeconfig
 

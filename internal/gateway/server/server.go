@@ -62,7 +62,7 @@ func NewGateway(ctx context.Context, sgConfig *cfg.SparkGatewayConfig, sparkMana
 	ginRouter := gin.Default()
 
 	//Repos
-	sparkManagerRepo, err := repository.NewSparkManagerRepository(sgConfig.KubeClusters, sparkManagerHostnameTemplate, sgConfig.SparkManagerPort, sgConfig.DebugPorts)
+	sparkManagerRepo, err := repository.NewSparkManagerRepository(sgConfig.KubeClusters, sparkManagerHostnameTemplate, sgConfig.SparkManagerPort, sgConfig.DebugPorts, sgConfig.GatewayConfig.OperationTimeoutSeconds)
 	if err != nil {
 		return nil, fmt.Errorf("could not create SparkManagerRespository: %w", err)
 	}
