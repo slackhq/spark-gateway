@@ -161,11 +161,13 @@ func (s *service) List(ctx context.Context, cluster string, namespace string) ([
 		namespacesMap[cluster.Name] = namespaceList
 	}
 
+	// fetchSparkAppMeta func will make calls to a specific cluster for each namespace in the list to get SparkApp
+	// metadata list. The output channels are used to send responses, and ctx will be used to determine if the routine
+	// should be terminated prematurely
 	fetchSparkAppMeta := func(ctx context.Context, cluster string, namespaceList []string, outputChan chan []*model.GatewayApplicationMeta, outputErrChan chan error) {
 		appMetaList := []*model.GatewayApplicationMeta{}
 
 		for _, ns := range namespaceList {
-			// Check if context is done
 			select {
 			case <-ctx.Done():
 				return
@@ -192,20 +194,20 @@ func (s *service) List(ctx context.Context, cluster string, namespace string) ([
 		}
 	}
 
-	receiveChan := make(chan []*model.GatewayApplicationMeta)
-	receiveErrChan := make(chan error)
+	receiveChan := make(chan []*model.GatewayApplicationMeta, len(namespacesMap))
+	receiveErrChan := make(chan error, len(namespacesMap))
 
 	// close channels when ctx is Done
 	go func() {
-		// context comes from gin request and should be cancelled after the response is sent
+		// context comes from gin request and should be canceled after the response is sent
 		<-ctx.Done()
 		close(receiveChan)
 		close(receiveErrChan)
 	}()
 
 	// Create a routine per cluster
-	for cluster, namespaceList := range namespacesMap {
-		go fetchSparkAppMeta(ctx, cluster, namespaceList, receiveChan, receiveErrChan)
+	for clusterName, namespaceList := range namespacesMap {
+		go fetchSparkAppMeta(ctx, clusterName, namespaceList, receiveChan, receiveErrChan)
 	}
 
 	var totalAppMetaList []*model.GatewayApplicationMeta
@@ -223,7 +225,7 @@ func (s *service) List(ctx context.Context, cluster string, namespace string) ([
 		case <-listTimeout:
 			return nil, gatewayerrors.NewInternal(fmt.Errorf("Timeout reached for list calls to SparkManager. Timeout: %v", timeoutSeconds))
 		case <-ctx.Done():
-			return nil, gatewayerrors.NewInternal(errors.New("Context is cancelled"))
+			return nil, gatewayerrors.NewInternal(errors.New("Context is canceled"))
 		}
 	}
 
