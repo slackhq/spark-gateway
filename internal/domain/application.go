@@ -45,13 +45,9 @@ type GatewayApplication struct {
 	SparkLogURLs              SparkLogURLs `json:"sparkLogURLs"`
 }
 
-type GatewayIdGenerator struct {
-	UuidGenerator func() (string, error)
-}
-
-func (g *GatewayIdGenerator) NewId(cluster KubeCluster, namespace string) (string, error) {
-	// Generate name from clusterId and UUID and set
-	genUUID, err := g.UuidGenerator()
+func NewId(cluster KubeCluster, namespace string) (string, error) {
+	// Generate name from clusterId, namespaceId, and UUID
+	uuid, err := uuid.NewV7()
 	if err != nil {
 		return "", fmt.Errorf("error generating application UUID: %w", err)
 	}
@@ -61,10 +57,11 @@ func (g *GatewayIdGenerator) NewId(cluster KubeCluster, namespace string) (strin
 		return "", fmt.Errorf("error generating GatewayId: %w", err)
 	}
 
-	appName := fmt.Sprintf("%s-%s-%s", cluster.ClusterId, kubeNamespace.NamespaceId, genUUID)
+	appName := fmt.Sprintf("%s-%s-%s", cluster.ClusterId, kubeNamespace.NamespaceId, uuid)
 
 	return appName, nil
 }
+
 
 func ParseGatewayIdUUID(gatewayId string) (*uuid.UUID, error) {
 	parts := strings.Split(gatewayId, "-")
