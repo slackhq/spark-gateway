@@ -16,10 +16,12 @@
 package domain
 
 import (
+	"errors"
 	"fmt"
+	"strings"
+
 	"github.com/google/uuid"
 	"github.com/kubeflow/spark-operator/v2/api/v1beta2"
-	"strings"
 )
 
 const GATEWAY_USER_LABEL = "spark-gateway/user"
@@ -34,11 +36,11 @@ type StatusUrlTemplates struct {
 // to be expanded into individual models like what Batch Processing Gateway did to fully decouple everything, but since we're
 // focusing on Kubeflow Spark Operator for now, we will target their models
 type GatewayApplicationStatus struct {
-	*v1beta2.SparkApplicationStatus
+	v1beta2.SparkApplicationStatus
 }
 
 type GatewayApplicationSpec struct {
-	*v1beta2.SparkApplicationSpec
+	v1beta2.SparkApplicationSpec
 }
 
 type GatewayApplicationMeta struct {
@@ -49,14 +51,24 @@ type GatewayApplicationMeta struct {
 }
 
 type GatewayApplication struct {
-	*v1beta2.SparkApplication `json:"sparkApplication"`
-	Metadata                  *GatewayApplicationMeta   `json:"metadata"`
-	Spec                      *GatewayApplicationSpec   `json:"spec"`
-	Status                    *GatewayApplicationStatus `json:"status"`
-	GatewayId                 string                    `json:"gatewayId"`
-	Cluster                   string                    `json:"cluster"`
-	User                      string                    `json:"user"`
-	SparkLogURLs              StatusUrlTemplates        `json:"sparkLogURLs"`
+	GatewayApplicationMeta `json:"metadata"`
+	Spec                   GatewayApplicationSpec   `json:"spec"`
+	Status                 GatewayApplicationStatus `json:"status"`
+	GatewayId              string                   `json:"gatewayId"`
+	Cluster                string                   `json:"cluster"`
+	User                   string                   `json:"user"`
+	SparkLogURLs           StatusUrlTemplates       `json:"sparkLogURLs"`
+}
+
+// SetUser will add the Gateway user label to the apps Labels and override
+// the Spec ProxyUser
+func (g *GatewayApplication) SetUser(user string) {
+
+	// Add user label to app Labels
+	g.Labels[GATEWAY_USER_LABEL] = user
+
+	// Set ProxyUser
+	g.Spec.ProxyUser = &user
 }
 
 func NewId(cluster KubeCluster, namespace string) (string, error) {
@@ -86,4 +98,47 @@ func ParseGatewayIdUUID(gatewayId string) (*uuid.UUID, error) {
 		return &uid, nil
 	}
 	return nil, fmt.Errorf("error parsing gatewayId (%s). Format must be 'cluster-namespace-uuid'", gatewayId)
+}
+
+// GatewayApplicationFromV1Beta2Application will return a new GatewayApplication by mapping inputs from a v1beta2.SparkApplication
+// and setting defaults.
+func GatewayApplicationFromV1Beta2Application(sparkApp v1beta2.SparkApplication) (*GatewayApplication, error) {
+
+	if sparkApp.Namespace == "" {
+		return nil, errors.New("submitted SparkApplication must have a Namespace")
+	}
+
+	// Create base structs first
+	meta := GatewayApplicationMeta{
+		Namespace: sparkApp.Namespace,
+	}
+	spec := GatewayApplicationSpec{SparkApplicationSpec: sparkApp.Spec}
+	status := GatewayApplicationStatus{SparkApplicationStatus: sparkApp.Status}
+
+	// Default labels and annotations
+	annotations := map[string]string{}
+	labels := map[string]string{}
+	if sparkApp.Annotations != nil {
+		annotations = sparkApp.Annotations
+	}
+
+	if sparkApp.Labels != nil {
+		labels = sparkApp.Labels
+	}
+
+	meta.Annotations = annotations
+	meta.Labels = labels
+
+	// If the application already has a name, we set it as an annotation because
+	// gateway will later override it with a GatewayId
+	if sparkApp.Name != "" {
+		annotations["applicationName"] = sparkApp.Name
+	}
+
+	return &GatewayApplication{
+		GatewayApplicationMeta: meta,
+		Spec:                   spec,
+		Status:                 status,
+	}, nil
+
 }

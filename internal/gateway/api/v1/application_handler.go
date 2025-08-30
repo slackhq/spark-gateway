@@ -172,8 +172,6 @@ func (h *GatewayApplicationHandler) Create(c *gin.Context) {
 		return
 	}
 
-	gatewayApp := domain.FromV1Beta2Application(app)
-
 	// Set user
 	// This should always exist because of prior auth middlewares
 	gotUser, exists := c.Get("user")
@@ -181,7 +179,14 @@ func (h *GatewayApplicationHandler) Create(c *gin.Context) {
 		c.Error(errors.New("no user set, congratulations you've encountered a bug that should never happen"))
 		return
 	}
-	gatewayApp.User = gotUser.(string)
+	user := gotUser.(string)
+
+	gatewayApp, err := domain.GatewayApplicationFromV1Beta2Application(app)
+	if err != nil {
+		c.Error(gatewayerrors.NewBadRequest(err))
+		return
+	}
+	gatewayApp.SetUser(user)
 
 	createdApp, err := h.service.Create(c, gatewayApp)
 

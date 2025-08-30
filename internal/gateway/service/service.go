@@ -17,7 +17,6 @@ package service
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"strings"
 
@@ -28,64 +27,59 @@ import (
 	"github.com/slackhq/spark-gateway/internal/shared/config"
 	"github.com/slackhq/spark-gateway/internal/shared/util"
 
-	"github.com/kubeflow/spark-operator/v2/api/v1beta2"
-
 	"github.com/slackhq/spark-gateway/internal/gateway/clusterrouter"
 	"github.com/slackhq/spark-gateway/internal/shared/gatewayerrors"
 )
 
-//go:generate moq -rm  -out mocksparkapplicationrepository.go . SparkApplicationRepository
+//go:generate moq -rm  -out mocksparkapplicationrepository.go . GatewayApplicationRepository
 
-type SparkApplicationRepository interface {
-	Get(ctx context.Context, cluster domain.KubeCluster, namespace string, name string) (*v1beta2.SparkApplication, error)
-	List(ctx context.Context, cluster domain.KubeCluster, namespace string) ([]*domain.SparkManagerApplicationMeta, error)
-	Status(ctx context.Context, cluster domain.KubeCluster, namespace string, name string) (*v1beta2.SparkApplicationStatus, error)
+type GatewayApplicationRepository interface {
+	Get(ctx context.Context, cluster domain.KubeCluster, namespace string, name string) (*domain.GatewayApplication, error)
+	List(ctx context.Context, cluster domain.KubeCluster, namespace string) ([]*domain.GatewayApplicationMeta, error)
+	Status(ctx context.Context, cluster domain.KubeCluster, namespace string, name string) (*domain.GatewayApplicationStatus, error)
 	Logs(ctx context.Context, cluster domain.KubeCluster, namespace string, name string, tailLines int) (*string, error)
-	Create(ctx context.Context, cluster domain.KubeCluster, application *v1beta2.SparkApplication) (*v1beta2.SparkApplication, error)
+	Create(ctx context.Context, cluster domain.KubeCluster, gatewayApp *domain.GatewayApplication) (*domain.GatewayApplication, error)
 	Delete(ctx context.Context, cluster domain.KubeCluster, namespace string, name string) error
 }
 
-//go:generate moq -rm  -out mockgatewayapplicationservice.go . SparkApplicationService
+//go:generate moq -rm  -out mockgatewayapplicationservice.go . GatewayApplicationService
 
-type SparkApplicationService interface {
+type GatewayApplicationService interface {
 	Get(ctx context.Context, gatewayId string) (*domain.GatewayApplication, error)
 	List(ctx context.Context, cluster string, namespace string) ([]*domain.GatewayApplicationMeta, error)
-	Create(ctx context.Context, application *v1beta2.SparkApplication, user string) (*domain.GatewayApplication, error)
-	Status(ctx context.Context, gatewayId string) (*v1beta2.SparkApplicationStatus, error)
+	Create(ctx context.Context, gatewayApp *domain.GatewayApplication) (*domain.GatewayApplication, error)
+	Status(ctx context.Context, gatewayId string) (*domain.GatewayApplicationStatus, error)
 	Logs(ctx context.Context, gatewayId string, tailLines int) (*string, error)
 	Delete(ctx context.Context, gatewayId string) error
 }
 
 type service struct {
-	sparkAppRepo          SparkApplicationRepository
+	gatewayAppRepo        GatewayApplicationRepository
 	clusterRepository     clusterPkg.ClusterRepository
 	clusterRouter         clusterrouter.ClusterRouter
 	fallbackClusterRouter clusterrouter.ClusterRouter
 	config                config.GatewayConfig
 	selectorKey           string
 	selectorValue         string
-	gatewayIdGenerator    domain.GatewayIdGenerator
 }
 
 func NewApplicationService(
-	sparkAppRepo SparkApplicationRepository,
+	gatewayAppRepo GatewayApplicationRepository,
 	clusterRepository clusterPkg.ClusterRepository,
 	clusterRouter clusterrouter.ClusterRouter,
 	fallbackClusterRouter clusterrouter.ClusterRouter,
 	config config.GatewayConfig,
 	selectorKey string,
 	selectorValue string,
-	gatewayIdGenerator domain.GatewayIdGenerator,
-) SparkApplicationService {
+) GatewayApplicationService {
 	return &service{
-		sparkAppRepo:          sparkAppRepo,
+		gatewayAppRepo:        gatewayAppRepo,
 		clusterRepository:     clusterRepository,
 		clusterRouter:         clusterRouter,
 		fallbackClusterRouter: fallbackClusterRouter,
 		config:                config,
 		selectorKey:           selectorKey,
 		selectorValue:         selectorValue,
-		gatewayIdGenerator:    gatewayIdGenerator,
 	}
 }
 
@@ -113,23 +107,10 @@ func (s *service) Get(ctx context.Context, gatewayId string) (*domain.GatewayApp
 		return nil, err
 	}
 
-	sparkApp, err := s.sparkAppRepo.Get(ctx, *cluster, namespace, gatewayId)
+	gatewayApp, err := s.gatewayAppRepo.Get(ctx, *cluster, namespace, gatewayId)
 
 	if err != nil {
-		return nil, gatewayerrors.NewFrom(fmt.Errorf("error getting SparkApplication '%s': %w", gatewayId, err))
-	}
-
-	user, ok := sparkApp.Labels[domain.GATEWAY_USER_LABEL]
-	if !ok {
-		return nil, gatewayerrors.NewFrom(errors.New("no gateway user associated with this application, possibly not created through spark-gateway?"))
-	}
-
-	gatewayApp := &domain.GatewayApplication{
-		SparkApplication: sparkApp,
-		GatewayId:        sparkApp.Name,
-		Cluster:          cluster.Name,
-		User:             user,
-		SparkLogURLs:     GetRenderedURLs(s.config.StatusUrlTemplates, sparkApp),
+		return nil, gatewayerrors.NewFrom(fmt.Errorf("error getting GatewayApplication '%s': %w", gatewayId, err))
 	}
 
 	return gatewayApp, nil
@@ -157,80 +138,65 @@ func (s *service) List(ctx context.Context, cluster string, namespace string) ([
 		}
 	}
 
-	var appMetaList []*domain.GatewayApplicationMeta
+	var gatewayMetaList []*domain.GatewayApplicationMeta
 	for _, ns := range namespaces {
-		nsAppMetas, err := s.sparkAppRepo.List(ctx, *kubeCluster, ns)
+		nsGatewayMeta, err := s.gatewayAppRepo.List(ctx, *kubeCluster, ns)
 		if err != nil {
 			return nil, gatewayerrors.NewFrom(fmt.Errorf("error getting applications: %w", err))
 		}
 
-		for _, appMeta := range nsAppMetas {
-			appMetaList = append(appMetaList, domain.NewGatewayApplicationMeta(appMeta, cluster))
+		for _, gatewayMeta := range nsGatewayMeta {
+			gatewayMetaList = append(gatewayMetaList, gatewayMeta)
 		}
 
 	}
 
-	return appMetaList, nil
+	return gatewayMetaList, nil
 
 }
 
-func (s *service) Create(ctx context.Context, application *v1beta2.SparkApplication, user string) (*domain.GatewayApplication, error) {
+func (s *service) Create(ctx context.Context, gatewayApp *domain.GatewayApplication) (*domain.GatewayApplication, error) {
 
-	errors := s.SparkApplicationValidator(application)
-	if len(errors) > 0 {
-		return nil, gatewayerrors.NewBadRequest(fmt.Errorf("submitted SparkApplication is invalid: %v", errors))
-	}
-
-	application = SparkApplicationDefaulter(application)
-
-	cluster, err := s.clusterRouter.GetCluster(ctx, application.ObjectMeta.Namespace)
+	cluster, err := s.clusterRouter.GetCluster(ctx, gatewayApp.Namespace)
 	if cluster == nil || err != nil {
-		klog.Warningf("error getting cluster for application '%s': %v", application.ObjectMeta.Name, err)
+		klog.Warningf("error getting cluster for gatewayApp '%s': %v", gatewayApp.Name, err)
 		klog.Warning("Trying fallback cluster router")
 		// Try fallback cluster router
-		cluster, err = s.fallbackClusterRouter.GetCluster(ctx, application.ObjectMeta.Namespace)
+		cluster, err = s.fallbackClusterRouter.GetCluster(ctx, gatewayApp.Namespace)
 		if cluster == nil || err != nil {
 			return nil, gatewayerrors.NewFrom(fmt.Errorf("error getting routing cluster: %w", err))
 		}
 	}
 
 	// Generate name from clusterId and UUID and set
-	appName, err := s.gatewayIdGenerator.NewId(*cluster, application.Namespace)
+	gatewayId, err := domain.NewId(*cluster, gatewayApp.Namespace)
 	if err != nil {
-		return nil, fmt.Errorf("error generating GatewayId for SparkApplication: %w", err)
+		return nil, fmt.Errorf("error generating GatewayId for GatewayApplication: %w", err)
 	}
 
-	application = s.SparkApplicationOverrides(application, user, appName)
+	gatewayApp = s.SetGatewayApplicationOverrides(gatewayApp, gatewayId)
 
 	// Create SparkApp
-	sparkApp, err := s.sparkAppRepo.Create(ctx, *cluster, application)
+	createdApp, err := s.gatewayAppRepo.Create(ctx, *cluster, gatewayApp)
 	if err != nil {
-		return nil, gatewayerrors.NewFrom(fmt.Errorf("error creating SparkApplication '%s/%s': %w", application.Namespace, application.Name, err))
+		return nil, gatewayerrors.NewFrom(fmt.Errorf("error creating GatewayApplication '%s/%s': %w", gatewayApp.Namespace, gatewayApp.Name, err))
 	}
 
-	gatewayApp := &domain.GatewayApplication{
-		SparkApplication: sparkApp,
-		GatewayId:        sparkApp.Name,
-		Cluster:          cluster.Name,
-		User:             *sparkApp.Spec.ProxyUser,
-		SparkLogURLs:     GetRenderedURLs(s.config.StatusUrlTemplates, sparkApp),
-	}
-
-	return gatewayApp, nil
+	return createdApp, nil
 }
 
-func (s *service) Status(ctx context.Context, gatewayId string) (*v1beta2.SparkApplicationStatus, error) {
+func (s *service) Status(ctx context.Context, gatewayId string) (*domain.GatewayApplicationStatus, error) {
 	cluster, namespace, err := s.GetClusterNamespaceFromGatewayId(gatewayId)
 	if err != nil {
 		return nil, err
 	}
 
-	sparkApp, err := s.sparkAppRepo.Get(ctx, *cluster, namespace, gatewayId)
+	gatewayApp, err := s.gatewayAppRepo.Get(ctx, *cluster, namespace, gatewayId)
 	if err != nil {
-		return nil, gatewayerrors.NewFrom(fmt.Errorf("error getting status for SparkApplication '%s': %w", gatewayId, err))
+		return nil, gatewayerrors.NewFrom(fmt.Errorf("error getting status for GatewayApplication '%s': %w", gatewayId, err))
 	}
 
-	return &sparkApp.Status, nil
+	return &gatewayApp.Status, nil
 }
 
 func (s *service) Logs(ctx context.Context, gatewayId string, tailLines int) (*string, error) {
@@ -239,9 +205,9 @@ func (s *service) Logs(ctx context.Context, gatewayId string, tailLines int) (*s
 		return nil, err
 	}
 
-	logString, err := s.sparkAppRepo.Logs(ctx, *cluster, namespace, gatewayId, tailLines)
+	logString, err := s.gatewayAppRepo.Logs(ctx, *cluster, namespace, gatewayId, tailLines)
 	if err != nil {
-		return nil, gatewayerrors.NewFrom(fmt.Errorf("error getting Logs for SparkApplication '%s': %w", gatewayId, err))
+		return nil, gatewayerrors.NewFrom(fmt.Errorf("error getting Logs for GatewayApplication '%s': %w", gatewayId, err))
 	}
 
 	return logString, nil
@@ -253,93 +219,50 @@ func (s *service) Delete(ctx context.Context, gatewayId string) error {
 		return err
 	}
 
-	if err := s.sparkAppRepo.Delete(ctx, *cluster, namespace, gatewayId); err != nil {
-		return gatewayerrors.NewFrom(fmt.Errorf("error deleting SparkApplication '%s': %w", gatewayId, err))
+	if err := s.gatewayAppRepo.Delete(ctx, *cluster, namespace, gatewayId); err != nil {
+		return gatewayerrors.NewFrom(fmt.Errorf("error deleting GatewayApplication '%s': %w", gatewayId, err))
 	}
 
 	return nil
 }
 
-func GetRenderedURLs(templates domain.StatusUrlTemplates, sparkApp *v1beta2.SparkApplication) domain.SparkLogURLs {
+func GetRenderedURLs(templates domain.StatusUrlTemplates, gatewayApp *domain.GatewayApplication) domain.StatusUrlTemplates {
 	// Render URLs
-	sparkUI, err := util.RenderTemplate(templates.SparkUI, sparkApp)
+	sparkUI, err := util.RenderTemplate(templates.SparkUI, gatewayApp)
 	if err != nil {
 		klog.Errorf("unable to render SparkUI template: %v", err)
 		sparkUI = new(string)
 	}
 
-	logsUI, err := util.RenderTemplate(templates.LogsUI, sparkApp)
+	logsUI, err := util.RenderTemplate(templates.LogsUI, gatewayApp)
 	if err != nil {
 		klog.Errorf("unable to render LogsUI template: %v", err)
 		logsUI = new(string)
 	}
 
-	sparkHistoryUI, err := util.RenderTemplate(templates.SparkHistoryUI, sparkApp)
+	sparkHistoryUI, err := util.RenderTemplate(templates.SparkHistoryUI, gatewayApp)
 	if err != nil {
 		klog.Errorf("unable to render SparkHistoryUI template: %v", err)
 		sparkHistoryUI = new(string)
 	}
 
-	return domain.SparkLogURLs{
+	return domain.StatusUrlTemplates{
 		SparkUI:        *sparkUI,
 		LogsUI:         *logsUI,
 		SparkHistoryUI: *sparkHistoryUI,
 	}
 }
 
-func (s *service) SparkApplicationValidator(application *v1beta2.SparkApplication) []string {
-	var errors []string
-	if application == nil {
-		errors = append(errors, "application should never be nil")
-		return errors
-	}
+// SetGatewayApplicationOverrides sets values of the GatewayApplication that are determined at the service layer
+func (s *service) SetGatewayApplicationOverrides(gatewayApp *domain.GatewayApplication, gatewayId string) *domain.GatewayApplication {
 
-	if application.ObjectMeta.Namespace == "" {
-		errors = append(errors, "namespace should not be empty")
-	}
+	// Set Name to GatewayId
+	gatewayApp.Name = gatewayId
 
-	return errors
-}
-
-func SparkApplicationDefaulter(application *v1beta2.SparkApplication) *v1beta2.SparkApplication {
-	klog.Info("setting defaults for SparkApplication")
-	// If SparkApp has a name, set it as an annotation
-	/// Set annotations first
-	if application.Annotations == nil {
-		application.Annotations = map[string]string{}
-	}
-
-	if application.Labels == nil {
-		application.Labels = map[string]string{}
-	}
-
-	return application
-}
-
-func (s *service) SparkApplicationOverrides(application *v1beta2.SparkApplication, user string, appName string) *v1beta2.SparkApplication {
-	if application.Name != "" {
-		application.Annotations["applicationName"] = application.Name
-	}
-
-	application.Name = appName
-
-	// Set default gateway labels
-	gatewayLabels := map[string]string{
-		domain.GATEWAY_USER_LABEL: user,
-	}
-
-	// Set selector label
+	// Set selector labels
 	if s.selectorKey != "" && s.selectorValue != "" {
-		gatewayLabels = util.MergeMaps(gatewayLabels, map[string]string{
-			s.selectorKey: s.selectorValue,
-		})
+		gatewayApp.Labels[s.selectorKey] = s.selectorValue
 	}
 
-	// Merge labels if they exist in the submitted SparkApp
-	application.Labels = util.MergeMaps(application.Labels, gatewayLabels)
-
-	// set user
-	application.Spec.ProxyUser = &user
-
-	return application
+	return gatewayApp
 }
