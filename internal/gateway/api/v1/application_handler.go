@@ -22,7 +22,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/kubeflow/spark-operator/v2/api/v1beta2"
-	"github.com/slackhq/spark-gateway/internal/domain"
 	"github.com/slackhq/spark-gateway/internal/gateway/service"
 	"github.com/slackhq/spark-gateway/internal/shared/gatewayerrors"
 )
@@ -160,7 +159,7 @@ func (h *GatewayApplicationHandler) Logs(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Security BasicAuth
-// @Param GatewayApplication body v1beta2.GatewayApplication true "v1beta2.GatewayApplication resource"
+// @Param SparkApplication body v1beta2.SparkApplication true "v1beta2.SparkApplication resource"
 // @Success 201 {object} domain.GatewayApplication "GatewayApplication Created"
 // @Router /v1/applications/ [post]
 func (h *GatewayApplicationHandler) Create(c *gin.Context) {
@@ -172,8 +171,11 @@ func (h *GatewayApplicationHandler) Create(c *gin.Context) {
 		return
 	}
 
-	// Set user
-	// This should always exist because of prior auth middlewares
+	if app.Namespace == "" {
+		c.Error(gatewayerrors.NewBadRequest(errors.New("submitted SparkApplication must have a Namespace")))
+		return
+	}
+
 	gotUser, exists := c.Get("user")
 	if !exists {
 		c.Error(errors.New("no user set, congratulations you've encountered a bug that should never happen"))
@@ -181,14 +183,7 @@ func (h *GatewayApplicationHandler) Create(c *gin.Context) {
 	}
 	user := gotUser.(string)
 
-	gatewayApp, err := domain.GatewayApplicationFromV1Beta2Application(app)
-	if err != nil {
-		c.Error(gatewayerrors.NewBadRequest(err))
-		return
-	}
-	gatewayApp.SetUser(user)
-
-	createdApp, err := h.service.Create(c, gatewayApp)
+	createdApp, err := h.service.Create(c, app, user)
 
 	if err != nil {
 		c.Error(err)

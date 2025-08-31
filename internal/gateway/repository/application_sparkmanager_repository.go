@@ -30,7 +30,6 @@ import (
 	"github.com/slackhq/spark-gateway/internal/shared/gatewayerrors"
 	sgHttp "github.com/slackhq/spark-gateway/internal/shared/http"
 	"github.com/slackhq/spark-gateway/internal/shared/util"
-	"github.com/slackhq/spark-gateway/internal/sparkManager/kube"
 )
 
 type SparkManagerRepository struct {
@@ -70,7 +69,7 @@ func NewSparkManagerRepository(clusters []domain.KubeCluster, sparkManagerHostna
 	}, nil
 }
 
-func (r *SparkManagerRepository) Get(ctx context.Context, cluster domain.KubeCluster, namespace string, name string) (*v1beta2.SparkApplication, error) {
+func (r *SparkManagerRepository) Get(ctx context.Context, cluster domain.KubeCluster, namespace string, name string) (*domain.GatewayApplication, error) {
 
 	clusterEndpoint := r.ClusterEndpoints[cluster.Name]
 	// Url: http://host:port/api/v1/namespace/name
@@ -91,15 +90,15 @@ func (r *SparkManagerRepository) Get(ctx context.Context, cluster domain.KubeClu
 		return nil, gatewayerrors.NewFrom(err)
 	}
 
-	var app v1beta2.SparkApplication
-	if err := json.Unmarshal(*respBody, &app); err != nil {
+	var sparkApp v1beta2.SparkApplication
+	if err := json.Unmarshal(*respBody, &sparkApp); err != nil {
 		return nil, fmt.Errorf("failed to Unmarshal JSON response: %w", err)
 	}
 
-	return kube.Sanitize(&app), nil
+	return domain.NewGatewayApplication(sparkApp), nil
 }
 
-func (r *SparkManagerRepository) List(ctx context.Context, cluster domain.KubeCluster, namespace string) ([]*domain.GatewayApplicationMeta, error) {
+func (r *SparkManagerRepository) List(ctx context.Context, cluster domain.KubeCluster, namespace string) ([]*domain.GatewayApplication, error) {
 
 	clusterEndpoint := r.ClusterEndpoints[cluster.Name]
 	// Url: http://host:port/api/v1/namespace
@@ -120,15 +119,21 @@ func (r *SparkManagerRepository) List(ctx context.Context, cluster domain.KubeCl
 		return nil, gatewayerrors.NewFrom(err)
 	}
 
-	var appMetaList []*domain.GatewayApplicationMeta
-	if err := json.Unmarshal(*respBody, &appMetaList); err != nil {
+	var sparkAppList []*v1beta2.SparkApplication
+	if err := json.Unmarshal(*respBody, &sparkAppList); err != nil {
 		return nil, fmt.Errorf("failed to Unmarshal JSON response: %w", err)
 	}
 
-	return appMetaList, nil
+	var gatewayAppList []*domain.GatewayApplication
+	for _, sparkApp := range sparkAppList {
+		gatewayApp := domain.NewGatewayApplication(*sparkApp)
+		gatewayAppList = append(gatewayAppList, gatewayApp)
+	}
+
+	return gatewayAppList, nil
 }
 
-func (r *SparkManagerRepository) Status(ctx context.Context, cluster domain.KubeCluster, namespace string, name string) (*v1beta2.SparkApplicationStatus, error) {
+func (r *SparkManagerRepository) Status(ctx context.Context, cluster domain.KubeCluster, namespace string, name string) (*domain.GatewayApplicationStatus, error) {
 
 	clusterEndpoint := r.ClusterEndpoints[cluster.Name]
 	// Url: http://host:port/api/v1/namespace/name/status
@@ -154,7 +159,7 @@ func (r *SparkManagerRepository) Status(ctx context.Context, cluster domain.Kube
 		return nil, fmt.Errorf("failed to Unmarshal JSON response: %w", err)
 	}
 
-	return &appStatus, nil
+	return domain.NewGatewayApplicationStatus(appStatus), nil
 }
 
 func (r *SparkManagerRepository) Logs(ctx context.Context, cluster domain.KubeCluster, namespace string, name string, tailLines int) (*string, error) {
@@ -186,7 +191,7 @@ func (r *SparkManagerRepository) Logs(ctx context.Context, cluster domain.KubeCl
 	return &logString, nil
 }
 
-func (r *SparkManagerRepository) Create(ctx context.Context, cluster domain.KubeCluster, sparkApplication *v1beta2.SparkApplication) (*v1beta2.SparkApplication, error) {
+func (r *SparkManagerRepository) Create(ctx context.Context, cluster domain.KubeCluster, sparkApplication *v1beta2.SparkApplication) (*domain.GatewayApplication, error) {
 
 	clusterEndpoint := r.ClusterEndpoints[cluster.Name]
 	// Url: http://host:port/api/v1/namespace/name
@@ -218,7 +223,7 @@ func (r *SparkManagerRepository) Create(ctx context.Context, cluster domain.Kube
 		return nil, fmt.Errorf("failed to Unmarshal JSON response: %w", err)
 	}
 
-	return kube.Sanitize(&sparkApp), nil
+	return domain.NewGatewayApplication(sparkApp), nil
 }
 
 func (r *SparkManagerRepository) Delete(ctx context.Context, cluster domain.KubeCluster, namespace string, name string) error {
