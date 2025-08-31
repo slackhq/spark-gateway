@@ -32,7 +32,7 @@ sparkManagerPort: "8081"
 
 gateway:
   gatewayApiVersion: v1
-  gatewayPort: "8080"
+  gatewayPort: "8082"
 
   middleware:
     - type: RegexBasicAuthAllowMiddleware

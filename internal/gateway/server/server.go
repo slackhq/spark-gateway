@@ -28,6 +28,7 @@ import (
 	"github.com/slackhq/spark-gateway/internal/gateway/application/repository"
 	"github.com/slackhq/spark-gateway/internal/gateway/application/service"
 	"github.com/slackhq/spark-gateway/internal/gateway/cluster"
+	"github.com/slackhq/spark-gateway/internal/gateway/web"
 
 	"time"
 
@@ -127,6 +128,10 @@ func NewGateway(ctx context.Context, sgConfig *cfg.SparkGatewayConfig, sparkMana
 	if sgConfig.GatewayConfig.EnableSwaggerUI {
 		handler.RegisterSwaggerDocs(rootGroup, sgConfig.GatewayConfig.GatewayApiVersion)
 	}
+
+	// Register UI
+	webHandler := web.NewWebHandler(sgConfig, ginRouter, rootGroup)
+	webHandler.RegisterRoutes()
 
 	/// Register versioned handlers
 	versionGroup := ginRouter.Group(fmt.Sprintf("/%s", sgConfig.GatewayConfig.GatewayApiVersion), mwHandlerChain...)

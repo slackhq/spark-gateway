@@ -17,6 +17,8 @@ require (
 )
 
 require (
+	github.com/a-h/templ v0.3.943
+	github.com/a-h/templ/examples/integration-gin v0.0.0-20250818063052-abb427c0fb8d
 	github.com/jackc/pgx/v5 v5.7.4
 	github.com/knadh/koanf/providers/confmap v1.0.0
 	github.com/prometheus/client_golang v1.22.0

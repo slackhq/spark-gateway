@@ -1,0 +1,80 @@
+package components
+
+templ Sidebar() {
+	<aside class="sidebar">
+		<nav style="padding: 20px 0;">
+			<ul style="list-style: none;">
+				<li style="margin-bottom: 8px;">
+					<a 
+						href="#"
+						style="display: block; padding: 12px 20px; color: #333; text-decoration: none; border-radius: 4px; margin: 0 10px;"
+						hx-get="/ui/dashboard"
+						hx-target="#main-content"
+						hx-push-url="true"
+						onmouseover="this.style.backgroundColor='#f8f9fa'"
+						onmouseout="this.style.backgroundColor='transparent'"
+					>
+						<span style="margin-right: 10px;">📊</span>
+						Dashboard
+					</a>
+				</li>
+				<li style="margin-bottom: 8px;">
+					<a 
+						href="#"
+						style="display: block; padding: 12px 20px; color: #333; text-decoration: none; border-radius: 4px; margin: 0 10px;"
+						hx-get="/ui/clusters"
+						hx-target="#main-content"
+						hx-push-url="true"
+						onmouseover="this.style.backgroundColor='#f8f9fa'"
+						onmouseout="this.style.backgroundColor='transparent'"
+					>
+						<span style="margin-right: 10px;">🏢</span>
+						Clusters
+					</a>
+				</li>
+				<li style="margin-bottom: 8px;">
+					<a 
+						href="#"
+						style="display: block; padding: 12px 20px; color: #333; text-decoration: none; border-radius: 4px; margin: 0 10px;"
+						hx-get="/ui/applications"
+						hx-target="#main-content"
+						hx-push-url="true"
+						onmouseover="this.style.backgroundColor='#f8f9fa'"
+						onmouseout="this.style.backgroundColor='transparent'"
+					>
+						<span style="margin-right: 10px;">📦</span>
+						Applications
+					</a>
+				</li>
+				<li style="margin-bottom: 8px;">
+					<a 
+						href="#"
+						style="display: block; padding: 12px 20px; color: #333; text-decoration: none; border-radius: 4px; margin: 0 10px;"
+						hx-get="/ui/jobs"
+						hx-target="#main-content"
+						hx-push-url="true"
+						onmouseover="this.style.backgroundColor='#f8f9fa'"
+						onmouseout="this.style.backgroundColor='transparent'"
+					>
+						<span style="margin-right: 10px;">⚡</span>
+						Jobs
+					</a>
+				</li>
+				<li style="margin-bottom: 8px;">
+					<a 
+						href="#"
+						style="display: block; padding: 12px 20px; color: #333; text-decoration: none; border-radius: 4px; margin: 0 10px;"
+						hx-get="/ui/settings"
+						hx-target="#main-content"
+						hx-push-url="true"
+						onmouseover="this.style.backgroundColor='#f8f9fa'"
+						onmouseout="this.style.backgroundColor='transparent'"
+					>
+						<span style="margin-right: 10px;">⚙️</span>
+						Settings
+					</a>
+				</li>
+			</ul>
+		</nav>
+	</aside>
+}
