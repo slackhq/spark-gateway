@@ -27,8 +27,8 @@ import (
 type ClusterRepository interface {
 	GetByName(cluster string) (*domain.KubeCluster, error)
 	GetById(clusterId string) (*domain.KubeCluster, error)
-	GetAll() ([]domain.KubeCluster, error)
-	GetAllWithNamespace(namespace string) ([]domain.KubeCluster, error)
+	GetAll() []domain.KubeCluster
+	GetAllWithNamespace(namespace string) []domain.KubeCluster
 }
 
 type LocalClusterRepo struct {
@@ -71,7 +71,7 @@ func (r *LocalClusterRepo) GetById(clusterId string) (*domain.KubeCluster, error
 	return &cluster, nil
 }
 
-func (r *LocalClusterRepo) GetAll() ([]domain.KubeCluster, error) {
+func (r *LocalClusterRepo) GetAll() []domain.KubeCluster {
 	var clusters []domain.KubeCluster
 
 	for _, cluster := range r.KubeClusters {
@@ -82,16 +82,13 @@ func (r *LocalClusterRepo) GetAll() ([]domain.KubeCluster, error) {
 		klog.Warningf("GetAll: no clusters found in clusters config")
 	}
 
-	return clusters, nil
+	return clusters
 }
 
-func (r *LocalClusterRepo) GetAllWithNamespace(namespace string) ([]domain.KubeCluster, error) {
+func (r *LocalClusterRepo) GetAllWithNamespace(namespace string) []domain.KubeCluster {
 	var clusters []domain.KubeCluster
 
-	allClusters, err := r.GetAll()
-	if err != nil {
-		return nil, err
-	}
+	allClusters := r.GetAll()
 
 	for _, cluster := range allClusters {
 		ns, err := cluster.GetNamespaceByName(namespace)
@@ -107,5 +104,5 @@ func (r *LocalClusterRepo) GetAllWithNamespace(namespace string) ([]domain.KubeC
 		klog.Warningf("GetAllWithNamespace: No clusters found in clusters config with namespace: %s", namespace)
 	}
 
-	return clusters, nil
+	return clusters
 }

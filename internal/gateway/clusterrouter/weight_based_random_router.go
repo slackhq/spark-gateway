@@ -79,9 +79,9 @@ func NewWeightBasedRandomRouter(
 */
 func (r *WeightBasedRandomRouter) GetCluster(ctx context.Context, namespace string) (*domain.KubeCluster, error) {
 
-	clustersList, err := r.clusterRepository.GetAllWithNamespace(namespace)
-	if err != nil {
-		return nil, gatewayerrors.NewFrom(fmt.Errorf("error listing clusters from clusterRepository: %w", err))
+	clustersList := r.clusterRepository.GetAllWithNamespace(namespace)
+	if len(clustersList) == 0 {
+		return nil, fmt.Errorf("no clusters with namespace %s returned", namespace)
 	}
 
 	switch len(clustersList) {
