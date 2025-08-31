@@ -98,7 +98,7 @@ func (r *SparkManagerRepository) Get(ctx context.Context, cluster domain.KubeClu
 	return domain.NewGatewayApplication(sparkApp), nil
 }
 
-func (r *SparkManagerRepository) List(ctx context.Context, cluster domain.KubeCluster, namespace string) ([]*domain.GatewayApplication, error) {
+func (r *SparkManagerRepository) List(ctx context.Context, cluster domain.KubeCluster, namespace string) ([]*domain.GatewayApplicationSummary, error) {
 
 	clusterEndpoint := r.ClusterEndpoints[cluster.Name]
 	// Url: http://host:port/api/v1/namespace
@@ -119,18 +119,12 @@ func (r *SparkManagerRepository) List(ctx context.Context, cluster domain.KubeCl
 		return nil, gatewayerrors.NewFrom(err)
 	}
 
-	var sparkAppList []*v1beta2.SparkApplication
-	if err := json.Unmarshal(*respBody, &sparkAppList); err != nil {
+	var summaryList []*domain.GatewayApplicationSummary
+	if err := json.Unmarshal(*respBody, &summaryList); err != nil {
 		return nil, fmt.Errorf("failed to Unmarshal JSON response: %w", err)
 	}
 
-	var gatewayAppList []*domain.GatewayApplication
-	for _, sparkApp := range sparkAppList {
-		gatewayApp := domain.NewGatewayApplication(*sparkApp)
-		gatewayAppList = append(gatewayAppList, gatewayApp)
-	}
-
-	return gatewayAppList, nil
+	return summaryList, nil
 }
 
 func (r *SparkManagerRepository) Status(ctx context.Context, cluster domain.KubeCluster, namespace string, name string) (*domain.GatewayApplicationStatus, error) {

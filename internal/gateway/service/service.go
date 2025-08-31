@@ -36,7 +36,7 @@ import (
 
 type GatewayApplicationRepository interface {
 	Get(ctx context.Context, cluster domain.KubeCluster, namespace string, name string) (*domain.GatewayApplication, error)
-	List(ctx context.Context, cluster domain.KubeCluster, namespace string) ([]*domain.GatewayApplicationMeta, error)
+	List(ctx context.Context, cluster domain.KubeCluster, namespace string) ([]*domain.GatewayApplicationSummary, error)
 	Status(ctx context.Context, cluster domain.KubeCluster, namespace string, name string) (*domain.GatewayApplicationStatus, error)
 	Logs(ctx context.Context, cluster domain.KubeCluster, namespace string, name string, tailLines int) (*string, error)
 	Create(ctx context.Context, cluster domain.KubeCluster, gatewayApp *domain.GatewayApplication) (*domain.GatewayApplication, error)
@@ -47,7 +47,7 @@ type GatewayApplicationRepository interface {
 
 type GatewayApplicationService interface {
 	Get(ctx context.Context, gatewayId string) (*domain.GatewayApplication, error)
-	List(ctx context.Context, cluster string, namespace string) ([]*domain.GatewayApplicationMeta, error)
+	List(ctx context.Context, cluster string, namespace string) ([]*domain.GatewayApplicationSummary, error)
 	Create(ctx context.Context, application v1beta2.SparkApplication, user string) (*domain.GatewayApplication, error)
 	Status(ctx context.Context, gatewayId string) (*domain.GatewayApplicationStatus, error)
 	Logs(ctx context.Context, gatewayId string, tailLines int) (*string, error)
@@ -121,7 +121,7 @@ func (s *service) Get(ctx context.Context, gatewayId string) (*domain.GatewayApp
 }
 
 // List retrieves `num` number of GatewayApplications from specified namespace `namespace` in cluster `cluster`
-func (s *service) List(ctx context.Context, cluster string, namespace string) ([]*domain.GatewayApplicationMeta, error) {
+func (s *service) List(ctx context.Context, cluster string, namespace string) ([]*domain.GatewayApplicationSummary, error) {
 
 	kubeCluster, err := s.clusterRepository.GetByName(cluster)
 
@@ -142,20 +142,20 @@ func (s *service) List(ctx context.Context, cluster string, namespace string) ([
 		}
 	}
 
-	var gatewayMetaList []*domain.GatewayApplicationMeta
+	var appSummaryList []*domain.GatewayApplicationSummary
 	for _, ns := range namespaces {
-		nsGatewayMeta, err := s.gatewayAppRepo.List(ctx, *kubeCluster, ns)
+		nsAppSummaries, err := s.gatewayAppRepo.List(ctx, *kubeCluster, ns)
 		if err != nil {
 			return nil, gatewayerrors.NewFrom(fmt.Errorf("error getting applications: %w", err))
 		}
 
-		for _, gatewayMeta := range nsGatewayMeta {
-			gatewayMetaList = append(gatewayMetaList, gatewayMeta)
+		for _, appSummary := range nsAppSummaries {
+			appSummaryList = append(appSummaryList, appSummary)
 		}
 
 	}
 
-	return gatewayMetaList, nil
+	return appSummaryList, nil
 
 }
 

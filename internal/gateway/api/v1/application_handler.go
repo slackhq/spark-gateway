@@ -44,17 +44,17 @@ func NewGatewayApplicationHandler(service service.GatewayApplicationService, def
 	return &GatewayApplicationHandler{service: service, defaultLogLines: defaultLogLines}
 }
 
-// ListGatewayApplications godoc
-// @Summary List GatewayApplications
-// @Description Lists GatewayApplications metadata in the specified cluster. Optionally filter by namespace.
+// ListGatewayApplicationSummaries godoc
+// @Summary List GatewayApplicationSummary
+// @Description Lists GatewayApplicationSummary of applications in specified cluster. Optionally filter by namespace.
 // @Tags Applications
 // @Accept json
 // @Produce json
 // @Security BasicAuth
 // @Param cluster query string true "Cluster name"
 // @Param namespace query string false "Namespace (optional)"
-// @Success 200 {array} domain.GatewayApplicationMeta "List of GatewayApplication metadata"
-// @Router /v1/applications/ [get]
+// @Success 200 {array} domain.GatewayApplicationSummary "List of GatewayApplicationSummary objects"
+// @Router /v1/applications [get]
 func (h *GatewayApplicationHandler) List(c *gin.Context) {
 
 	cluster := c.Query("cluster")

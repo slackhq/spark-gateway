@@ -70,6 +70,18 @@ func NewGatewayApplicationMeta(appMeta metav1.ObjectMeta) *GatewayApplicationMet
 	}
 }
 
+type GatewayApplicationSummary struct {
+	GatewayApplicationMeta   `json:",inline"`
+	GatewayApplicationStatus `json:"status"`
+}
+
+func NewGatewayApplicationSummary(sparkApp v1beta2.SparkApplication) *GatewayApplicationSummary {
+	return &GatewayApplicationSummary{
+		GatewayApplicationMeta:   *NewGatewayApplicationMeta(sparkApp.ObjectMeta),
+		GatewayApplicationStatus: *NewGatewayApplicationStatus(sparkApp.Status),
+	}
+}
+
 type GatewayApplication struct {
 	GatewayApplicationMeta `json:"metadata"`
 	Spec                   GatewayApplicationSpec   `json:"spec"`
