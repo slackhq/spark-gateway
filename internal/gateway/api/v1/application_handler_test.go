@@ -33,7 +33,6 @@ import (
 	"github.com/slackhq/spark-gateway/internal/shared/gatewayerrors"
 	sgMiddleware "github.com/slackhq/spark-gateway/internal/shared/middleware"
 	"github.com/stretchr/testify/assert"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 var testConfig = &config.SparkGatewayConfig{DefaultLogLines: 100}
@@ -102,11 +101,9 @@ func TestApplicationHandlerErrorHandler(t *testing.T) {
 func TestApplicationHandlerGet(t *testing.T) {
 
 	retApp := &domain.GatewayApplication{
-		SparkApplication: &v1beta2.SparkApplication{
-			ObjectMeta: v1.ObjectMeta{
-				Name:      "clusterid-testid",
-				Namespace: "test",
-			},
+		GatewayApplicationMeta: domain.GatewayApplicationMeta{
+			Name:      "clusterid-nsid-uuid",
+			Namespace: "test",
 		},
 		Cluster: "cluster",
 		User:    "user",
@@ -158,12 +155,14 @@ func TestApplicationHandlerGetError(t *testing.T) {
 }
 func TestApplicationHandlerStatus(t *testing.T) {
 
-	retResp := &v1beta2.SparkApplicationStatus{
-		SubmissionID: "submissionId",
+	retResp := &domain.GatewayApplicationStatus{
+		SparkApplicationStatus: v1beta2.SparkApplicationStatus{
+			SubmissionID: "submissionId",
+		},
 	}
 
 	service := &service.GatewayApplicationServiceMock{
-		StatusFunc: func(ctx context.Context, gatewayId string) (*v1beta2.SparkApplicationStatus, error) {
+		StatusFunc: func(ctx context.Context, gatewayId string) (*domain.GatewayApplicationStatus, error) {
 			return retResp, nil
 		},
 	}
@@ -175,7 +174,7 @@ func TestApplicationHandlerStatus(t *testing.T) {
 	w := httptest.NewRecorder()
 	router.ServeHTTP(w, req)
 
-	var gotStatus v1beta2.SparkApplicationStatus
+	var gotStatus domain.GatewayApplicationStatus
 	json.Unmarshal(w.Body.Bytes(), &gotStatus)
 
 	assert.Equal(t, http.StatusOK, w.Code, "codes should match")
@@ -184,8 +183,8 @@ func TestApplicationHandlerStatus(t *testing.T) {
 func TestApplicationHandlerStatusError(t *testing.T) {
 
 	service := &service.GatewayApplicationServiceMock{
-		StatusFunc: func(ctx context.Context, gatewayId string) (*v1beta2.SparkApplicationStatus, error) {
-			return &v1beta2.SparkApplicationStatus{}, gatewayerrors.NewNotFound(errors.New("error getting SparkApplication 'clusterid-testid'"))
+		StatusFunc: func(ctx context.Context, gatewayId string) (*domain.GatewayApplicationStatus, error) {
+			return &domain.GatewayApplicationStatus{}, gatewayerrors.NewNotFound(errors.New("error getting SparkApplication 'clusterid-testid'"))
 		},
 	}
 
@@ -212,11 +211,9 @@ func TestApplicationHandlerCreate(t *testing.T) {
 	})
 
 	retApp := &domain.GatewayApplication{
-		SparkApplication: &v1beta2.SparkApplication{
-			ObjectMeta: v1.ObjectMeta{
-				Name:      "clusterid-testid",
-				Namespace: "test",
-			},
+		GatewayApplicationMeta: domain.GatewayApplicationMeta{
+			Name:      "clusterid-nsid-uuid",
+			Namespace: "test",
 		},
 		Cluster: "cluster",
 		User:    "user",
@@ -230,8 +227,8 @@ func TestApplicationHandlerCreate(t *testing.T) {
 
 	RegisterGatewayApplicationRoutes(v1Group, testConfig, service)
 
-	createApp := &v1beta2.SparkApplication{
-		ObjectMeta: v1.ObjectMeta{
+	createApp := &domain.GatewayApplication{
+		GatewayApplicationMeta: domain.GatewayApplicationMeta{
 			Name:      "clusterid-testid",
 			Namespace: "test",
 		},
@@ -286,8 +283,8 @@ func TestApplicationHandlerCreateAlreadyExists(t *testing.T) {
 
 	RegisterGatewayApplicationRoutes(v1Group, testConfig, service)
 
-	createReq := &v1beta2.SparkApplication{
-		ObjectMeta: v1.ObjectMeta{
+	createReq := &domain.GatewayApplication{
+		GatewayApplicationMeta: domain.GatewayApplicationMeta{
 			Name:      "clusterid-testid",
 			Namespace: "test",
 		},
