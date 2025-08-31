@@ -48,7 +48,7 @@ type GatewayApplicationRepository interface {
 type GatewayApplicationService interface {
 	Get(ctx context.Context, gatewayId string) (*domain.GatewayApplication, error)
 	List(ctx context.Context, cluster string, namespace string) ([]*domain.GatewayApplicationSummary, error)
-	Create(ctx context.Context, application v1beta2.SparkApplication, user string) (*domain.GatewayApplication, error)
+	Create(ctx context.Context, application *v1beta2.SparkApplication, user string) (*domain.GatewayApplication, error)
 	Status(ctx context.Context, gatewayId string) (*domain.GatewayApplicationStatus, error)
 	Logs(ctx context.Context, gatewayId string, tailLines int) (*string, error)
 	Delete(ctx context.Context, gatewayId string) error
@@ -159,7 +159,7 @@ func (s *service) List(ctx context.Context, cluster string, namespace string) ([
 
 }
 
-func (s *service) Create(ctx context.Context, application v1beta2.SparkApplication, user string) (*domain.GatewayApplication, error) {
+func (s *service) Create(ctx context.Context, application *v1beta2.SparkApplication, user string) (*domain.GatewayApplication, error) {
 
 	cluster, err := s.clusterRouter.GetCluster(ctx, application.Namespace)
 	if cluster == nil || err != nil {

@@ -95,7 +95,7 @@ func (r *SparkManagerRepository) Get(ctx context.Context, cluster domain.KubeClu
 		return nil, fmt.Errorf("failed to Unmarshal JSON response: %w", err)
 	}
 
-	return domain.NewGatewayApplication(sparkApp), nil
+	return domain.NewGatewayApplication(&sparkApp), nil
 }
 
 func (r *SparkManagerRepository) List(ctx context.Context, cluster domain.KubeCluster, namespace string) ([]*domain.GatewayApplicationSummary, error) {
@@ -217,7 +217,7 @@ func (r *SparkManagerRepository) Create(ctx context.Context, cluster domain.Kube
 		return nil, fmt.Errorf("failed to Unmarshal JSON response: %w", err)
 	}
 
-	return domain.NewGatewayApplication(sparkApp), nil
+	return domain.NewGatewayApplication(&sparkApp), nil
 }
 
 func (r *SparkManagerRepository) Delete(ctx context.Context, cluster domain.KubeCluster, namespace string, name string) error {

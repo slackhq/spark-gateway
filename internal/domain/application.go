@@ -94,7 +94,7 @@ type GatewayApplication struct {
 
 // NewGatewayApplication will return a new GatewayApplication by first mapping the input v1beta2.SparkApplication and then applying any
 // opt functions to the mapped application
-func NewGatewayApplication(sparkApp v1beta2.SparkApplication, opts ...func(*GatewayApplication)) *GatewayApplication {
+func NewGatewayApplication(sparkApp *v1beta2.SparkApplication, opts ...func(*GatewayApplication)) *GatewayApplication {
 
 	// Default labels and annotations
 	annotations := map[string]string{}

@@ -183,7 +183,7 @@ func (h *GatewayApplicationHandler) Create(c *gin.Context) {
 	}
 	user := gotUser.(string)
 
-	createdApp, err := h.service.Create(c, app, user)
+	createdApp, err := h.service.Create(c, &app, user)
 
 	if err != nil {
 		c.Error(err)
