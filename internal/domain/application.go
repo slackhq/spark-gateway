@@ -16,12 +16,13 @@
 package domain
 
 import (
-	"errors"
 	"fmt"
 	"strings"
 
 	"github.com/google/uuid"
 	"github.com/kubeflow/spark-operator/v2/api/v1beta2"
+	"github.com/slackhq/spark-gateway/internal/shared/util"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 const GATEWAY_USER_LABEL = "spark-gateway/user"
@@ -39,6 +40,16 @@ type GatewayApplicationStatus struct {
 	v1beta2.SparkApplicationStatus
 }
 
+func NewGatewayApplicationStatus(status v1beta2.SparkApplicationStatus) *GatewayApplicationStatus {
+	gatewayStatus := &GatewayApplicationStatus{
+		SparkApplicationStatus: status,
+	}
+
+	gatewayStatus.ExecutorState = nil
+
+	return gatewayStatus
+}
+
 type GatewayApplicationSpec struct {
 	v1beta2.SparkApplicationSpec
 }
@@ -48,6 +59,15 @@ type GatewayApplicationMeta struct {
 	Namespace   string            `json:"namespace"`
 	Labels      map[string]string `json:"labels"`
 	Annotations map[string]string `json:"annotations"`
+}
+
+func NewGatewayApplicationMeta(appMeta metav1.ObjectMeta) *GatewayApplicationMeta {
+	return &GatewayApplicationMeta{
+		Name:        appMeta.Name,
+		Namespace:   appMeta.Namespace,
+		Annotations: appMeta.Annotations,
+		Labels:      appMeta.Labels,
+	}
 }
 
 type GatewayApplication struct {
@@ -60,15 +80,71 @@ type GatewayApplication struct {
 	SparkLogURLs           StatusUrlTemplates       `json:"sparkLogURLs"`
 }
 
-// SetUser will add the Gateway user label to the apps Labels and override
-// the Spec ProxyUser
-func (g *GatewayApplication) SetUser(user string) {
+// NewGatewayApplication will return a new GatewayApplication by first mapping the input v1beta2.SparkApplication and then applying any
+// opt functions to the mapped application
+func NewGatewayApplication(sparkApp v1beta2.SparkApplication, opts ...func(*GatewayApplication)) *GatewayApplication {
 
-	// Add user label to app Labels
-	g.Labels[GATEWAY_USER_LABEL] = user
+	// Default labels and annotations
+	annotations := map[string]string{}
+	labels := map[string]string{}
+	if sparkApp.Annotations != nil {
+		annotations = sparkApp.Annotations
+	}
 
-	// Set ProxyUser
-	g.Spec.ProxyUser = &user
+	if sparkApp.Labels != nil {
+		labels = sparkApp.Annotations
+	}
+
+	status := GatewayApplicationStatus{SparkApplicationStatus: sparkApp.Status}
+	status.ExecutorState = nil
+
+	gatewayApp := GatewayApplication{
+		GatewayApplicationMeta: GatewayApplicationMeta{
+			Namespace:   sparkApp.Namespace,
+			Annotations: annotations,
+			Labels:      labels,
+		},
+		Spec:   GatewayApplicationSpec{SparkApplicationSpec: sparkApp.Spec},
+		Status: status,
+	}
+
+	// Apply opts
+	for _, o := range opts {
+		o(&gatewayApp)
+	}
+
+	return &gatewayApp
+
+}
+
+func WithUser(user string) func(*GatewayApplication) {
+	return func(ga *GatewayApplication) {
+		ga.Labels[GATEWAY_USER_LABEL] = user
+		ga.Spec.ProxyUser = &user
+	}
+}
+
+func WithSelector(selectorMap map[string]string) func(*GatewayApplication) {
+	return func(ga *GatewayApplication) {
+		// Add selector values if they exist
+		if len(selectorMap) != 0 {
+			ga.Labels = util.MergeMaps(ga.Labels, selectorMap)
+		}
+	}
+}
+
+func WithId(gatewayId string) func(*GatewayApplication) {
+	return func(ga *GatewayApplication) {
+		ga.GatewayId = gatewayId
+
+		// If the application already has a name, we set it as an annotation because
+		// all GatewayApplication names are GatewayIds
+		if ga.Name != "" {
+			ga.Annotations["applicationName"] = ga.Name
+		}
+
+		ga.Name = gatewayId
+	}
 }
 
 func NewId(cluster KubeCluster, namespace string) (string, error) {
@@ -98,47 +174,4 @@ func ParseGatewayIdUUID(gatewayId string) (*uuid.UUID, error) {
 		return &uid, nil
 	}
 	return nil, fmt.Errorf("error parsing gatewayId (%s). Format must be 'cluster-namespace-uuid'", gatewayId)
-}
-
-// GatewayApplicationFromV1Beta2Application will return a new GatewayApplication by mapping inputs from a v1beta2.SparkApplication
-// and setting defaults.
-func GatewayApplicationFromV1Beta2Application(sparkApp v1beta2.SparkApplication) (*GatewayApplication, error) {
-
-	if sparkApp.Namespace == "" {
-		return nil, errors.New("submitted SparkApplication must have a Namespace")
-	}
-
-	// Create base structs first
-	meta := GatewayApplicationMeta{
-		Namespace: sparkApp.Namespace,
-	}
-	spec := GatewayApplicationSpec{SparkApplicationSpec: sparkApp.Spec}
-	status := GatewayApplicationStatus{SparkApplicationStatus: sparkApp.Status}
-
-	// Default labels and annotations
-	annotations := map[string]string{}
-	labels := map[string]string{}
-	if sparkApp.Annotations != nil {
-		annotations = sparkApp.Annotations
-	}
-
-	if sparkApp.Labels != nil {
-		labels = sparkApp.Labels
-	}
-
-	meta.Annotations = annotations
-	meta.Labels = labels
-
-	// If the application already has a name, we set it as an annotation because
-	// gateway will later override it with a GatewayId
-	if sparkApp.Name != "" {
-		annotations["applicationName"] = sparkApp.Name
-	}
-
-	return &GatewayApplication{
-		GatewayApplicationMeta: meta,
-		Spec:                   spec,
-		Status:                 status,
-	}, nil
-
 }
