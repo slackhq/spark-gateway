@@ -1,0 +1,81 @@
+package app
+
+import (
+	"fmt"
+	"github.com/slackhq/spark-gateway/pkg/model"
+)
+
+templ Clusters(clusters []model.KubeCluster) {
+	@Layout("Clusters - Spark Gateway") {
+		@ClustersContent(clusters)
+	}
+}
+
+templ ClustersContent(clusters []model.KubeCluster) {
+	<div id="main-content">
+		<div style="margin-bottom: 30px;">
+			<h1 style="font-size: 28px; font-weight: 600; color: #333; margin-bottom: 10px;">Clusters</h1>
+			<p style="color: #666; font-size: 16px;">Manage your Kubernetes clusters</p>
+		</div>
+		
+		<div style="background: white; border-radius: 8px; border: 1px solid #e1e5e9; overflow: hidden;">
+			if len(clusters) == 0 {
+				<div style="padding: 40px; text-align: center;">
+					<p style="color: #666; font-size: 16px;">No clusters configured</p>
+				</div>
+			} else {
+				<table style="width: 100%; border-collapse: collapse;">
+					<thead style="background-color: #f8f9fa; border-bottom: 2px solid #e1e5e9;">
+						<tr>
+							<th style="padding: 12px 16px; text-align: left; font-weight: 600; color: #333; border-bottom: 1px solid #e1e5e9;">Name</th>
+							<th style="padding: 12px 16px; text-align: left; font-weight: 600; color: #333; border-bottom: 1px solid #e1e5e9;">Cluster ID</th>
+							<th style="padding: 12px 16px; text-align: left; font-weight: 600; color: #333; border-bottom: 1px solid #e1e5e9;">Master URL</th>
+							<th style="padding: 12px 16px; text-align: left; font-weight: 600; color: #333; border-bottom: 1px solid #e1e5e9;">Routing Weight</th>
+							<th style="padding: 12px 16px; text-align: left; font-weight: 600; color: #333; border-bottom: 1px solid #e1e5e9;">Namespaces</th>
+						</tr>
+					</thead>
+					<tbody>
+						for i, cluster := range clusters {
+							<tr style={ templ.KV("background-color", getRowColor(i)) }>
+								<td style="padding: 12px 16px; border-bottom: 1px solid #e1e5e9;">
+									<div style="font-weight: 500; color: #333;">{ cluster.Name }</div>
+								</td>
+								<td style="padding: 12px 16px; border-bottom: 1px solid #e1e5e9;">
+									<code style="background: #f8f9fa; padding: 2px 6px; border-radius: 3px; font-size: 14px;">{ cluster.ClusterId }</code>
+								</td>
+								<td style="padding: 12px 16px; border-bottom: 1px solid #e1e5e9;">
+									<div style="color: #666; font-size: 14px; max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title={ cluster.MasterURL }>{ cluster.MasterURL }</div>
+								</td>
+								<td style="padding: 12px 16px; border-bottom: 1px solid #e1e5e9;">
+									<span style="background: #e3f2fd; color: #1976d2; padding: 4px 8px; border-radius: 12px; font-size: 12px; font-weight: 500;">
+										{ formatWeight(cluster.RoutingWeight) }
+									</span>
+								</td>
+								<td style="padding: 12px 16px; border-bottom: 1px solid #e1e5e9;">
+									<div style="display: flex; flex-wrap: wrap; gap: 4px;">
+										for _, namespace := range cluster.Namespaces {
+											<span style="background: #f3e5f5; color: #7b1fa2; padding: 2px 6px; border-radius: 8px; font-size: 11px; font-weight: 500;">
+												{ namespace.Name }
+											</span>
+										}
+									</div>
+								</td>
+							</tr>
+						}
+					</tbody>
+				</table>
+			}
+		</div>
+	</div>
+}
+
+func getRowColor(index int) string {
+	if index%2 == 0 {
+		return "#ffffff"
+	}
+	return "#f8f9fa"
+}
+
+func formatWeight(weight float64) string {
+	return fmt.Sprintf("%.1f", weight)
+}

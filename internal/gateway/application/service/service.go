@@ -39,7 +39,7 @@ import (
 
 type SparkApplicationRepository interface {
 	Get(ctx context.Context, cluster model.KubeCluster, namespace string, name string) (*v1beta2.SparkApplication, error)
-	List(ctx context.Context, cluster model.KubeCluster, namespace string) ([]*model.SparkManagerApplicationMeta, error)
+	List(ctx context.Context, cluster model.KubeCluster, namespace string, appState *v1beta2.ApplicationStateType) ([]*model.SparkManagerApplicationMeta, error)
 	Status(ctx context.Context, cluster model.KubeCluster, namespace string, name string) (*v1beta2.SparkApplicationStatus, error)
 	Logs(ctx context.Context, cluster model.KubeCluster, namespace string, name string, tailLines int) (*string, error)
 	Create(ctx context.Context, cluster model.KubeCluster, application *v1beta2.SparkApplication) (*v1beta2.SparkApplication, error)
@@ -125,8 +125,8 @@ func (s *service) Get(ctx context.Context, gatewayId string) (*model.GatewayAppl
 	return gatewayApp, nil
 }
 
-// List retrieves `num` number of GatewayApplications from specified namespace `namespace` in cluster `cluster`
-func (s *service) List(ctx context.Context, cluster string, namespace string) ([]*model.GatewayApplicationMeta, error) {
+// List retrieves a list of GatewayApplicationMeta from specified namespace `namespace` in cluster `cluster` with appState state
+func (s *service) List(ctx context.Context, cluster string, namespace string, appState *v1beta2.ApplicationStateType) ([]*model.GatewayApplicationMeta, error) {
 
 	kubeCluster, err := s.clusterRepository.GetByName(cluster)
 
@@ -149,7 +149,7 @@ func (s *service) List(ctx context.Context, cluster string, namespace string) ([
 
 	var appMetaList []*model.GatewayApplicationMeta
 	for _, ns := range namespaces {
-		nsAppMetas, err := s.sparkAppRepo.List(ctx, *kubeCluster, ns)
+		nsAppMetas, err := s.sparkAppRepo.List(ctx, *kubeCluster, ns, appState)
 		if err != nil {
 			return nil, gatewayerrors.NewFrom(fmt.Errorf("error getting applications: %w", err))
 		}

@@ -18,9 +18,10 @@ package handler
 import (
 	"context"
 	"fmt"
-	"github.com/slackhq/spark-gateway/pkg/model"
 	"net/http"
 	"strconv"
+
+	"github.com/slackhq/spark-gateway/pkg/model"
 
 	"github.com/gin-gonic/gin"
 	"github.com/kubeflow/spark-operator/v2/api/v1beta2"
@@ -32,7 +33,7 @@ import (
 
 type SparkApplicationService interface {
 	Get(namespace string, name string) (*v1beta2.SparkApplication, error)
-	List(namespace string) ([]*model.SparkManagerApplicationMeta, error)
+	List(namespace string, appState *v1beta2.ApplicationStateType) ([]*model.SparkManagerApplicationMeta, error)
 	Status(namespace string, name string) (*v1beta2.SparkApplicationStatus, error)
 	Logs(namespace string, name string, tailLines int64) (*string, error)
 	Create(ctx context.Context, application *v1beta2.SparkApplication) (*v1beta2.SparkApplication, error)
@@ -78,7 +79,18 @@ func (h *SparkApplicationHandler) Get(c *gin.Context) {
 }
 
 func (h *SparkApplicationHandler) List(c *gin.Context) {
-	appMetaList, err := h.sparkApplicationService.List(c.Param("namespace"))
+
+	_appState := c.Param("appState")
+	var appState *v1beta2.ApplicationStateType = nil
+	if _appState != "" {
+		state := v1beta2.ApplicationStateType(_appState)
+		if !model.ValidSparkApplicationStatesMap[state] {
+			c.Error(fmt.Errorf("invalid application state: %s", appState))
+		}
+		appState = &state
+	}
+
+	appMetaList, err := h.sparkApplicationService.List(c.Param("namespace"), appState)
 
 	if err != nil {
 		c.Error(err)

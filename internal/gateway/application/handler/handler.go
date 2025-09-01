@@ -19,14 +19,17 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	swaggerDocs "github.com/slackhq/spark-gateway/docs/swagger"
-	swaggerFiles "github.com/swaggo/files"
-	ginSwagger "github.com/swaggo/gin-swagger"
 	"net/http"
 	"strconv"
 
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
+
+	swaggerDocs "github.com/slackhq/spark-gateway/docs/swagger"
+
 	"github.com/gin-gonic/gin"
 	"github.com/kubeflow/spark-operator/v2/api/v1beta2"
+
 	"github.com/slackhq/spark-gateway/pkg/gatewayerrors"
 	pkgHttp "github.com/slackhq/spark-gateway/pkg/http"
 	"github.com/slackhq/spark-gateway/pkg/model"
@@ -47,7 +50,7 @@ const sparkApplicationPathName = "applications"
 
 type GatewayApplicationService interface {
 	Get(ctx context.Context, gatewayId string) (*model.GatewayApplication, error)
-	List(ctx context.Context, cluster string, namespace string) ([]*model.GatewayApplicationMeta, error)
+	List(ctx context.Context, cluster string, namespace string, appState *v1beta2.ApplicationStateType) ([]*model.GatewayApplicationMeta, error)
 	Create(ctx context.Context, application *v1beta2.SparkApplication, user string) (*model.GatewayApplication, error)
 	Status(ctx context.Context, gatewayId string) (*v1beta2.SparkApplicationStatus, error)
 	Logs(ctx context.Context, gatewayId string, tailLines int) (*string, error)
@@ -90,6 +93,7 @@ func (h *ApplicationHandler) RegisterRoutes(rg *gin.RouterGroup) {
 // @Security BasicAuth
 // @Param cluster query string true "Cluster name"
 // @Param namespace query string false "Namespace (optional)"
+// @Param appState query v1beta2.ApplicationStateType false "Filter by Spark Application state"
 // @Success 200 {array} model.GatewayApplicationMeta "List of SparkApplication metadata"
 // @Router / [get]
 func (h *ApplicationHandler) List(c *gin.Context) {
@@ -102,7 +106,17 @@ func (h *ApplicationHandler) List(c *gin.Context) {
 
 	namespace := c.Query("namespace")
 
-	appMetaList, err := h.service.List(c, cluster, namespace)
+	_appState := c.Param("appState")
+	var appState *v1beta2.ApplicationStateType = nil
+	if _appState != "" {
+		state := v1beta2.ApplicationStateType(_appState)
+		if !model.ValidSparkApplicationStatesMap[state] {
+			c.Error(fmt.Errorf("invalid application state: %s", appState))
+		}
+		appState = &state
+	}
+
+	appMetaList, err := h.service.List(c, cluster, namespace, appState)
 
 	if err != nil {
 		c.Error(err)

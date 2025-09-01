@@ -8,7 +8,7 @@ templ Sidebar() {
 					<a 
 						href="#"
 						style="display: block; padding: 12px 20px; color: #333; text-decoration: none; border-radius: 4px; margin: 0 10px;"
-						hx-get="/ui/dashboard"
+						hx-get="/ui"
 						hx-target="#main-content"
 						hx-push-url="true"
 						onmouseover="this.style.backgroundColor='#f8f9fa'"
@@ -44,34 +44,6 @@ templ Sidebar() {
 					>
 						<span style="margin-right: 10px;">📦</span>
 						Applications
-					</a>
-				</li>
-				<li style="margin-bottom: 8px;">
-					<a 
-						href="#"
-						style="display: block; padding: 12px 20px; color: #333; text-decoration: none; border-radius: 4px; margin: 0 10px;"
-						hx-get="/ui/jobs"
-						hx-target="#main-content"
-						hx-push-url="true"
-						onmouseover="this.style.backgroundColor='#f8f9fa'"
-						onmouseout="this.style.backgroundColor='transparent'"
-					>
-						<span style="margin-right: 10px;">⚡</span>
-						Jobs
-					</a>
-				</li>
-				<li style="margin-bottom: 8px;">
-					<a 
-						href="#"
-						style="display: block; padding: 12px 20px; color: #333; text-decoration: none; border-radius: 4px; margin: 0 10px;"
-						hx-get="/ui/settings"
-						hx-target="#main-content"
-						hx-push-url="true"
-						onmouseover="this.style.backgroundColor='#f8f9fa'"
-						onmouseout="this.style.backgroundColor='transparent'"
-					>
-						<span style="margin-right: 10px;">⚙️</span>
-						Settings
 					</a>
 				</li>
 			</ul>

@@ -17,10 +17,11 @@ package model
 
 import (
 	"fmt"
+	"strings"
+
 	"github.com/google/uuid"
 	"github.com/kubeflow/spark-operator/v2/api/v1beta2"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"strings"
 )
 
 const GATEWAY_USER_LABEL = "spark-gateway/user"
@@ -126,4 +127,18 @@ func NewGatewayApplicationMeta(smAppMeta *SparkManagerApplicationMeta, cluster s
 		SparkAppMeta: *smAppMeta,
 		Cluster:      cluster,
 	}
+}
+
+var ValidSparkApplicationStatesMap = map[v1beta2.ApplicationStateType]bool{
+	v1beta2.ApplicationStateNew:              true,
+	v1beta2.ApplicationStateSubmitted:        true,
+	v1beta2.ApplicationStateRunning:          true,
+	v1beta2.ApplicationStateCompleted:        true,
+	v1beta2.ApplicationStateFailed:           true,
+	v1beta2.ApplicationStateFailedSubmission: true,
+	v1beta2.ApplicationStatePendingRerun:     true,
+	v1beta2.ApplicationStateInvalidating:     true,
+	v1beta2.ApplicationStateSucceeding:       true,
+	v1beta2.ApplicationStateFailing:          true,
+	v1beta2.ApplicationStateUnknown:          true,
 }

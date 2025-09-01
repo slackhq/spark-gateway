@@ -6,21 +6,25 @@ import (
 	"github.com/a-h/templ/examples/integration-gin/gintemplrenderer"
 	"github.com/gin-gonic/gin"
 
+	"github.com/slackhq/spark-gateway/internal/gateway/application/handler"
 	"github.com/slackhq/spark-gateway/internal/gateway/cluster"
 	"github.com/slackhq/spark-gateway/internal/gateway/web/app"
+	"github.com/slackhq/spark-gateway/pkg/model"
 )
 
 type WebHandler struct {
-	localClusterRepo *cluster.LocalClusterRepo
-	engine           *gin.Engine
-	routerGroup      *gin.RouterGroup
+	localClusterRepo          *cluster.LocalClusterRepo
+	gatewayApplicationService handler.GatewayApplicationService
+	engine                    *gin.Engine
+	routerGroup               *gin.RouterGroup
 }
 
-func NewWebHandler(localClusterRepo *cluster.LocalClusterRepo, engine *gin.Engine, routerGroup *gin.RouterGroup) *WebHandler {
+func NewWebHandler(localClusterRepo *cluster.LocalClusterRepo, gatewayApplicationService handler.GatewayApplicationService, engine *gin.Engine, routerGroup *gin.RouterGroup) *WebHandler {
 	return &WebHandler{
-		localClusterRepo: localClusterRepo,
-		engine:           engine,
-		routerGroup:      routerGroup,
+		localClusterRepo:          localClusterRepo,
+		gatewayApplicationService: gatewayApplicationService,
+		engine:                    engine,
+		routerGroup:               routerGroup,
 	}
 }
 
@@ -32,10 +36,79 @@ func (h *WebHandler) RegisterRoutes() {
 
 	uiGroup.GET("/", h.main)
 	uiGroup.GET("/clusters", h.clusters)
+	uiGroup.GET("/applications", h.applications)
 
 }
 
 func (h *WebHandler) main(c *gin.Context) {
-	r := gintemplrenderer.New(c, http.StatusOK, app.Main())
-	c.Render(http.StatusOK, r)
+
+	if c.GetHeader("HX-Request") == "true" {
+		r := gintemplrenderer.New(c, http.StatusOK, app.MainContent())
+		c.Render(http.StatusOK, r)
+	} else {
+		r := gintemplrenderer.New(c, http.StatusOK, app.Main())
+		c.Render(http.StatusOK, r)
+	}
+
+}
+
+func (h *WebHandler) clusters(c *gin.Context) {
+	clusters, err := h.localClusterRepo.GetAll()
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	// Check if this is an HTMX request (partial update)
+	if c.GetHeader("HX-Request") == "true" {
+		r := gintemplrenderer.New(c, http.StatusOK, app.ClustersContent(clusters))
+		c.Render(http.StatusOK, r)
+	} else {
+		// Full page load
+		r := gintemplrenderer.New(c, http.StatusOK, app.Clusters(clusters))
+		c.Render(http.StatusOK, r)
+	}
+}
+
+func (h *WebHandler) applications(c *gin.Context) {
+	clusters, err := h.localClusterRepo.GetAll()
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	selectedCluster := c.Query("cluster")
+	selectedNamespace := c.Query("namespace")
+
+	var applications []*model.GatewayApplicationMeta
+	var namespaces []model.KubeNamespace
+
+	// Get applications if both cluster and namespace are selected
+	if selectedCluster != "" && selectedNamespace != "" {
+		applications, err = h.gatewayApplicationService.List(c, selectedCluster, selectedNamespace, nil)
+		if err != nil {
+			c.Error(err)
+			return
+		}
+	}
+
+	// Get namespaces if cluster is selected
+	if selectedCluster != "" {
+		for _, cluster := range clusters {
+			if cluster.Name == selectedCluster {
+				namespaces = cluster.Namespaces
+				break
+			}
+		}
+	}
+
+	// Check if this is an HTMX request (partial update)
+	if c.GetHeader("HX-Request") == "true" {
+		r := gintemplrenderer.New(c, http.StatusOK, app.ApplicationsContent(clusters, applications, selectedCluster, selectedNamespace, namespaces))
+		c.Render(http.StatusOK, r)
+	} else {
+		// Full page load
+		r := gintemplrenderer.New(c, http.StatusOK, app.Applications(clusters, applications, selectedCluster, selectedNamespace, namespaces))
+		c.Render(http.StatusOK, r)
+	}
 }

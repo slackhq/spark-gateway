@@ -18,9 +18,10 @@ package repository
 import (
 	"context"
 	"fmt"
-	"github.com/slackhq/spark-gateway/pkg/model"
 	"net/http"
 	"time"
+
+	"github.com/slackhq/spark-gateway/pkg/model"
 
 	"github.com/slackhq/spark-gateway/pkg/gatewayerrors"
 	"github.com/slackhq/spark-gateway/pkg/kube"
@@ -58,7 +59,7 @@ func (k *SparkApplicationRepository) Get(namespace string, name string) (*v1beta
 
 }
 
-func (k *SparkApplicationRepository) List(namespace string) ([]*model.SparkManagerApplicationMeta, error) {
+func (k *SparkApplicationRepository) List(namespace string, appState *v1beta2.ApplicationStateType) ([]*model.SparkManagerApplicationMeta, error) {
 
 	sparkApps, err := k.controller.SparkLister.SparkApplications(namespace).List(labels.Everything())
 
@@ -69,9 +70,13 @@ func (k *SparkApplicationRepository) List(namespace string) ([]*model.SparkManag
 	var appMetaList []*model.SparkManagerApplicationMeta
 
 	for _, sparkApp := range sparkApps {
+		if appState != nil && sparkApp.Status.AppState.State != *appState {
+			continue
+		}
 		sparkAppMeta := model.NewSparkManagerApplicationMeta(sparkApp)
 		appMetaList = append(appMetaList, sparkAppMeta)
 	}
+	
 	return appMetaList, nil
 
 }

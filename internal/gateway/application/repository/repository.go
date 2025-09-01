@@ -99,11 +99,16 @@ func (r *SparkManagerRepository) Get(ctx context.Context, cluster model.KubeClus
 	return kube.Sanitize(&app), nil
 }
 
-func (r *SparkManagerRepository) List(ctx context.Context, cluster model.KubeCluster, namespace string) ([]*model.SparkManagerApplicationMeta, error) {
+func (r *SparkManagerRepository) List(ctx context.Context, cluster model.KubeCluster, namespace string, appState *v1beta2.ApplicationStateType) ([]*model.SparkManagerApplicationMeta, error) {
 
 	clusterEndpoint := r.ClusterEndpoints[cluster.Name]
-	// Url: http://host:port/namespace
-	url := fmt.Sprintf("%s/%s", clusterEndpoint, namespace)
+	// Url: http://host:port/namespace?appState=appState
+	var url string
+	if appState == nil {
+		url = fmt.Sprintf("%s/%s", clusterEndpoint, namespace)
+	} else {
+		url = fmt.Sprintf("%s/%s?appState=%s", clusterEndpoint, namespace, string(*appState))
+	}
 
 	request, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {

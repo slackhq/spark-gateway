@@ -80,7 +80,7 @@ func (r *LocalClusterRepo) GetAll() ([]model.KubeCluster, error) {
 	}
 
 	if len(clusters) == 0 {
-		klog.Warningf("GetAll: no clusters found in clusters config")
+		return nil, fmt.Errorf("GetAll: no clusters found in clusters config")
 	}
 
 	return clusters, nil

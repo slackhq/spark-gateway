@@ -1,0 +1,188 @@
+package app
+
+import (
+	"fmt"
+	"time"
+	"github.com/slackhq/spark-gateway/pkg/model"
+	"github.com/kubeflow/spark-operator/v2/api/v1beta2"
+)
+
+templ Applications(clusters []model.KubeCluster, applications []*model.GatewayApplicationMeta, selectedCluster, selectedNamespace string, namespaces []model.KubeNamespace) {
+	@Layout("Applications - Spark Gateway") {
+		@ApplicationsContent(clusters, applications, selectedCluster, selectedNamespace, namespaces)
+	}
+}
+
+templ ApplicationsContent(clusters []model.KubeCluster, applications []*model.GatewayApplicationMeta, selectedCluster, selectedNamespace string, namespaces []model.KubeNamespace) {
+	<div id="main-content">
+		<div style="margin-bottom: 30px;">
+			<h1 style="font-size: 28px; font-weight: 600; color: #333; margin-bottom: 10px;">Applications</h1>
+			<p style="color: #666; font-size: 16px;">Manage your Spark applications</p>
+		</div>
+		
+		<div style="background: white; padding: 20px; border-radius: 8px; border: 1px solid #e1e5e9; margin-bottom: 20px;">
+			<h3 style="font-size: 18px; font-weight: 600; color: #333; margin-bottom: 15px;">Filters</h3>
+			<form style="display: flex; gap: 15px; align-items: end;">
+				<div style="flex: 1;">
+					<label style="display: block; margin-bottom: 5px; font-weight: 500; color: #333; font-size: 14px;">Cluster</label>
+					<select 
+						name="cluster" 
+						id="cluster-select"
+						style="width: 100%; padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 4px; font-size: 14px;"
+						hx-get="/ui/applications"
+						hx-target="#main-content"
+						hx-trigger="change"
+						hx-include="[name='namespace']"
+					>
+						<option value="">Select a cluster...</option>
+						for _, cluster := range clusters {
+							<option value={ cluster.Name } selected?={ cluster.Name == selectedCluster }>{ cluster.Name }</option>
+						}
+					</select>
+				</div>
+				
+				<div style="flex: 1;">
+					<label style="display: block; margin-bottom: 5px; font-weight: 500; color: #333; font-size: 14px;">Namespace</label>
+					<select 
+						name="namespace" 
+						id="namespace-select"
+						style="width: 100%; padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 4px; font-size: 14px;"
+						disabled?={ selectedCluster == "" }
+						hx-get="/ui/applications"
+						hx-target="#main-content"
+						hx-trigger="change"
+						hx-include="[name='cluster']"
+					>
+						<option value="">Select a namespace...</option>
+						for _, namespace := range namespaces {
+							<option value={ namespace.Name } selected?={ namespace.Name == selectedNamespace }>{ namespace.Name }</option>
+						}
+					</select>
+				</div>
+				
+				<div>
+					<button 
+						type="button"
+						style="padding: 8px 16px; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px;"
+						hx-get="/ui/applications"
+						hx-target="#main-content"
+						onclick="document.getElementById('cluster-select').value = ''; document.getElementById('namespace-select').value = '';"
+					>
+						Clear
+					</button>
+				</div>
+			</form>
+		</div>
+		
+		<div style="background: white; border-radius: 8px; border: 1px solid #e1e5e9; overflow: hidden;">
+			if selectedCluster == "" {
+				<div style="padding: 40px; text-align: center;">
+					<p style="color: #666; font-size: 16px;">Please select a cluster to view applications</p>
+				</div>
+			} else if selectedNamespace == "" {
+				<div style="padding: 40px; text-align: center;">
+					<p style="color: #666; font-size: 16px;">Please select a namespace to view applications</p>
+				</div>
+			} else if len(applications) == 0 {
+				<div style="padding: 40px; text-align: center;">
+					<p style="color: #666; font-size: 16px;">No applications found in { selectedCluster }/{ selectedNamespace }</p>
+				</div>
+			} else {
+				<div style="overflow-x: auto;">
+					<table style="width: 100%; border-collapse: collapse; min-width: 1200px;">
+						<thead style="background-color: #f8f9fa; border-bottom: 2px solid #e1e5e9;">
+							<tr>
+								<th style="padding: 12px 16px; text-align: left; font-weight: 600; color: #333; border-bottom: 1px solid #e1e5e9; white-space: nowrap;">Name</th>
+								<th style="padding: 12px 16px; text-align: left; font-weight: 600; color: #333; border-bottom: 1px solid #e1e5e9; white-space: nowrap;">Spark App ID</th>
+								<th style="padding: 12px 16px; text-align: left; font-weight: 600; color: #333; border-bottom: 1px solid #e1e5e9; white-space: nowrap;">Submission ID</th>
+								<th style="padding: 12px 16px; text-align: left; font-weight: 600; color: #333; border-bottom: 1px solid #e1e5e9; white-space: nowrap;">Last Submission</th>
+								<th style="padding: 12px 16px; text-align: left; font-weight: 600; color: #333; border-bottom: 1px solid #e1e5e9; white-space: nowrap;">Termination Time</th>
+								<th style="padding: 12px 16px; text-align: left; font-weight: 600; color: #333; border-bottom: 1px solid #e1e5e9; white-space: nowrap;">Driver Info</th>
+								<th style="padding: 12px 16px; text-align: left; font-weight: 600; color: #333; border-bottom: 1px solid #e1e5e9; white-space: nowrap;">App State</th>
+								<th style="padding: 12px 16px; text-align: left; font-weight: 600; color: #333; border-bottom: 1px solid #e1e5e9; white-space: nowrap;">Execution Attempts</th>
+								<th style="padding: 12px 16px; text-align: left; font-weight: 600; color: #333; border-bottom: 1px solid #e1e5e9; white-space: nowrap;">Submission Attempts</th>
+							</tr>
+						</thead>
+						<tbody>
+							for i, app := range applications {
+								<tr style={ templ.KV("background-color", getRowColor(i)) }>
+									<td style="padding: 12px 16px; border-bottom: 1px solid #e1e5e9;">
+										<div style="font-weight: 500; color: #333;">{ app.SparkAppMeta.ObjectMeta.Name }</div>
+										<div style="font-size: 12px; color: #666;">{ app.SparkAppMeta.ObjectMeta.Namespace }</div>
+									</td>
+									<td style="padding: 12px 16px; border-bottom: 1px solid #e1e5e9;">
+										<code style="background: #f8f9fa; padding: 2px 6px; border-radius: 3px; font-size: 12px;">{ app.SparkAppMeta.SparkApplicationID }</code>
+									</td>
+									<td style="padding: 12px 16px; border-bottom: 1px solid #e1e5e9;">
+										<code style="background: #f8f9fa; padding: 2px 6px; border-radius: 3px; font-size: 12px;">{ app.SparkAppMeta.SubmissionID }</code>
+									</td>
+									<td style="padding: 12px 16px; border-bottom: 1px solid #e1e5e9;">
+										<div style="font-size: 14px; color: #333;">{ formatTime(app.SparkAppMeta.LastSubmissionAttemptTime.Time) }</div>
+									</td>
+									<td style="padding: 12px 16px; border-bottom: 1px solid #e1e5e9;">
+										<div style="font-size: 14px; color: #333;">{ formatTime(app.SparkAppMeta.TerminationTime.Time) }</div>
+									</td>
+									<td style="padding: 12px 16px; border-bottom: 1px solid #e1e5e9;">
+										<div style="font-size: 14px; color: #333;">
+											if app.SparkAppMeta.DriverInfo.PodName != "" {
+												<div>Pod: { app.SparkAppMeta.DriverInfo.PodName }</div>
+											}
+											if app.SparkAppMeta.DriverInfo.WebUIAddress != "" {
+												<div>UI: { app.SparkAppMeta.DriverInfo.WebUIAddress }</div>
+											}
+										</div>
+									</td>
+									<td style="padding: 12px 16px; border-bottom: 1px solid #e1e5e9;">
+										<span style={ "background: " + getStateColor(formatAppState(app.SparkAppMeta.AppState)) + "; color: white; padding: 4px 8px; border-radius: 12px; font-size: 12px; font-weight: 500;" }>
+											{ formatAppState(app.SparkAppMeta.AppState) }
+										</span>
+									</td>
+									<td style="padding: 12px 16px; border-bottom: 1px solid #e1e5e9; text-align: center;">
+										<span style="font-weight: 500; color: #333;">{ fmt.Sprintf("%d", app.SparkAppMeta.ExecutionAttempts) }</span>
+									</td>
+									<td style="padding: 12px 16px; border-bottom: 1px solid #e1e5e9; text-align: center;">
+										<span style="font-weight: 500; color: #333;">{ fmt.Sprintf("%d", app.SparkAppMeta.SubmissionAttempts) }</span>
+									</td>
+								</tr>
+							}
+						</tbody>
+					</table>
+				</div>
+			}
+		</div>
+	</div>
+}
+
+func formatTime(t time.Time) string {
+	if t.IsZero() {
+		return "-"
+	}
+	return t.Format("2006-01-02 15:04:05")
+}
+
+func formatAppState(state v1beta2.ApplicationState) string {
+	return string(state.State)
+}
+
+func getStateColor(state string) string {
+	switch state {
+	case "COMPLETED":
+		return "#28a745"
+	case "RUNNING":
+		return "#007bff"
+	case "FAILED":
+		return "#dc3545"
+	case "PENDING":
+		return "#ffc107"
+	case "SUBMISSION_FAILED":
+		return "#dc3545"
+	case "INVALIDATING":
+		return "#6c757d"
+	case "SUCCEEDING":
+		return "#17a2b8"
+	case "FAILING":
+		return "#fd7e14"
+	default:
+		return "#6c757d"
+	}
+}

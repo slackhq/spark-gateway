@@ -130,7 +130,7 @@ func NewGateway(ctx context.Context, sgConfig *cfg.SparkGatewayConfig, sparkMana
 	}
 
 	// Register UI
-	webHandler := web.NewWebHandler(sgConfig, ginRouter, rootGroup)
+	webHandler := web.NewWebHandler(localClusterRepo, appService, ginRouter, rootGroup)
 	webHandler.RegisterRoutes()
 
 	/// Register versioned handlers

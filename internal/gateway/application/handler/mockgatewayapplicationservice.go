@@ -29,7 +29,7 @@ var _ GatewayApplicationService = &GatewayApplicationServiceMock{}
 //			GetFunc: func(ctx context.Context, gatewayId string) (*model.GatewayApplication, error) {
 //				panic("mock out the Get method")
 //			},
-//			ListFunc: func(ctx context.Context, cluster string, namespace string) ([]*model.GatewayApplicationMeta, error) {
+//			ListFunc: func(ctx context.Context, cluster string, namespace string, appState *v1beta2.ApplicationStateType) ([]*model.GatewayApplicationMeta, error) {
 //				panic("mock out the List method")
 //			},
 //			LogsFunc: func(ctx context.Context, gatewayId string, tailLines int) (*string, error) {
@@ -55,7 +55,7 @@ type GatewayApplicationServiceMock struct {
 	GetFunc func(ctx context.Context, gatewayId string) (*model.GatewayApplication, error)
 
 	// ListFunc mocks the List method.
-	ListFunc func(ctx context.Context, cluster string, namespace string) ([]*model.GatewayApplicationMeta, error)
+	ListFunc func(ctx context.Context, cluster string, namespace string, appState *v1beta2.ApplicationStateType) ([]*model.GatewayApplicationMeta, error)
 
 	// LogsFunc mocks the Logs method.
 	LogsFunc func(ctx context.Context, gatewayId string, tailLines int) (*string, error)
@@ -96,6 +96,8 @@ type GatewayApplicationServiceMock struct {
 			Cluster string
 			// Namespace is the namespace argument value.
 			Namespace string
+			// AppState is the appState argument value.
+			AppState *v1beta2.ApplicationStateType
 		}
 		// Logs holds details about calls to the Logs method.
 		Logs []struct {
@@ -235,7 +237,7 @@ func (mock *GatewayApplicationServiceMock) GetCalls() []struct {
 }
 
 // List calls ListFunc.
-func (mock *GatewayApplicationServiceMock) List(ctx context.Context, cluster string, namespace string) ([]*model.GatewayApplicationMeta, error) {
+func (mock *GatewayApplicationServiceMock) List(ctx context.Context, cluster string, namespace string, appState *v1beta2.ApplicationStateType) ([]*model.GatewayApplicationMeta, error) {
 	if mock.ListFunc == nil {
 		panic("GatewayApplicationServiceMock.ListFunc: method is nil but GatewayApplicationService.List was just called")
 	}
@@ -243,15 +245,17 @@ func (mock *GatewayApplicationServiceMock) List(ctx context.Context, cluster str
 		Ctx       context.Context
 		Cluster   string
 		Namespace string
+		AppState  *v1beta2.ApplicationStateType
 	}{
 		Ctx:       ctx,
 		Cluster:   cluster,
 		Namespace: namespace,
+		AppState:  appState,
 	}
 	mock.lockList.Lock()
 	mock.calls.List = append(mock.calls.List, callInfo)
 	mock.lockList.Unlock()
-	return mock.ListFunc(ctx, cluster, namespace)
+	return mock.ListFunc(ctx, cluster, namespace, appState)
 }
 
 // ListCalls gets all the calls that were made to List.
@@ -262,11 +266,13 @@ func (mock *GatewayApplicationServiceMock) ListCalls() []struct {
 	Ctx       context.Context
 	Cluster   string
 	Namespace string
+	AppState  *v1beta2.ApplicationStateType
 } {
 	var calls []struct {
 		Ctx       context.Context
 		Cluster   string
 		Namespace string
+		AppState  *v1beta2.ApplicationStateType
 	}
 	mock.lockList.RLock()
 	calls = mock.calls.List

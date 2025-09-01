@@ -32,7 +32,7 @@ var _ SparkApplicationRepository = &SparkApplicationRepositoryMock{}
 //			GetLogsFunc: func(namespace string, name string, tailLines int64) (*string, error) {
 //				panic("mock out the GetLogs method")
 //			},
-//			ListFunc: func(namespace string) ([]*model.SparkManagerApplicationMeta, error) {
+//			ListFunc: func(namespace string, appState *v1beta2.ApplicationStateType) ([]*model.SparkManagerApplicationMeta, error) {
 //				panic("mock out the List method")
 //			},
 //		}
@@ -55,7 +55,7 @@ type SparkApplicationRepositoryMock struct {
 	GetLogsFunc func(namespace string, name string, tailLines int64) (*string, error)
 
 	// ListFunc mocks the List method.
-	ListFunc func(namespace string) ([]*model.SparkManagerApplicationMeta, error)
+	ListFunc func(namespace string, appState *v1beta2.ApplicationStateType) ([]*model.SparkManagerApplicationMeta, error)
 
 	// calls tracks calls to the methods.
 	calls struct {
@@ -95,6 +95,8 @@ type SparkApplicationRepositoryMock struct {
 		List []struct {
 			// Namespace is the namespace argument value.
 			Namespace string
+			// AppState is the appState argument value.
+			AppState *v1beta2.ApplicationStateType
 		}
 	}
 	lockCreate  sync.RWMutex
@@ -257,19 +259,21 @@ func (mock *SparkApplicationRepositoryMock) GetLogsCalls() []struct {
 }
 
 // List calls ListFunc.
-func (mock *SparkApplicationRepositoryMock) List(namespace string) ([]*model.SparkManagerApplicationMeta, error) {
+func (mock *SparkApplicationRepositoryMock) List(namespace string, appState *v1beta2.ApplicationStateType) ([]*model.SparkManagerApplicationMeta, error) {
 	if mock.ListFunc == nil {
 		panic("SparkApplicationRepositoryMock.ListFunc: method is nil but SparkApplicationRepository.List was just called")
 	}
 	callInfo := struct {
 		Namespace string
+		AppState  *v1beta2.ApplicationStateType
 	}{
 		Namespace: namespace,
+		AppState:  appState,
 	}
 	mock.lockList.Lock()
 	mock.calls.List = append(mock.calls.List, callInfo)
 	mock.lockList.Unlock()
-	return mock.ListFunc(namespace)
+	return mock.ListFunc(namespace, appState)
 }
 
 // ListCalls gets all the calls that were made to List.
@@ -278,9 +282,11 @@ func (mock *SparkApplicationRepositoryMock) List(namespace string) ([]*model.Spa
 //	len(mockedSparkApplicationRepository.ListCalls())
 func (mock *SparkApplicationRepositoryMock) ListCalls() []struct {
 	Namespace string
+	AppState  *v1beta2.ApplicationStateType
 } {
 	var calls []struct {
 		Namespace string
+		AppState  *v1beta2.ApplicationStateType
 	}
 	mock.lockList.RLock()
 	calls = mock.calls.List

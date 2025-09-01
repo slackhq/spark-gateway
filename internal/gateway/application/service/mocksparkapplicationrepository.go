@@ -29,7 +29,7 @@ var _ SparkApplicationRepository = &SparkApplicationRepositoryMock{}
 //			GetFunc: func(ctx context.Context, cluster model.KubeCluster, namespace string, name string) (*v1beta2.SparkApplication, error) {
 //				panic("mock out the Get method")
 //			},
-//			ListFunc: func(ctx context.Context, cluster model.KubeCluster, namespace string) ([]*model.SparkManagerApplicationMeta, error) {
+//			ListFunc: func(ctx context.Context, cluster model.KubeCluster, namespace string, appState *v1beta2.ApplicationStateType) ([]*model.SparkManagerApplicationMeta, error) {
 //				panic("mock out the List method")
 //			},
 //			LogsFunc: func(ctx context.Context, cluster model.KubeCluster, namespace string, name string, tailLines int) (*string, error) {
@@ -55,7 +55,7 @@ type SparkApplicationRepositoryMock struct {
 	GetFunc func(ctx context.Context, cluster model.KubeCluster, namespace string, name string) (*v1beta2.SparkApplication, error)
 
 	// ListFunc mocks the List method.
-	ListFunc func(ctx context.Context, cluster model.KubeCluster, namespace string) ([]*model.SparkManagerApplicationMeta, error)
+	ListFunc func(ctx context.Context, cluster model.KubeCluster, namespace string, appState *v1beta2.ApplicationStateType) ([]*model.SparkManagerApplicationMeta, error)
 
 	// LogsFunc mocks the Logs method.
 	LogsFunc func(ctx context.Context, cluster model.KubeCluster, namespace string, name string, tailLines int) (*string, error)
@@ -104,6 +104,8 @@ type SparkApplicationRepositoryMock struct {
 			Cluster model.KubeCluster
 			// Namespace is the namespace argument value.
 			Namespace string
+			// AppState is the appState argument value.
+			AppState *v1beta2.ApplicationStateType
 		}
 		// Logs holds details about calls to the Logs method.
 		Logs []struct {
@@ -267,7 +269,7 @@ func (mock *SparkApplicationRepositoryMock) GetCalls() []struct {
 }
 
 // List calls ListFunc.
-func (mock *SparkApplicationRepositoryMock) List(ctx context.Context, cluster model.KubeCluster, namespace string) ([]*model.SparkManagerApplicationMeta, error) {
+func (mock *SparkApplicationRepositoryMock) List(ctx context.Context, cluster model.KubeCluster, namespace string, appState *v1beta2.ApplicationStateType) ([]*model.SparkManagerApplicationMeta, error) {
 	if mock.ListFunc == nil {
 		panic("SparkApplicationRepositoryMock.ListFunc: method is nil but SparkApplicationRepository.List was just called")
 	}
@@ -275,15 +277,17 @@ func (mock *SparkApplicationRepositoryMock) List(ctx context.Context, cluster mo
 		Ctx       context.Context
 		Cluster   model.KubeCluster
 		Namespace string
+		AppState  *v1beta2.ApplicationStateType
 	}{
 		Ctx:       ctx,
 		Cluster:   cluster,
 		Namespace: namespace,
+		AppState:  appState,
 	}
 	mock.lockList.Lock()
 	mock.calls.List = append(mock.calls.List, callInfo)
 	mock.lockList.Unlock()
-	return mock.ListFunc(ctx, cluster, namespace)
+	return mock.ListFunc(ctx, cluster, namespace, appState)
 }
 
 // ListCalls gets all the calls that were made to List.
@@ -294,11 +298,13 @@ func (mock *SparkApplicationRepositoryMock) ListCalls() []struct {
 	Ctx       context.Context
 	Cluster   model.KubeCluster
 	Namespace string
+	AppState  *v1beta2.ApplicationStateType
 } {
 	var calls []struct {
 		Ctx       context.Context
 		Cluster   model.KubeCluster
 		Namespace string
+		AppState  *v1beta2.ApplicationStateType
 	}
 	mock.lockList.RLock()
 	calls = mock.calls.List
