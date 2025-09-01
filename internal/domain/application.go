@@ -33,7 +33,7 @@ type StatusUrlTemplates struct {
 	LogsUI         string `koanf:"logsUI"`
 }
 
-// Most models here are simply wrappers for corresponding v1beta2 types to help with "decoupling". These will most likely need
+// Most models here are simply wrappers for corresponding v1beta2 types with some fields removed or defaulted. These will most likely need
 // to be expanded into individual models like what Batch Processing Gateway did to fully decouple everything, but since we're
 // focusing on Kubeflow Spark Operator for now, we will target their models
 type GatewayApplicationStatus struct {
@@ -82,14 +82,39 @@ func NewGatewayApplicationSummary(sparkApp v1beta2.SparkApplication) *GatewayApp
 	}
 }
 
-type GatewayApplication struct {
+type GatewaySparkApplication struct {
 	GatewayApplicationMeta `json:"metadata"`
 	Spec                   GatewayApplicationSpec   `json:"spec"`
 	Status                 GatewayApplicationStatus `json:"status"`
-	GatewayId              string                   `json:"gatewayId"`
-	Cluster                string                   `json:"cluster"`
-	User                   string                   `json:"user"`
-	SparkLogURLs           StatusUrlTemplates       `json:"sparkLogURLs"`
+}
+
+func (gsa *GatewaySparkApplication) ToV1Beta2SparkApplication() *v1beta2.SparkApplication {
+	return &v1beta2.SparkApplication{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:        gsa.Name,
+			Namespace:   gsa.Namespace,
+			Annotations: gsa.Annotations,
+			Labels:      gsa.Labels,
+		},
+		Spec:   gsa.Spec.SparkApplicationSpec,
+		Status: gsa.Status.SparkApplicationStatus,
+	}
+}
+
+func GatewaySparkApplicationFromV1Beta2SparkApplication(sparkApp v1beta2.SparkApplication) *GatewaySparkApplication {
+	return &GatewaySparkApplication{
+		GatewayApplicationMeta: *NewGatewayApplicationMeta(sparkApp.ObjectMeta),
+		Spec:                   GatewayApplicationSpec{SparkApplicationSpec: sparkApp.Spec},
+		Status:                 *NewGatewayApplicationStatus(sparkApp.Status),
+	}
+}
+
+type GatewayApplication struct {
+	SparkApplication GatewaySparkApplication `json:"sparkApplication"`
+	GatewayId        string                  `json:"gatewayId"`
+	Cluster          string                  `json:"cluster"`
+	User             string                  `json:"user"`
+	SparkLogURLs     StatusUrlTemplates      `json:"sparkLogURLs"`
 }
 
 // NewGatewayApplication will return a new GatewayApplication by first mapping the input v1beta2.SparkApplication and then applying any
@@ -110,7 +135,7 @@ func NewGatewayApplication(sparkApp *v1beta2.SparkApplication, opts ...func(*Gat
 	status := GatewayApplicationStatus{SparkApplicationStatus: sparkApp.Status}
 	status.ExecutorState = nil
 
-	gatewayApp := GatewayApplication{
+	gaSparkApp := GatewaySparkApplication{
 		GatewayApplicationMeta: GatewayApplicationMeta{
 			Namespace:   sparkApp.Namespace,
 			Annotations: annotations,
@@ -123,7 +148,11 @@ func NewGatewayApplication(sparkApp *v1beta2.SparkApplication, opts ...func(*Gat
 	// If the application already has a name, we set it as an annotation because
 	// all GatewayApplication names are GatewayIds
 	if sparkApp.ObjectMeta.Name != "" {
-		gatewayApp.Annotations["applicationName"] = sparkApp.Name
+		gaSparkApp.Annotations["applicationName"] = sparkApp.Name
+	}
+
+	gatewayApp := GatewayApplication{
+		SparkApplication: gaSparkApp,
 	}
 
 	// Apply opts
@@ -138,8 +167,8 @@ func NewGatewayApplication(sparkApp *v1beta2.SparkApplication, opts ...func(*Gat
 func WithUser(user string) func(*GatewayApplication) {
 	return func(ga *GatewayApplication) {
 		ga.User = user
-		ga.Labels[GATEWAY_USER_LABEL] = user
-		ga.Spec.ProxyUser = &user
+		ga.SparkApplication.Labels[GATEWAY_USER_LABEL] = user
+		ga.SparkApplication.Spec.ProxyUser = &user
 	}
 }
 
@@ -147,7 +176,7 @@ func WithSelector(selectorMap map[string]string) func(*GatewayApplication) {
 	return func(ga *GatewayApplication) {
 		// Add selector values if they exist
 		if len(selectorMap) != 0 {
-			ga.Labels = util.MergeMaps(ga.Labels, selectorMap)
+			ga.SparkApplication.Labels = util.MergeMaps(ga.SparkApplication.Labels, selectorMap)
 		}
 	}
 }
@@ -155,7 +184,7 @@ func WithSelector(selectorMap map[string]string) func(*GatewayApplication) {
 func WithId(gatewayId string) func(*GatewayApplication) {
 	return func(ga *GatewayApplication) {
 		ga.GatewayId = gatewayId
-		ga.Name = gatewayId
+		ga.SparkApplication.Name = gatewayId
 	}
 }
 
