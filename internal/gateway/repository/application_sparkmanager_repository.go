@@ -32,6 +32,25 @@ import (
 	"github.com/slackhq/spark-gateway/internal/shared/util"
 )
 
+// DoHTTP runs a request, checks for errors from making the request or the request body, and returns the Response body bytes
+// if the request succeeds
+func DoHTTP(ctx context.Context, request *http.Request) (*[]byte, error) {
+	resp, respBody, err := sgHttp.HttpRequest(ctx, &http.Client{}, request)
+	if err != nil {
+		return nil, gatewayerrors.NewFrom(err)
+	}
+
+	err = sgHttp.CheckJsonResponse(resp, respBody)
+	if err != nil {
+		return nil, gatewayerrors.NewFrom(err)
+	}
+
+	return respBody, nil
+
+}
+
+// SparkManagerRepository is responsible for handling submission and monitoring of GatewayApplications through the SparkManager REST API.
+// The API contract for this implementation is based on Kubeflow Spark Operator v1beta2.SparkApplication types
 type SparkManagerRepository struct {
 	ClusterEndpoints map[string]string
 }
@@ -80,12 +99,7 @@ func (r *SparkManagerRepository) Get(ctx context.Context, cluster domain.KubeClu
 		return nil, gatewayerrors.NewFrom(fmt.Errorf("error creating %s request: %w", http.MethodGet, err))
 	}
 
-	resp, respBody, err := sgHttp.HttpRequest(ctx, &http.Client{}, request)
-	if err != nil {
-		return nil, gatewayerrors.NewFrom(err)
-	}
-
-	err = sgHttp.CheckJsonResponse(resp, respBody)
+	respBody, err := DoHTTP(ctx, request)
 	if err != nil {
 		return nil, gatewayerrors.NewFrom(err)
 	}
@@ -109,12 +123,7 @@ func (r *SparkManagerRepository) List(ctx context.Context, cluster domain.KubeCl
 		return nil, gatewayerrors.NewFrom(fmt.Errorf("error creating %s request: %w", http.MethodGet, err))
 	}
 
-	resp, respBody, err := sgHttp.HttpRequest(ctx, &http.Client{}, request)
-	if err != nil {
-		return nil, gatewayerrors.NewFrom(err)
-	}
-
-	err = sgHttp.CheckJsonResponse(resp, respBody)
+	respBody, err := DoHTTP(ctx, request)
 	if err != nil {
 		return nil, gatewayerrors.NewFrom(err)
 	}
@@ -138,12 +147,7 @@ func (r *SparkManagerRepository) Status(ctx context.Context, cluster domain.Kube
 		return nil, gatewayerrors.NewFrom(fmt.Errorf("error creating %s request: %w", http.MethodGet, err))
 	}
 
-	resp, respBody, err := sgHttp.HttpRequest(ctx, &http.Client{}, request)
-	if err != nil {
-		return nil, gatewayerrors.NewFrom(err)
-	}
-
-	err = sgHttp.CheckJsonResponse(resp, respBody)
+	respBody, err := DoHTTP(ctx, request)
 	if err != nil {
 		return nil, gatewayerrors.NewFrom(err)
 	}
@@ -167,12 +171,7 @@ func (r *SparkManagerRepository) Logs(ctx context.Context, cluster domain.KubeCl
 		return nil, gatewayerrors.NewFrom(fmt.Errorf("error creating %s request: %w", http.MethodGet, err))
 	}
 
-	resp, respBody, err := sgHttp.HttpRequest(ctx, &http.Client{}, request)
-	if err != nil {
-		return nil, gatewayerrors.NewFrom(err)
-	}
-
-	err = sgHttp.CheckJsonResponse(resp, respBody)
+	respBody, err := DoHTTP(ctx, request)
 	if err != nil {
 		return nil, gatewayerrors.NewFrom(err)
 	}
@@ -195,19 +194,13 @@ func (r *SparkManagerRepository) Create(ctx context.Context, cluster domain.Kube
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal SparkApplication: %w", err)
 	}
-
 	request, err := http.NewRequest(http.MethodPost, url, bytes.NewBuffer(body))
 	if err != nil {
 		return nil, gatewayerrors.NewFrom(fmt.Errorf("error creating %s request: %w", http.MethodPost, err))
 	}
 	request.Header.Set("Content-Type", "application/json")
 
-	resp, respBody, err := sgHttp.HttpRequest(ctx, &http.Client{}, request)
-	if err != nil {
-		return nil, gatewayerrors.NewFrom(err)
-	}
-
-	err = sgHttp.CheckJsonResponse(resp, respBody)
+	respBody, err := DoHTTP(ctx, request)
 	if err != nil {
 		return nil, gatewayerrors.NewFrom(err)
 	}
@@ -231,12 +224,7 @@ func (r *SparkManagerRepository) Delete(ctx context.Context, cluster domain.Kube
 		return gatewayerrors.NewFrom(fmt.Errorf("error creating %s request: %w", http.MethodDelete, err))
 	}
 
-	resp, respBody, err := sgHttp.HttpRequest(ctx, &http.Client{}, request)
-	if err != nil {
-		return gatewayerrors.NewFrom(err)
-	}
-
-	err = sgHttp.CheckJsonResponse(resp, respBody)
+	_, err = DoHTTP(ctx, request)
 	if err != nil {
 		return gatewayerrors.NewFrom(err)
 	}
