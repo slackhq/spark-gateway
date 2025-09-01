@@ -28,7 +28,7 @@ func NewRouter(sgConf *config.SparkGatewayConfig, appService service.SparkApplic
 	}
 
 	// Versioned routes
-	v1Group := router.Group("/v1")
+	v1Group := router.Group("/api/v1")
 	if err := middleware.AddMiddleware(sgConf.GatewayConfig.Middleware, v1Group); err != nil {
 		return nil, fmt.Errorf("error adding middlewares to routes: %w", err)
 	}

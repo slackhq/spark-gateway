@@ -20,7 +20,7 @@ func NewRouter(sgConf *config.SparkGatewayConfig, appService service.SparkApplic
 	health.RegisterHealthRoutes(rootGroup)
 
 	// Versioned routes
-	v1Group := router.Group("/v1")
+	v1Group := router.Group("/api/v1")
 
 	v1kubeflow.RegisterKubeflowApplicationRoutes(v1Group, sgConf, appService)
 
