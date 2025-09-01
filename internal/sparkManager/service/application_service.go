@@ -31,7 +31,7 @@ import (
 
 type SparkApplicationRepository interface {
 	Get(namespace string, name string) (*v1beta2.SparkApplication, error)
-	List(namespace string) ([]*domain.SparkManagerApplicationMeta, error)
+	List(namespace string) ([]*v1beta2.SparkApplication, error)
 	GetLogs(namespace string, name string, tailLines int64) (*string, error)
 	Create(ctx context.Context, application *v1beta2.SparkApplication) (*v1beta2.SparkApplication, error)
 	Delete(ctx context.Context, namespace string, name string) error
@@ -41,7 +41,7 @@ type SparkApplicationRepository interface {
 
 type SparkApplicationService interface {
 	Get(namespace string, name string) (*v1beta2.SparkApplication, error)
-	List(namespace string) ([]*domain.SparkManagerApplicationMeta, error)
+	List(namespace string) ([]*domain.GatewayApplicationSummary, error)
 	Status(namespace string, name string) (*v1beta2.SparkApplicationStatus, error)
 	Logs(namespace string, name string, tailLines int64) (*string, error)
 	Create(ctx context.Context, application *v1beta2.SparkApplication) (*v1beta2.SparkApplication, error)
@@ -69,15 +69,21 @@ func (s *ApplicationService) Get(namespace string, name string) (*v1beta2.SparkA
 	return sparkApp, nil
 }
 
-func (s *ApplicationService) List(namespace string) ([]*domain.SparkManagerApplicationMeta, error) {
+func (s *ApplicationService) List(namespace string) ([]*domain.GatewayApplicationSummary, error) {
 
-	appMetaList, err := s.sparkApplicationRepository.List(namespace)
+	sparkApps, err := s.sparkApplicationRepository.List(namespace)
 
 	if err != nil {
 		return nil, gatewayerrors.NewFrom(err)
 	}
 
-	return appMetaList, nil
+	appSummaries := []*domain.GatewayApplicationSummary{}
+	for _, sparkApp := range sparkApps {
+		appSummary := domain.NewGatewayApplicationSummary(sparkApp, s.cluster.Name)
+		appSummaries = append(appSummaries, appSummary)
+	}
+
+	return appSummaries, nil
 }
 
 func (s *ApplicationService) Status(namespace string, name string) (*v1beta2.SparkApplicationStatus, error) {

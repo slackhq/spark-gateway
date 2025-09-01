@@ -73,12 +73,17 @@ func NewGatewayApplicationMeta(appMeta metav1.ObjectMeta) *GatewayApplicationMet
 type GatewayApplicationSummary struct {
 	GatewayApplicationMeta   `json:",inline"`
 	GatewayApplicationStatus `json:"status"`
+	GatewayId                string `json:"gatewayId"`
+	Cluster                  string `json:"cluster"`
 }
 
-func NewGatewayApplicationSummary(sparkApp v1beta2.SparkApplication) *GatewayApplicationSummary {
+func NewGatewayApplicationSummary(sparkApp *v1beta2.SparkApplication, cluster string) *GatewayApplicationSummary {
 	return &GatewayApplicationSummary{
+		// Name should always be GatewayId due to model mappings etc.
 		GatewayApplicationMeta:   *NewGatewayApplicationMeta(sparkApp.ObjectMeta),
 		GatewayApplicationStatus: *NewGatewayApplicationStatus(sparkApp.Status),
+		GatewayId:                sparkApp.Name,
+		Cluster:                  cluster,
 	}
 }
 
