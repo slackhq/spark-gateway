@@ -5,6 +5,7 @@ package service
 
 import (
 	"context"
+	"github.com/kubeflow/spark-operator/v2/api/v1beta2"
 	"github.com/slackhq/spark-gateway/internal/domain"
 	"sync"
 )
@@ -19,7 +20,7 @@ var _ GatewayApplicationRepository = &GatewayApplicationRepositoryMock{}
 //
 //		// make and configure a mocked GatewayApplicationRepository
 //		mockedGatewayApplicationRepository := &GatewayApplicationRepositoryMock{
-//			CreateFunc: func(ctx context.Context, cluster domain.KubeCluster, gatewayApp *domain.GatewayApplication) (*domain.GatewayApplication, error) {
+//			CreateFunc: func(ctx context.Context, cluster domain.KubeCluster, application *v1beta2.SparkApplication) (*v1beta2.SparkApplication, error) {
 //				panic("mock out the Create method")
 //			},
 //			DeleteFunc: func(ctx context.Context, cluster domain.KubeCluster, namespace string, name string) error {
@@ -45,7 +46,7 @@ var _ GatewayApplicationRepository = &GatewayApplicationRepositoryMock{}
 //	}
 type GatewayApplicationRepositoryMock struct {
 	// CreateFunc mocks the Create method.
-	CreateFunc func(ctx context.Context, cluster domain.KubeCluster, gatewayApp *domain.GatewayApplication) (*domain.GatewayApplication, error)
+	CreateFunc func(ctx context.Context, cluster domain.KubeCluster, application *v1beta2.SparkApplication) (*v1beta2.SparkApplication, error)
 
 	// DeleteFunc mocks the Delete method.
 	DeleteFunc func(ctx context.Context, cluster domain.KubeCluster, namespace string, name string) error
@@ -70,8 +71,8 @@ type GatewayApplicationRepositoryMock struct {
 			Ctx context.Context
 			// Cluster is the cluster argument value.
 			Cluster domain.KubeCluster
-			// GatewayApp is the gatewayApp argument value.
-			GatewayApp *domain.GatewayApplication
+			// Application is the application argument value.
+			Application *v1beta2.SparkApplication
 		}
 		// Delete holds details about calls to the Delete method.
 		Delete []struct {
@@ -138,23 +139,23 @@ type GatewayApplicationRepositoryMock struct {
 }
 
 // Create calls CreateFunc.
-func (mock *GatewayApplicationRepositoryMock) Create(ctx context.Context, cluster domain.KubeCluster, gatewayApp *domain.GatewayApplication) (*domain.GatewayApplication, error) {
+func (mock *GatewayApplicationRepositoryMock) Create(ctx context.Context, cluster domain.KubeCluster, application *v1beta2.SparkApplication) (*v1beta2.SparkApplication, error) {
 	if mock.CreateFunc == nil {
 		panic("GatewayApplicationRepositoryMock.CreateFunc: method is nil but GatewayApplicationRepository.Create was just called")
 	}
 	callInfo := struct {
-		Ctx        context.Context
-		Cluster    domain.KubeCluster
-		GatewayApp *domain.GatewayApplication
+		Ctx         context.Context
+		Cluster     domain.KubeCluster
+		Application *v1beta2.SparkApplication
 	}{
-		Ctx:        ctx,
-		Cluster:    cluster,
-		GatewayApp: gatewayApp,
+		Ctx:         ctx,
+		Cluster:     cluster,
+		Application: application,
 	}
 	mock.lockCreate.Lock()
 	mock.calls.Create = append(mock.calls.Create, callInfo)
 	mock.lockCreate.Unlock()
-	return mock.CreateFunc(ctx, cluster, gatewayApp)
+	return mock.CreateFunc(ctx, cluster, application)
 }
 
 // CreateCalls gets all the calls that were made to Create.
@@ -162,14 +163,14 @@ func (mock *GatewayApplicationRepositoryMock) Create(ctx context.Context, cluste
 //
 //	len(mockedGatewayApplicationRepository.CreateCalls())
 func (mock *GatewayApplicationRepositoryMock) CreateCalls() []struct {
-	Ctx        context.Context
-	Cluster    domain.KubeCluster
-	GatewayApp *domain.GatewayApplication
+	Ctx         context.Context
+	Cluster     domain.KubeCluster
+	Application *v1beta2.SparkApplication
 } {
 	var calls []struct {
-		Ctx        context.Context
-		Cluster    domain.KubeCluster
-		GatewayApp *domain.GatewayApplication
+		Ctx         context.Context
+		Cluster     domain.KubeCluster
+		Application *v1beta2.SparkApplication
 	}
 	mock.lockCreate.RLock()
 	calls = mock.calls.Create

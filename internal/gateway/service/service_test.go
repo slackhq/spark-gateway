@@ -154,8 +154,8 @@ var mockClusterRepo_Failure repository.ClusterRepository = &repository.ClusterRe
 }
 
 var mockGatewayAppRepository_Success GatewayApplicationRepositoryMock = GatewayApplicationRepositoryMock{
-	CreateFunc: func(ctx context.Context, cluster domain.KubeCluster, gatewayApp *domain.GatewayApplication) (*domain.GatewayApplication, error) {
-		return gatewayApp, nil
+	CreateFunc: func(ctx context.Context, cluster domain.KubeCluster, sparkApp *v1beta2.SparkApplication) (*v1beta2.SparkApplication, error) {
+		return sparkApp, nil
 	},
 	DeleteFunc: func(ctx context.Context, cluster domain.KubeCluster, namespace, name string) error {
 		return nil
@@ -170,12 +170,12 @@ var mockGatewayAppRepository_Success GatewayApplicationRepositoryMock = GatewayA
 		return &logString, nil
 	},
 	StatusFunc: func(ctx context.Context, cluster domain.KubeCluster, namespace, name string) (*domain.GatewayApplicationStatus, error) {
-		return &expectedGatewayApplication.Status, nil
+		return &expectedGatewayApplication.SparkApplication.Status, nil
 	},
 }
 
 var mockGatewayAppRepository_Failure GatewayApplicationRepositoryMock = GatewayApplicationRepositoryMock{
-	CreateFunc: func(ctx context.Context, cluster domain.KubeCluster, gatewayApp *domain.GatewayApplication) (*domain.GatewayApplication, error) {
+	CreateFunc: func(ctx context.Context, cluster domain.KubeCluster, sparkApp *v1beta2.SparkApplication) (*v1beta2.SparkApplication, error) {
 		return nil, errors.New("error creating GatewayApplication")
 	},
 	DeleteFunc: func(ctx context.Context, cluster domain.KubeCluster, namespace, name string) error {
@@ -344,7 +344,7 @@ func TestServiceCreateLabelsExist(t *testing.T) {
 	}
 
 	testExpectedApp := expectedGatewayApplication
-	testExpectedApp.Labels["test"] = "label1"
+	testExpectedApp.SparkApplication.Labels["test"] = "label1"
 
 	testExpectedApp.SparkLogURLs.SparkHistoryUI = "https://spark-history-testNamespace.test.com/history//jobs"
 	testExpectedApp.SparkLogURLs.LogsUI = "https://logs.test.com/app/discover#/?_g=(_a=(interval:auto,query:(language:lucene,query:'host:%20%22clusterid-nsid-testid-driver%22')"
@@ -382,22 +382,24 @@ func TestServiceCreateNoName(t *testing.T) {
 	expected := domain.GatewayApplication{
 		User:      user,
 		GatewayId: "clusterid-nsid-testid",
-		GatewayApplicationMeta: domain.GatewayApplicationMeta{
-			Name:      "clusterid-nsid-testid",
-			Namespace: "testNamespace",
-			Labels: map[string]string{
-				domain.GATEWAY_USER_LABEL: "user",
+		SparkApplication: domain.GatewaySparkApplication{
+			GatewayApplicationMeta: domain.GatewayApplicationMeta{
+				Name:      "clusterid-nsid-testid",
+				Namespace: "testNamespace",
+				Labels: map[string]string{
+					domain.GATEWAY_USER_LABEL: "user",
+				},
+				Annotations: map[string]string{},
 			},
-			Annotations: map[string]string{},
-		},
-		Spec: domain.GatewayApplicationSpec{
-			SparkApplicationSpec: v1beta2.SparkApplicationSpec{
-				ProxyUser: &user,
+			Spec: domain.GatewayApplicationSpec{
+				SparkApplicationSpec: v1beta2.SparkApplicationSpec{
+					ProxyUser: &user,
+				},
 			},
-		},
-		Status: domain.GatewayApplicationStatus{
-			SparkApplicationStatus: v1beta2.SparkApplicationStatus{
-				SubmissionID: "test123",
+			Status: domain.GatewayApplicationStatus{
+				SparkApplicationStatus: v1beta2.SparkApplicationStatus{
+					SubmissionID: "test123",
+				},
 			},
 		},
 	}

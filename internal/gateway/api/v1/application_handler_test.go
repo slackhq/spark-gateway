@@ -101,9 +101,11 @@ func TestApplicationHandlerErrorHandler(t *testing.T) {
 func TestApplicationHandlerGet(t *testing.T) {
 
 	retApp := &domain.GatewayApplication{
-		GatewayApplicationMeta: domain.GatewayApplicationMeta{
-			Name:      "clusterid-nsid-uuid",
-			Namespace: "test",
+		SparkApplication: domain.GatewaySparkApplication{
+			GatewayApplicationMeta: domain.GatewayApplicationMeta{
+				Name:      "clusterid-nsid-uuid",
+				Namespace: "test",
+			},
 		},
 		Cluster: "cluster",
 		User:    "user",
@@ -211,9 +213,11 @@ func TestApplicationHandlerCreate(t *testing.T) {
 	})
 
 	retApp := &domain.GatewayApplication{
-		GatewayApplicationMeta: domain.GatewayApplicationMeta{
-			Name:      "clusterid-nsid-uuid",
-			Namespace: "test",
+		SparkApplication: domain.GatewaySparkApplication{
+			GatewayApplicationMeta: domain.GatewayApplicationMeta{
+				Name:      "clusterid-nsid-uuid",
+				Namespace: "test",
+			},
 		},
 		Cluster: "cluster",
 		User:    "user",
@@ -227,14 +231,14 @@ func TestApplicationHandlerCreate(t *testing.T) {
 
 	RegisterGatewayApplicationRoutes(v1Group, testConfig, service)
 
-	createApp := &domain.GatewayApplication{
+	createReq := domain.GatewaySparkApplication{
 		GatewayApplicationMeta: domain.GatewayApplicationMeta{
 			Name:      "clusterid-testid",
 			Namespace: "test",
 		},
 	}
 
-	jsonReq, _ := json.Marshal(createApp)
+	jsonReq, _ := json.Marshal(createReq)
 	req, _ := http.NewRequest("POST", "/api/v1/applications", bytes.NewBuffer(jsonReq))
 	w := httptest.NewRecorder()
 	router.ServeHTTP(w, req)
@@ -283,7 +287,7 @@ func TestApplicationHandlerCreateAlreadyExists(t *testing.T) {
 
 	RegisterGatewayApplicationRoutes(v1Group, testConfig, service)
 
-	createReq := &domain.GatewayApplication{
+	createReq := domain.GatewaySparkApplication{
 		GatewayApplicationMeta: domain.GatewayApplicationMeta{
 			Name:      "clusterid-testid",
 			Namespace: "test",

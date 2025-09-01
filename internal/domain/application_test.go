@@ -17,11 +17,13 @@ func TestBaseNewApplication(t *testing.T) {
 	}
 
 	expected := GatewayApplication{
-		GatewayApplicationMeta: GatewayApplicationMeta{
-			Namespace: "test",
-			Labels:    map[string]string{},
-			Annotations: map[string]string{
-				"applicationName": "BaseTest",
+		SparkApplication: GatewaySparkApplication{
+			GatewayApplicationMeta: GatewayApplicationMeta{
+				Namespace: "test",
+				Labels:    map[string]string{},
+				Annotations: map[string]string{
+					"applicationName": "BaseTest",
+				},
 			},
 		},
 	}
@@ -46,14 +48,16 @@ func TestBaseNewApplicationWithLabelsAnnotations(t *testing.T) {
 	}
 
 	expected := GatewayApplication{
-		GatewayApplicationMeta: GatewayApplicationMeta{
-			Namespace: "test",
-			Annotations: map[string]string{
-				"annotation":      "1",
-				"applicationName": "BaseTest",
-			},
-			Labels: map[string]string{
-				"label": "1",
+		SparkApplication: GatewaySparkApplication{
+			GatewayApplicationMeta: GatewayApplicationMeta{
+				Namespace: "test",
+				Annotations: map[string]string{
+					"annotation":      "1",
+					"applicationName": "BaseTest",
+				},
+				Labels: map[string]string{
+					"label": "1",
+				},
 			},
 		},
 	}
@@ -75,18 +79,20 @@ func TestBaseNewApplicationWithUser(t *testing.T) {
 	}
 
 	expected := GatewayApplication{
-		GatewayApplicationMeta: GatewayApplicationMeta{
-			Namespace: "test",
-			Labels: map[string]string{
-				GATEWAY_USER_LABEL: "user",
+		SparkApplication: GatewaySparkApplication{
+			GatewayApplicationMeta: GatewayApplicationMeta{
+				Namespace: "test",
+				Labels: map[string]string{
+					GATEWAY_USER_LABEL: "user",
+				},
+				Annotations: map[string]string{
+					"applicationName": "BaseTest",
+				},
 			},
-			Annotations: map[string]string{
-				"applicationName": "BaseTest",
-			},
-		},
-		Spec: GatewayApplicationSpec{
-			SparkApplicationSpec: v1beta2.SparkApplicationSpec{
-				ProxyUser: &userStr,
+			Spec: GatewayApplicationSpec{
+				SparkApplicationSpec: v1beta2.SparkApplicationSpec{
+					ProxyUser: &userStr,
+				},
 			},
 		},
 		User: "user",
@@ -107,13 +113,15 @@ func TestBaseNewApplicationWithSelector(t *testing.T) {
 	}
 
 	expected := GatewayApplication{
-		GatewayApplicationMeta: GatewayApplicationMeta{
-			Namespace: "test",
-			Labels: map[string]string{
-				"key": "value",
-			},
-			Annotations: map[string]string{
-				"applicationName": "BaseTest",
+		SparkApplication: GatewaySparkApplication{
+			GatewayApplicationMeta: GatewayApplicationMeta{
+				Namespace: "test",
+				Labels: map[string]string{
+					"key": "value",
+				},
+				Annotations: map[string]string{
+					"applicationName": "BaseTest",
+				},
 			},
 		},
 	}
@@ -134,11 +142,13 @@ func TestBaseNewApplicationWithIdNoName(t *testing.T) {
 	}
 
 	expected := GatewayApplication{
-		GatewayApplicationMeta: GatewayApplicationMeta{
-			Name:        "id",
-			Namespace:   "test",
-			Labels:      map[string]string{},
-			Annotations: map[string]string{},
+		SparkApplication: GatewaySparkApplication{
+			GatewayApplicationMeta: GatewayApplicationMeta{
+				Name:        "id",
+				Namespace:   "test",
+				Labels:      map[string]string{},
+				Annotations: map[string]string{},
+			},
 		},
 		GatewayId: "id",
 	}
@@ -158,12 +168,14 @@ func TestBaseNewApplicationWithIdName(t *testing.T) {
 	}
 
 	expected := GatewayApplication{
-		GatewayApplicationMeta: GatewayApplicationMeta{
-			Name:      "id",
-			Namespace: "test",
-			Labels:    map[string]string{},
-			Annotations: map[string]string{
-				"applicationName": "appName",
+		SparkApplication: GatewaySparkApplication{
+			GatewayApplicationMeta: GatewayApplicationMeta{
+				Name:      "id",
+				Namespace: "test",
+				Labels:    map[string]string{},
+				Annotations: map[string]string{
+					"applicationName": "appName",
+				},
 			},
 		},
 		GatewayId: "id",
