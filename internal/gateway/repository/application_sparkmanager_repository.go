@@ -39,7 +39,7 @@ type SparkManagerRepository struct {
 
 func NewSparkManagerRepository(clusters []domain.KubeCluster, sparkManagerHostnameTemplate string, sparkManagerPort string, debugPorts map[string]config.DebugPort) (*SparkManagerRepository, error) {
 
-	hostNameF := "http://%s:%s"
+	hostNameF := "http://%s:%s/api/v1"
 	clusterEndpoints := map[string]string{}
 
 	// Pretemplate the hostname with debug port if any
@@ -73,7 +73,7 @@ func NewSparkManagerRepository(clusters []domain.KubeCluster, sparkManagerHostna
 func (r *SparkManagerRepository) Get(ctx context.Context, cluster domain.KubeCluster, namespace string, name string) (*v1beta2.SparkApplication, error) {
 
 	clusterEndpoint := r.ClusterEndpoints[cluster.Name]
-	// Url: http://host:port/namespace/name
+	// Url: http://host:port/api/v1/namespace/name
 	url := fmt.Sprintf("%s/%s/%s", clusterEndpoint, namespace, name)
 
 	request, err := http.NewRequest(http.MethodGet, url, nil)
@@ -102,7 +102,7 @@ func (r *SparkManagerRepository) Get(ctx context.Context, cluster domain.KubeClu
 func (r *SparkManagerRepository) List(ctx context.Context, cluster domain.KubeCluster, namespace string) ([]*domain.SparkManagerApplicationMeta, error) {
 
 	clusterEndpoint := r.ClusterEndpoints[cluster.Name]
-	// Url: http://host:port/namespace
+	// Url: http://host:port/api/v1/namespace
 	url := fmt.Sprintf("%s/%s", clusterEndpoint, namespace)
 
 	request, err := http.NewRequest(http.MethodGet, url, nil)
@@ -131,7 +131,7 @@ func (r *SparkManagerRepository) List(ctx context.Context, cluster domain.KubeCl
 func (r *SparkManagerRepository) Status(ctx context.Context, cluster domain.KubeCluster, namespace string, name string) (*v1beta2.SparkApplicationStatus, error) {
 
 	clusterEndpoint := r.ClusterEndpoints[cluster.Name]
-	// Url: http://host:port/namespace/name/status
+	// Url: http://host:port/api/v1/namespace/name/status
 	url := fmt.Sprintf("%s/%s/%s/status", clusterEndpoint, namespace, name)
 
 	request, err := http.NewRequest(http.MethodGet, url, nil)
@@ -160,7 +160,7 @@ func (r *SparkManagerRepository) Status(ctx context.Context, cluster domain.Kube
 func (r *SparkManagerRepository) Logs(ctx context.Context, cluster domain.KubeCluster, namespace string, name string, tailLines int) (*string, error) {
 
 	clusterEndpoint := r.ClusterEndpoints[cluster.Name]
-	// Url: http://host:port/namespace/name/logs?lines=lineCount
+	// Url: http://host:port/api/v1/namespace/name/logs?lines=lineCount
 	url := fmt.Sprintf("%s/%s/%s/logs?lines=%d", clusterEndpoint, namespace, name, tailLines)
 
 	request, err := http.NewRequest(http.MethodGet, url, nil)
@@ -189,7 +189,7 @@ func (r *SparkManagerRepository) Logs(ctx context.Context, cluster domain.KubeCl
 func (r *SparkManagerRepository) Create(ctx context.Context, cluster domain.KubeCluster, sparkApplication *v1beta2.SparkApplication) (*v1beta2.SparkApplication, error) {
 
 	clusterEndpoint := r.ClusterEndpoints[cluster.Name]
-	// Url: http://host:port/namespace/name
+	// Url: http://host:port/api/v1/namespace/name
 	url := fmt.Sprintf("%s/%s/%s", clusterEndpoint, sparkApplication.Namespace, sparkApplication.Name)
 
 	body, err := json.Marshal(sparkApplication)
@@ -224,7 +224,7 @@ func (r *SparkManagerRepository) Create(ctx context.Context, cluster domain.Kube
 func (r *SparkManagerRepository) Delete(ctx context.Context, cluster domain.KubeCluster, namespace string, name string) error {
 
 	clusterEndpoint := r.ClusterEndpoints[cluster.Name]
-	// Url: http://host:port/namespace/name
+	// Url: http://host:port/api/v1/namespace/name
 	url := fmt.Sprintf("%s/%s/%s", clusterEndpoint, namespace, name)
 
 	request, err := http.NewRequest(http.MethodDelete, url, nil)
