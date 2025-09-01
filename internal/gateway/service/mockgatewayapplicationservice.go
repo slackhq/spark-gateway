@@ -5,22 +5,21 @@ package service
 
 import (
 	"context"
-	"sync"
-
 	"github.com/kubeflow/spark-operator/v2/api/v1beta2"
 	"github.com/slackhq/spark-gateway/internal/domain"
+	"sync"
 )
 
-// Ensure, that SparkApplicationServiceMock does implement SparkApplicationService.
+// Ensure, that GatewayApplicationServiceMock does implement GatewayApplicationService.
 // If this is not the case, regenerate this file with moq.
-var _ SparkApplicationService = &SparkApplicationServiceMock{}
+var _ GatewayApplicationService = &GatewayApplicationServiceMock{}
 
-// SparkApplicationServiceMock is a mock implementation of SparkApplicationService.
+// GatewayApplicationServiceMock is a mock implementation of GatewayApplicationService.
 //
-//	func TestSomethingThatUsesSparkApplicationService(t *testing.T) {
+//	func TestSomethingThatUsesGatewayApplicationService(t *testing.T) {
 //
-//		// make and configure a mocked SparkApplicationService
-//		mockedSparkApplicationService := &SparkApplicationServiceMock{
+//		// make and configure a mocked GatewayApplicationService
+//		mockedGatewayApplicationService := &GatewayApplicationServiceMock{
 //			CreateFunc: func(ctx context.Context, application *v1beta2.SparkApplication, user string) (*domain.GatewayApplication, error) {
 //				panic("mock out the Create method")
 //			},
@@ -30,22 +29,22 @@ var _ SparkApplicationService = &SparkApplicationServiceMock{}
 //			GetFunc: func(ctx context.Context, gatewayId string) (*domain.GatewayApplication, error) {
 //				panic("mock out the Get method")
 //			},
-//			ListFunc: func(ctx context.Context, cluster string, namespace string) ([]*domain.GatewayApplicationMeta, error) {
+//			ListFunc: func(ctx context.Context, cluster string, namespace string) ([]*domain.GatewayApplicationSummary, error) {
 //				panic("mock out the List method")
 //			},
 //			LogsFunc: func(ctx context.Context, gatewayId string, tailLines int) (*string, error) {
 //				panic("mock out the Logs method")
 //			},
-//			StatusFunc: func(ctx context.Context, gatewayId string) (*v1beta2.SparkApplicationStatus, error) {
+//			StatusFunc: func(ctx context.Context, gatewayId string) (*domain.GatewayApplicationStatus, error) {
 //				panic("mock out the Status method")
 //			},
 //		}
 //
-//		// use mockedSparkApplicationService in code that requires SparkApplicationService
+//		// use mockedGatewayApplicationService in code that requires GatewayApplicationService
 //		// and then make assertions.
 //
 //	}
-type SparkApplicationServiceMock struct {
+type GatewayApplicationServiceMock struct {
 	// CreateFunc mocks the Create method.
 	CreateFunc func(ctx context.Context, application *v1beta2.SparkApplication, user string) (*domain.GatewayApplication, error)
 
@@ -56,13 +55,13 @@ type SparkApplicationServiceMock struct {
 	GetFunc func(ctx context.Context, gatewayId string) (*domain.GatewayApplication, error)
 
 	// ListFunc mocks the List method.
-	ListFunc func(ctx context.Context, cluster string, namespace string) ([]*domain.GatewayApplicationMeta, error)
+	ListFunc func(ctx context.Context, cluster string, namespace string) ([]*domain.GatewayApplicationSummary, error)
 
 	// LogsFunc mocks the Logs method.
 	LogsFunc func(ctx context.Context, gatewayId string, tailLines int) (*string, error)
 
 	// StatusFunc mocks the Status method.
-	StatusFunc func(ctx context.Context, gatewayId string) (*v1beta2.SparkApplicationStatus, error)
+	StatusFunc func(ctx context.Context, gatewayId string) (*domain.GatewayApplicationStatus, error)
 
 	// calls tracks calls to the methods.
 	calls struct {
@@ -124,9 +123,9 @@ type SparkApplicationServiceMock struct {
 }
 
 // Create calls CreateFunc.
-func (mock *SparkApplicationServiceMock) Create(ctx context.Context, application *v1beta2.SparkApplication, user string) (*domain.GatewayApplication, error) {
+func (mock *GatewayApplicationServiceMock) Create(ctx context.Context, application *v1beta2.SparkApplication, user string) (*domain.GatewayApplication, error) {
 	if mock.CreateFunc == nil {
-		panic("SparkApplicationServiceMock.CreateFunc: method is nil but SparkApplicationService.Create was just called")
+		panic("GatewayApplicationServiceMock.CreateFunc: method is nil but GatewayApplicationService.Create was just called")
 	}
 	callInfo := struct {
 		Ctx         context.Context
@@ -146,8 +145,8 @@ func (mock *SparkApplicationServiceMock) Create(ctx context.Context, application
 // CreateCalls gets all the calls that were made to Create.
 // Check the length with:
 //
-//	len(mockedSparkApplicationService.CreateCalls())
-func (mock *SparkApplicationServiceMock) CreateCalls() []struct {
+//	len(mockedGatewayApplicationService.CreateCalls())
+func (mock *GatewayApplicationServiceMock) CreateCalls() []struct {
 	Ctx         context.Context
 	Application *v1beta2.SparkApplication
 	User        string
@@ -164,9 +163,9 @@ func (mock *SparkApplicationServiceMock) CreateCalls() []struct {
 }
 
 // Delete calls DeleteFunc.
-func (mock *SparkApplicationServiceMock) Delete(ctx context.Context, gatewayId string) error {
+func (mock *GatewayApplicationServiceMock) Delete(ctx context.Context, gatewayId string) error {
 	if mock.DeleteFunc == nil {
-		panic("SparkApplicationServiceMock.DeleteFunc: method is nil but SparkApplicationService.Delete was just called")
+		panic("GatewayApplicationServiceMock.DeleteFunc: method is nil but GatewayApplicationService.Delete was just called")
 	}
 	callInfo := struct {
 		Ctx       context.Context
@@ -184,8 +183,8 @@ func (mock *SparkApplicationServiceMock) Delete(ctx context.Context, gatewayId s
 // DeleteCalls gets all the calls that were made to Delete.
 // Check the length with:
 //
-//	len(mockedSparkApplicationService.DeleteCalls())
-func (mock *SparkApplicationServiceMock) DeleteCalls() []struct {
+//	len(mockedGatewayApplicationService.DeleteCalls())
+func (mock *GatewayApplicationServiceMock) DeleteCalls() []struct {
 	Ctx       context.Context
 	GatewayId string
 } {
@@ -200,9 +199,9 @@ func (mock *SparkApplicationServiceMock) DeleteCalls() []struct {
 }
 
 // Get calls GetFunc.
-func (mock *SparkApplicationServiceMock) Get(ctx context.Context, gatewayId string) (*domain.GatewayApplication, error) {
+func (mock *GatewayApplicationServiceMock) Get(ctx context.Context, gatewayId string) (*domain.GatewayApplication, error) {
 	if mock.GetFunc == nil {
-		panic("SparkApplicationServiceMock.GetFunc: method is nil but SparkApplicationService.Get was just called")
+		panic("GatewayApplicationServiceMock.GetFunc: method is nil but GatewayApplicationService.Get was just called")
 	}
 	callInfo := struct {
 		Ctx       context.Context
@@ -220,8 +219,8 @@ func (mock *SparkApplicationServiceMock) Get(ctx context.Context, gatewayId stri
 // GetCalls gets all the calls that were made to Get.
 // Check the length with:
 //
-//	len(mockedSparkApplicationService.GetCalls())
-func (mock *SparkApplicationServiceMock) GetCalls() []struct {
+//	len(mockedGatewayApplicationService.GetCalls())
+func (mock *GatewayApplicationServiceMock) GetCalls() []struct {
 	Ctx       context.Context
 	GatewayId string
 } {
@@ -236,9 +235,9 @@ func (mock *SparkApplicationServiceMock) GetCalls() []struct {
 }
 
 // List calls ListFunc.
-func (mock *SparkApplicationServiceMock) List(ctx context.Context, cluster string, namespace string) ([]*domain.GatewayApplicationMeta, error) {
+func (mock *GatewayApplicationServiceMock) List(ctx context.Context, cluster string, namespace string) ([]*domain.GatewayApplicationSummary, error) {
 	if mock.ListFunc == nil {
-		panic("SparkApplicationServiceMock.ListFunc: method is nil but SparkApplicationService.List was just called")
+		panic("GatewayApplicationServiceMock.ListFunc: method is nil but GatewayApplicationService.List was just called")
 	}
 	callInfo := struct {
 		Ctx       context.Context
@@ -258,8 +257,8 @@ func (mock *SparkApplicationServiceMock) List(ctx context.Context, cluster strin
 // ListCalls gets all the calls that were made to List.
 // Check the length with:
 //
-//	len(mockedSparkApplicationService.ListCalls())
-func (mock *SparkApplicationServiceMock) ListCalls() []struct {
+//	len(mockedGatewayApplicationService.ListCalls())
+func (mock *GatewayApplicationServiceMock) ListCalls() []struct {
 	Ctx       context.Context
 	Cluster   string
 	Namespace string
@@ -276,9 +275,9 @@ func (mock *SparkApplicationServiceMock) ListCalls() []struct {
 }
 
 // Logs calls LogsFunc.
-func (mock *SparkApplicationServiceMock) Logs(ctx context.Context, gatewayId string, tailLines int) (*string, error) {
+func (mock *GatewayApplicationServiceMock) Logs(ctx context.Context, gatewayId string, tailLines int) (*string, error) {
 	if mock.LogsFunc == nil {
-		panic("SparkApplicationServiceMock.LogsFunc: method is nil but SparkApplicationService.Logs was just called")
+		panic("GatewayApplicationServiceMock.LogsFunc: method is nil but GatewayApplicationService.Logs was just called")
 	}
 	callInfo := struct {
 		Ctx       context.Context
@@ -298,8 +297,8 @@ func (mock *SparkApplicationServiceMock) Logs(ctx context.Context, gatewayId str
 // LogsCalls gets all the calls that were made to Logs.
 // Check the length with:
 //
-//	len(mockedSparkApplicationService.LogsCalls())
-func (mock *SparkApplicationServiceMock) LogsCalls() []struct {
+//	len(mockedGatewayApplicationService.LogsCalls())
+func (mock *GatewayApplicationServiceMock) LogsCalls() []struct {
 	Ctx       context.Context
 	GatewayId string
 	TailLines int
@@ -316,9 +315,9 @@ func (mock *SparkApplicationServiceMock) LogsCalls() []struct {
 }
 
 // Status calls StatusFunc.
-func (mock *SparkApplicationServiceMock) Status(ctx context.Context, gatewayId string) (*v1beta2.SparkApplicationStatus, error) {
+func (mock *GatewayApplicationServiceMock) Status(ctx context.Context, gatewayId string) (*domain.GatewayApplicationStatus, error) {
 	if mock.StatusFunc == nil {
-		panic("SparkApplicationServiceMock.StatusFunc: method is nil but SparkApplicationService.Status was just called")
+		panic("GatewayApplicationServiceMock.StatusFunc: method is nil but GatewayApplicationService.Status was just called")
 	}
 	callInfo := struct {
 		Ctx       context.Context
@@ -336,8 +335,8 @@ func (mock *SparkApplicationServiceMock) Status(ctx context.Context, gatewayId s
 // StatusCalls gets all the calls that were made to Status.
 // Check the length with:
 //
-//	len(mockedSparkApplicationService.StatusCalls())
-func (mock *SparkApplicationServiceMock) StatusCalls() []struct {
+//	len(mockedGatewayApplicationService.StatusCalls())
+func (mock *GatewayApplicationServiceMock) StatusCalls() []struct {
 	Ctx       context.Context
 	GatewayId string
 } {

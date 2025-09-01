@@ -5,63 +5,62 @@ package service
 
 import (
 	"context"
-	"github.com/kubeflow/spark-operator/v2/api/v1beta2"
 	"github.com/slackhq/spark-gateway/internal/domain"
 	"sync"
 )
 
-// Ensure, that SparkApplicationRepositoryMock does implement SparkApplicationRepository.
+// Ensure, that GatewayApplicationRepositoryMock does implement GatewayApplicationRepository.
 // If this is not the case, regenerate this file with moq.
-var _ SparkApplicationRepository = &SparkApplicationRepositoryMock{}
+var _ GatewayApplicationRepository = &GatewayApplicationRepositoryMock{}
 
-// SparkApplicationRepositoryMock is a mock implementation of SparkApplicationRepository.
+// GatewayApplicationRepositoryMock is a mock implementation of GatewayApplicationRepository.
 //
-//	func TestSomethingThatUsesSparkApplicationRepository(t *testing.T) {
+//	func TestSomethingThatUsesGatewayApplicationRepository(t *testing.T) {
 //
-//		// make and configure a mocked SparkApplicationRepository
-//		mockedSparkApplicationRepository := &SparkApplicationRepositoryMock{
-//			CreateFunc: func(ctx context.Context, cluster domain.KubeCluster, application *v1beta2.SparkApplication) (*v1beta2.SparkApplication, error) {
+//		// make and configure a mocked GatewayApplicationRepository
+//		mockedGatewayApplicationRepository := &GatewayApplicationRepositoryMock{
+//			CreateFunc: func(ctx context.Context, cluster domain.KubeCluster, gatewayApp *domain.GatewayApplication) (*domain.GatewayApplication, error) {
 //				panic("mock out the Create method")
 //			},
 //			DeleteFunc: func(ctx context.Context, cluster domain.KubeCluster, namespace string, name string) error {
 //				panic("mock out the Delete method")
 //			},
-//			GetFunc: func(ctx context.Context, cluster domain.KubeCluster, namespace string, name string) (*v1beta2.SparkApplication, error) {
+//			GetFunc: func(ctx context.Context, cluster domain.KubeCluster, namespace string, name string) (*domain.GatewayApplication, error) {
 //				panic("mock out the Get method")
 //			},
-//			ListFunc: func(ctx context.Context, cluster domain.KubeCluster, namespace string) ([]*domain.SparkManagerApplicationMeta, error) {
+//			ListFunc: func(ctx context.Context, cluster domain.KubeCluster, namespace string) ([]*domain.GatewayApplicationSummary, error) {
 //				panic("mock out the List method")
 //			},
 //			LogsFunc: func(ctx context.Context, cluster domain.KubeCluster, namespace string, name string, tailLines int) (*string, error) {
 //				panic("mock out the Logs method")
 //			},
-//			StatusFunc: func(ctx context.Context, cluster domain.KubeCluster, namespace string, name string) (*v1beta2.SparkApplicationStatus, error) {
+//			StatusFunc: func(ctx context.Context, cluster domain.KubeCluster, namespace string, name string) (*domain.GatewayApplicationStatus, error) {
 //				panic("mock out the Status method")
 //			},
 //		}
 //
-//		// use mockedSparkApplicationRepository in code that requires SparkApplicationRepository
+//		// use mockedGatewayApplicationRepository in code that requires GatewayApplicationRepository
 //		// and then make assertions.
 //
 //	}
-type SparkApplicationRepositoryMock struct {
+type GatewayApplicationRepositoryMock struct {
 	// CreateFunc mocks the Create method.
-	CreateFunc func(ctx context.Context, cluster domain.KubeCluster, application *v1beta2.SparkApplication) (*v1beta2.SparkApplication, error)
+	CreateFunc func(ctx context.Context, cluster domain.KubeCluster, gatewayApp *domain.GatewayApplication) (*domain.GatewayApplication, error)
 
 	// DeleteFunc mocks the Delete method.
 	DeleteFunc func(ctx context.Context, cluster domain.KubeCluster, namespace string, name string) error
 
 	// GetFunc mocks the Get method.
-	GetFunc func(ctx context.Context, cluster domain.KubeCluster, namespace string, name string) (*v1beta2.SparkApplication, error)
+	GetFunc func(ctx context.Context, cluster domain.KubeCluster, namespace string, name string) (*domain.GatewayApplication, error)
 
 	// ListFunc mocks the List method.
-	ListFunc func(ctx context.Context, cluster domain.KubeCluster, namespace string) ([]*domain.SparkManagerApplicationMeta, error)
+	ListFunc func(ctx context.Context, cluster domain.KubeCluster, namespace string) ([]*domain.GatewayApplicationSummary, error)
 
 	// LogsFunc mocks the Logs method.
 	LogsFunc func(ctx context.Context, cluster domain.KubeCluster, namespace string, name string, tailLines int) (*string, error)
 
 	// StatusFunc mocks the Status method.
-	StatusFunc func(ctx context.Context, cluster domain.KubeCluster, namespace string, name string) (*v1beta2.SparkApplicationStatus, error)
+	StatusFunc func(ctx context.Context, cluster domain.KubeCluster, namespace string, name string) (*domain.GatewayApplicationStatus, error)
 
 	// calls tracks calls to the methods.
 	calls struct {
@@ -71,8 +70,8 @@ type SparkApplicationRepositoryMock struct {
 			Ctx context.Context
 			// Cluster is the cluster argument value.
 			Cluster domain.KubeCluster
-			// Application is the application argument value.
-			Application *v1beta2.SparkApplication
+			// GatewayApp is the gatewayApp argument value.
+			GatewayApp *domain.GatewayApplication
 		}
 		// Delete holds details about calls to the Delete method.
 		Delete []struct {
@@ -139,38 +138,38 @@ type SparkApplicationRepositoryMock struct {
 }
 
 // Create calls CreateFunc.
-func (mock *SparkApplicationRepositoryMock) Create(ctx context.Context, cluster domain.KubeCluster, application *v1beta2.SparkApplication) (*v1beta2.SparkApplication, error) {
+func (mock *GatewayApplicationRepositoryMock) Create(ctx context.Context, cluster domain.KubeCluster, gatewayApp *domain.GatewayApplication) (*domain.GatewayApplication, error) {
 	if mock.CreateFunc == nil {
-		panic("SparkApplicationRepositoryMock.CreateFunc: method is nil but SparkApplicationRepository.Create was just called")
+		panic("GatewayApplicationRepositoryMock.CreateFunc: method is nil but GatewayApplicationRepository.Create was just called")
 	}
 	callInfo := struct {
-		Ctx         context.Context
-		Cluster     domain.KubeCluster
-		Application *v1beta2.SparkApplication
+		Ctx        context.Context
+		Cluster    domain.KubeCluster
+		GatewayApp *domain.GatewayApplication
 	}{
-		Ctx:         ctx,
-		Cluster:     cluster,
-		Application: application,
+		Ctx:        ctx,
+		Cluster:    cluster,
+		GatewayApp: gatewayApp,
 	}
 	mock.lockCreate.Lock()
 	mock.calls.Create = append(mock.calls.Create, callInfo)
 	mock.lockCreate.Unlock()
-	return mock.CreateFunc(ctx, cluster, application)
+	return mock.CreateFunc(ctx, cluster, gatewayApp)
 }
 
 // CreateCalls gets all the calls that were made to Create.
 // Check the length with:
 //
-//	len(mockedSparkApplicationRepository.CreateCalls())
-func (mock *SparkApplicationRepositoryMock) CreateCalls() []struct {
-	Ctx         context.Context
-	Cluster     domain.KubeCluster
-	Application *v1beta2.SparkApplication
+//	len(mockedGatewayApplicationRepository.CreateCalls())
+func (mock *GatewayApplicationRepositoryMock) CreateCalls() []struct {
+	Ctx        context.Context
+	Cluster    domain.KubeCluster
+	GatewayApp *domain.GatewayApplication
 } {
 	var calls []struct {
-		Ctx         context.Context
-		Cluster     domain.KubeCluster
-		Application *v1beta2.SparkApplication
+		Ctx        context.Context
+		Cluster    domain.KubeCluster
+		GatewayApp *domain.GatewayApplication
 	}
 	mock.lockCreate.RLock()
 	calls = mock.calls.Create
@@ -179,9 +178,9 @@ func (mock *SparkApplicationRepositoryMock) CreateCalls() []struct {
 }
 
 // Delete calls DeleteFunc.
-func (mock *SparkApplicationRepositoryMock) Delete(ctx context.Context, cluster domain.KubeCluster, namespace string, name string) error {
+func (mock *GatewayApplicationRepositoryMock) Delete(ctx context.Context, cluster domain.KubeCluster, namespace string, name string) error {
 	if mock.DeleteFunc == nil {
-		panic("SparkApplicationRepositoryMock.DeleteFunc: method is nil but SparkApplicationRepository.Delete was just called")
+		panic("GatewayApplicationRepositoryMock.DeleteFunc: method is nil but GatewayApplicationRepository.Delete was just called")
 	}
 	callInfo := struct {
 		Ctx       context.Context
@@ -203,8 +202,8 @@ func (mock *SparkApplicationRepositoryMock) Delete(ctx context.Context, cluster 
 // DeleteCalls gets all the calls that were made to Delete.
 // Check the length with:
 //
-//	len(mockedSparkApplicationRepository.DeleteCalls())
-func (mock *SparkApplicationRepositoryMock) DeleteCalls() []struct {
+//	len(mockedGatewayApplicationRepository.DeleteCalls())
+func (mock *GatewayApplicationRepositoryMock) DeleteCalls() []struct {
 	Ctx       context.Context
 	Cluster   domain.KubeCluster
 	Namespace string
@@ -223,9 +222,9 @@ func (mock *SparkApplicationRepositoryMock) DeleteCalls() []struct {
 }
 
 // Get calls GetFunc.
-func (mock *SparkApplicationRepositoryMock) Get(ctx context.Context, cluster domain.KubeCluster, namespace string, name string) (*v1beta2.SparkApplication, error) {
+func (mock *GatewayApplicationRepositoryMock) Get(ctx context.Context, cluster domain.KubeCluster, namespace string, name string) (*domain.GatewayApplication, error) {
 	if mock.GetFunc == nil {
-		panic("SparkApplicationRepositoryMock.GetFunc: method is nil but SparkApplicationRepository.Get was just called")
+		panic("GatewayApplicationRepositoryMock.GetFunc: method is nil but GatewayApplicationRepository.Get was just called")
 	}
 	callInfo := struct {
 		Ctx       context.Context
@@ -247,8 +246,8 @@ func (mock *SparkApplicationRepositoryMock) Get(ctx context.Context, cluster dom
 // GetCalls gets all the calls that were made to Get.
 // Check the length with:
 //
-//	len(mockedSparkApplicationRepository.GetCalls())
-func (mock *SparkApplicationRepositoryMock) GetCalls() []struct {
+//	len(mockedGatewayApplicationRepository.GetCalls())
+func (mock *GatewayApplicationRepositoryMock) GetCalls() []struct {
 	Ctx       context.Context
 	Cluster   domain.KubeCluster
 	Namespace string
@@ -267,9 +266,9 @@ func (mock *SparkApplicationRepositoryMock) GetCalls() []struct {
 }
 
 // List calls ListFunc.
-func (mock *SparkApplicationRepositoryMock) List(ctx context.Context, cluster domain.KubeCluster, namespace string) ([]*domain.SparkManagerApplicationMeta, error) {
+func (mock *GatewayApplicationRepositoryMock) List(ctx context.Context, cluster domain.KubeCluster, namespace string) ([]*domain.GatewayApplicationSummary, error) {
 	if mock.ListFunc == nil {
-		panic("SparkApplicationRepositoryMock.ListFunc: method is nil but SparkApplicationRepository.List was just called")
+		panic("GatewayApplicationRepositoryMock.ListFunc: method is nil but GatewayApplicationRepository.List was just called")
 	}
 	callInfo := struct {
 		Ctx       context.Context
@@ -289,8 +288,8 @@ func (mock *SparkApplicationRepositoryMock) List(ctx context.Context, cluster do
 // ListCalls gets all the calls that were made to List.
 // Check the length with:
 //
-//	len(mockedSparkApplicationRepository.ListCalls())
-func (mock *SparkApplicationRepositoryMock) ListCalls() []struct {
+//	len(mockedGatewayApplicationRepository.ListCalls())
+func (mock *GatewayApplicationRepositoryMock) ListCalls() []struct {
 	Ctx       context.Context
 	Cluster   domain.KubeCluster
 	Namespace string
@@ -307,9 +306,9 @@ func (mock *SparkApplicationRepositoryMock) ListCalls() []struct {
 }
 
 // Logs calls LogsFunc.
-func (mock *SparkApplicationRepositoryMock) Logs(ctx context.Context, cluster domain.KubeCluster, namespace string, name string, tailLines int) (*string, error) {
+func (mock *GatewayApplicationRepositoryMock) Logs(ctx context.Context, cluster domain.KubeCluster, namespace string, name string, tailLines int) (*string, error) {
 	if mock.LogsFunc == nil {
-		panic("SparkApplicationRepositoryMock.LogsFunc: method is nil but SparkApplicationRepository.Logs was just called")
+		panic("GatewayApplicationRepositoryMock.LogsFunc: method is nil but GatewayApplicationRepository.Logs was just called")
 	}
 	callInfo := struct {
 		Ctx       context.Context
@@ -333,8 +332,8 @@ func (mock *SparkApplicationRepositoryMock) Logs(ctx context.Context, cluster do
 // LogsCalls gets all the calls that were made to Logs.
 // Check the length with:
 //
-//	len(mockedSparkApplicationRepository.LogsCalls())
-func (mock *SparkApplicationRepositoryMock) LogsCalls() []struct {
+//	len(mockedGatewayApplicationRepository.LogsCalls())
+func (mock *GatewayApplicationRepositoryMock) LogsCalls() []struct {
 	Ctx       context.Context
 	Cluster   domain.KubeCluster
 	Namespace string
@@ -355,9 +354,9 @@ func (mock *SparkApplicationRepositoryMock) LogsCalls() []struct {
 }
 
 // Status calls StatusFunc.
-func (mock *SparkApplicationRepositoryMock) Status(ctx context.Context, cluster domain.KubeCluster, namespace string, name string) (*v1beta2.SparkApplicationStatus, error) {
+func (mock *GatewayApplicationRepositoryMock) Status(ctx context.Context, cluster domain.KubeCluster, namespace string, name string) (*domain.GatewayApplicationStatus, error) {
 	if mock.StatusFunc == nil {
-		panic("SparkApplicationRepositoryMock.StatusFunc: method is nil but SparkApplicationRepository.Status was just called")
+		panic("GatewayApplicationRepositoryMock.StatusFunc: method is nil but GatewayApplicationRepository.Status was just called")
 	}
 	callInfo := struct {
 		Ctx       context.Context
@@ -379,8 +378,8 @@ func (mock *SparkApplicationRepositoryMock) Status(ctx context.Context, cluster 
 // StatusCalls gets all the calls that were made to Status.
 // Check the length with:
 //
-//	len(mockedSparkApplicationRepository.StatusCalls())
-func (mock *SparkApplicationRepositoryMock) StatusCalls() []struct {
+//	len(mockedGatewayApplicationRepository.StatusCalls())
+func (mock *GatewayApplicationRepositoryMock) StatusCalls() []struct {
 	Ctx       context.Context
 	Cluster   domain.KubeCluster
 	Namespace string

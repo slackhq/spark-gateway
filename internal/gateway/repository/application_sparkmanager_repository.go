@@ -185,13 +185,13 @@ func (r *SparkManagerRepository) Logs(ctx context.Context, cluster domain.KubeCl
 	return &logString, nil
 }
 
-func (r *SparkManagerRepository) Create(ctx context.Context, cluster domain.KubeCluster, sparkApplication *v1beta2.SparkApplication) (*domain.GatewayApplication, error) {
+func (r *SparkManagerRepository) Create(ctx context.Context, cluster domain.KubeCluster, gatewayApp *domain.GatewayApplication) (*domain.GatewayApplication, error) {
 
 	clusterEndpoint := r.ClusterEndpoints[cluster.Name]
 	// Url: http://host:port/api/v1/namespace/name
-	url := fmt.Sprintf("%s/%s/%s", clusterEndpoint, sparkApplication.Namespace, sparkApplication.Name)
+	url := fmt.Sprintf("%s/%s/%s", clusterEndpoint, gatewayApp.Namespace, gatewayApp.Name)
 
-	body, err := json.Marshal(sparkApplication)
+	body, err := json.Marshal(gatewayApp)
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal SparkApplication: %w", err)
 	}

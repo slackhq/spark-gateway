@@ -32,6 +32,8 @@ import (
 	"github.com/slackhq/spark-gateway/internal/shared/gatewayerrors"
 )
 
+type GatewayIdGenerator func(cluster domain.KubeCluster, namespace string) (string, error)
+
 //go:generate moq -rm  -out mocksparkapplicationrepository.go . GatewayApplicationRepository
 
 type GatewayApplicationRepository interface {
@@ -62,6 +64,7 @@ type service struct {
 	config                config.GatewayConfig
 	selectorKey           string
 	selectorValue         string
+	gatewayIdGen          GatewayIdGenerator
 }
 
 func NewApplicationService(
@@ -72,6 +75,7 @@ func NewApplicationService(
 	config config.GatewayConfig,
 	selectorKey string,
 	selectorValue string,
+	gatewayIdGen GatewayIdGenerator,
 ) GatewayApplicationService {
 	return &service{
 		gatewayAppRepo:        gatewayAppRepo,
@@ -81,6 +85,7 @@ func NewApplicationService(
 		config:                config,
 		selectorKey:           selectorKey,
 		selectorValue:         selectorValue,
+		gatewayIdGen:          gatewayIdGen,
 	}
 }
 
@@ -111,7 +116,7 @@ func (s *service) Get(ctx context.Context, gatewayId string) (*domain.GatewayApp
 	gatewayApp, err := s.gatewayAppRepo.Get(ctx, *cluster, namespace, gatewayId)
 
 	if err != nil {
-		return nil, gatewayerrors.NewFrom(fmt.Errorf("error getting GatewayApplication '%s': %w", gatewayId, err))
+		return nil, fmt.Errorf("error getting GatewayApplication '%s': %w", gatewayId, err)
 	}
 
 	// Set log URLs
@@ -126,14 +131,14 @@ func (s *service) List(ctx context.Context, cluster string, namespace string) ([
 	kubeCluster, err := s.clusterRepository.GetByName(cluster)
 
 	if err != nil {
-		return nil, gatewayerrors.NewFrom(fmt.Errorf("error getting cluster: %w", err))
+		return nil, fmt.Errorf("error getting cluster: %w", err)
 	}
 
 	namespaces := []string{}
 	// Get all apps in cluster if namespace is blank
 	if namespace != "" {
 		if _, err := kubeCluster.GetNamespaceByName(namespace); err != nil {
-			return nil, gatewayerrors.NewFrom(fmt.Errorf("error getting namespace: %w", err))
+			return nil, fmt.Errorf("error getting namespace: %w", err)
 		}
 		namespaces = append(namespaces, namespace)
 	} else {
@@ -146,12 +151,10 @@ func (s *service) List(ctx context.Context, cluster string, namespace string) ([
 	for _, ns := range namespaces {
 		nsAppSummaries, err := s.gatewayAppRepo.List(ctx, *kubeCluster, ns)
 		if err != nil {
-			return nil, gatewayerrors.NewFrom(fmt.Errorf("error getting applications: %w", err))
+			return nil, fmt.Errorf("error getting applications: %w", err)
 		}
 
-		for _, appSummary := range nsAppSummaries {
-			appSummaryList = append(appSummaryList, appSummary)
-		}
+		appSummaryList = append(appSummaryList, nsAppSummaries...)
 
 	}
 
@@ -168,12 +171,12 @@ func (s *service) Create(ctx context.Context, application *v1beta2.SparkApplicat
 		// Try fallback cluster router
 		cluster, err = s.fallbackClusterRouter.GetCluster(ctx, application.Namespace)
 		if cluster == nil || err != nil {
-			return nil, gatewayerrors.NewFrom(fmt.Errorf("error getting routing cluster: %w", err))
+			return nil, fmt.Errorf("error getting routing cluster: %w", err)
 		}
 	}
 
 	// Generate GatewayId from clusterId and UUID
-	gatewayId, err := domain.NewId(*cluster, application.Namespace)
+	gatewayId, err := s.gatewayIdGen(*cluster, application.Namespace)
 	if err != nil {
 		return nil, fmt.Errorf("error generating GatewayId for GatewayApplication: %w", err)
 	}
@@ -185,14 +188,11 @@ func (s *service) Create(ctx context.Context, application *v1beta2.SparkApplicat
 	}
 
 	gatewayApp := domain.NewGatewayApplication(application, domain.WithUser(user), domain.WithSelector(selectorMap), domain.WithId(gatewayId))
-	if err != nil {
-		return nil, fmt.Errorf("error generating GatewayId for GatewayApplication: %w", err)
-	}
 
 	// Create SparkApp
 	createdApp, err := s.gatewayAppRepo.Create(ctx, *cluster, gatewayApp)
 	if err != nil {
-		return nil, gatewayerrors.NewFrom(fmt.Errorf("error creating GatewayApplication '%s/%s': %w", gatewayApp.Namespace, gatewayApp.Name, err))
+		return nil, fmt.Errorf("error creating GatewayApplication '%s/%s': %w", gatewayApp.Namespace, gatewayApp.Name, err)
 	}
 
 	// Set log URLs
@@ -209,7 +209,7 @@ func (s *service) Status(ctx context.Context, gatewayId string) (*domain.Gateway
 
 	gatewayApp, err := s.gatewayAppRepo.Get(ctx, *cluster, namespace, gatewayId)
 	if err != nil {
-		return nil, gatewayerrors.NewFrom(fmt.Errorf("error getting status for GatewayApplication '%s': %w", gatewayId, err))
+		return nil, fmt.Errorf("error getting status for GatewayApplication '%s': %w", gatewayId, err)
 	}
 
 	return &gatewayApp.Status, nil
@@ -223,7 +223,7 @@ func (s *service) Logs(ctx context.Context, gatewayId string, tailLines int) (*s
 
 	logString, err := s.gatewayAppRepo.Logs(ctx, *cluster, namespace, gatewayId, tailLines)
 	if err != nil {
-		return nil, gatewayerrors.NewFrom(fmt.Errorf("error getting Logs for GatewayApplication '%s': %w", gatewayId, err))
+		return nil, fmt.Errorf("error getting logs for GatewayApplication '%s': %w", gatewayId, err)
 	}
 
 	return logString, nil
@@ -236,7 +236,7 @@ func (s *service) Delete(ctx context.Context, gatewayId string) error {
 	}
 
 	if err := s.gatewayAppRepo.Delete(ctx, *cluster, namespace, gatewayId); err != nil {
-		return gatewayerrors.NewFrom(fmt.Errorf("error deleting GatewayApplication '%s': %w", gatewayId, err))
+		return fmt.Errorf("error deleting GatewayApplication '%s': %w", gatewayId, err)
 	}
 
 	return nil

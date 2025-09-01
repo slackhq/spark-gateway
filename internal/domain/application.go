@@ -104,7 +104,7 @@ func NewGatewayApplication(sparkApp *v1beta2.SparkApplication, opts ...func(*Gat
 	}
 
 	if sparkApp.Labels != nil {
-		labels = sparkApp.Annotations
+		labels = sparkApp.Labels
 	}
 
 	status := GatewayApplicationStatus{SparkApplicationStatus: sparkApp.Status}
@@ -120,6 +120,12 @@ func NewGatewayApplication(sparkApp *v1beta2.SparkApplication, opts ...func(*Gat
 		Status: status,
 	}
 
+	// If the application already has a name, we set it as an annotation because
+	// all GatewayApplication names are GatewayIds
+	if sparkApp.ObjectMeta.Name != "" {
+		gatewayApp.Annotations["applicationName"] = sparkApp.Name
+	}
+
 	// Apply opts
 	for _, o := range opts {
 		o(&gatewayApp)
@@ -131,6 +137,7 @@ func NewGatewayApplication(sparkApp *v1beta2.SparkApplication, opts ...func(*Gat
 
 func WithUser(user string) func(*GatewayApplication) {
 	return func(ga *GatewayApplication) {
+		ga.User = user
 		ga.Labels[GATEWAY_USER_LABEL] = user
 		ga.Spec.ProxyUser = &user
 	}
@@ -148,13 +155,6 @@ func WithSelector(selectorMap map[string]string) func(*GatewayApplication) {
 func WithId(gatewayId string) func(*GatewayApplication) {
 	return func(ga *GatewayApplication) {
 		ga.GatewayId = gatewayId
-
-		// If the application already has a name, we set it as an annotation because
-		// all GatewayApplication names are GatewayIds
-		if ga.Name != "" {
-			ga.Annotations["applicationName"] = ga.Name
-		}
-
 		ga.Name = gatewayId
 	}
 }
