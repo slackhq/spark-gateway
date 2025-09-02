@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/slackhq/spark-gateway/pkg/model"
 
@@ -80,12 +81,13 @@ func (h *SparkApplicationHandler) Get(c *gin.Context) {
 
 func (h *SparkApplicationHandler) List(c *gin.Context) {
 
-	_appState := c.Param("appState")
+	_appState := strings.ToUpper(c.Query("appState"))
 	var appState *v1beta2.ApplicationStateType = nil
 	if _appState != "" {
 		state := v1beta2.ApplicationStateType(_appState)
 		if !model.ValidSparkApplicationStatesMap[state] {
-			c.Error(fmt.Errorf("invalid application state: %s", appState))
+			c.Error(fmt.Errorf("invalid application state: %s", state))
+			return
 		}
 		appState = &state
 	}

@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
@@ -106,12 +107,13 @@ func (h *ApplicationHandler) List(c *gin.Context) {
 
 	namespace := c.Query("namespace")
 
-	_appState := c.Param("appState")
+	_appState := strings.ToUpper(c.Query("appState"))
 	var appState *v1beta2.ApplicationStateType = nil
 	if _appState != "" {
 		state := v1beta2.ApplicationStateType(_appState)
 		if !model.ValidSparkApplicationStatesMap[state] {
-			c.Error(fmt.Errorf("invalid application state: %s", appState))
+			c.Error(fmt.Errorf("invalid application state: %s", state))
+			return
 		}
 		appState = &state
 	}
