@@ -8,7 +8,19 @@ package app
 import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
-func Main() templ.Component {
+import (
+	"fmt"
+	"github.com/slackhq/spark-gateway/pkg/model"
+)
+
+type ApplicationCounts struct {
+	Submitted int
+	Running   int
+	Completed int
+	Failed    int
+}
+
+func Main(counts ApplicationCounts, clusters []model.KubeCluster, applications []*model.GatewayApplicationMeta, selectedCluster, selectedNamespace string, namespaces []model.KubeNamespace) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -41,7 +53,7 @@ func Main() templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = MainContent().Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = MainContent(counts, clusters, applications, selectedCluster, selectedNamespace, namespaces).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -55,7 +67,7 @@ func Main() templ.Component {
 	})
 }
 
-func MainContent() templ.Component {
+func MainContent(counts ApplicationCounts, clusters []model.KubeCluster, applications []*model.GatewayApplicationMeta, selectedCluster, selectedNamespace string, namespaces []model.KubeNamespace) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -76,7 +88,448 @@ func MainContent() templ.Component {
 			templ_7745c5c3_Var3 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div id=\"main-content\"><div style=\"margin-bottom: 30px;\"><h1 style=\"font-size: 28px; font-weight: 600; color: #333; margin-bottom: 10px;\">Welcome to Spark Gateway</h1><p style=\"color: #666; font-size: 16px;\">Monitor and manage your Spark applications and clusters</p></div><div style=\"display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-bottom: 30px;\"><div style=\"background: white; padding: 20px; border-radius: 8px; border: 1px solid #e1e5e9;\"><h3 style=\"font-size: 18px; font-weight: 600; color: #333; margin-bottom: 10px;\">Active Clusters</h3><p style=\"font-size: 24px; font-weight: 700; color: #007bff;\">3</p><p style=\"color: #666; font-size: 14px;\">Currently running</p></div><div style=\"background: white; padding: 20px; border-radius: 8px; border: 1px solid #e1e5e9;\"><h3 style=\"font-size: 18px; font-weight: 600; color: #333; margin-bottom: 10px;\">Running Jobs</h3><p style=\"font-size: 24px; font-weight: 700; color: #28a745;\">12</p><p style=\"color: #666; font-size: 14px;\">Currently processing</p></div><div style=\"background: white; padding: 20px; border-radius: 8px; border: 1px solid #e1e5e9;\"><h3 style=\"font-size: 18px; font-weight: 600; color: #333; margin-bottom: 10px;\">Applications</h3><p style=\"font-size: 24px; font-weight: 700; color: #6f42c1;\">8</p><p style=\"color: #666; font-size: 14px;\">Deployed applications</p></div></div><div style=\"background: white; padding: 20px; border-radius: 8px; border: 1px solid #e1e5e9;\"><h3 style=\"font-size: 18px; font-weight: 600; color: #333; margin-bottom: 15px;\">Quick Actions</h3><div style=\"display: flex; gap: 10px; flex-wrap: wrap;\"><button style=\"padding: 10px 16px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px;\" hx-get=\"/ui/clusters/new\" hx-target=\"#main-content\">New Cluster</button> <button style=\"padding: 10px 16px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px;\" hx-get=\"/ui/jobs/submit\" hx-target=\"#main-content\">Submit Job</button> <button style=\"padding: 10px 16px; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px;\" hx-get=\"/ui/monitoring\" hx-target=\"#main-content\">View Monitoring</button></div></div></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div id=\"main-content\"><div style=\"margin-bottom: 30px;\"><h1 style=\"font-size: 28px; font-weight: 600; color: #333; margin-bottom: 10px;\">Welcome to Spark Gateway</h1><p style=\"color: #666; font-size: 16px;\">Monitor and manage your Spark applications</p></div><div style=\"background: white; padding: 20px; border-radius: 8px; border: 1px solid #e1e5e9; margin-bottom: 20px;\"><h3 style=\"font-size: 18px; font-weight: 600; color: #333; margin-bottom: 15px;\">Application Status</h3><div style=\"display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 15px;\"><div style=\"text-align: center; padding: 10px;\"><p style=\"font-size: 20px; font-weight: 700; color: #ffc107; margin: 0;\">")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var4 string
+		templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", counts.Submitted))
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/gateway/web/app/main.templ`, Line: 32, Col: 115}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</p><p style=\"color: #666; font-size: 12px; margin: 5px 0 0 0;\">Submitted</p></div><div style=\"text-align: center; padding: 10px;\"><p style=\"font-size: 20px; font-weight: 700; color: #28a745; margin: 0;\">")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var5 string
+		templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", counts.Running))
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/gateway/web/app/main.templ`, Line: 36, Col: 113}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "</p><p style=\"color: #666; font-size: 12px; margin: 5px 0 0 0;\">Running</p></div><div style=\"text-align: center; padding: 10px;\"><p style=\"font-size: 20px; font-weight: 700; color: #007bff; margin: 0;\">")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var6 string
+		templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", counts.Completed))
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/gateway/web/app/main.templ`, Line: 40, Col: 115}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "</p><p style=\"color: #666; font-size: 12px; margin: 5px 0 0 0;\">Completed</p></div><div style=\"text-align: center; padding: 10px;\"><p style=\"font-size: 20px; font-weight: 700; color: #dc3545; margin: 0;\">")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var7 string
+		templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", counts.Failed))
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/gateway/web/app/main.templ`, Line: 44, Col: 112}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "</p><p style=\"color: #666; font-size: 12px; margin: 5px 0 0 0;\">Failed</p></div></div></div><div style=\"background: white; padding: 20px; border-radius: 8px; border: 1px solid #e1e5e9; margin-bottom: 20px;\"><h3 style=\"font-size: 18px; font-weight: 600; color: #333; margin-bottom: 15px;\">Filters</h3><form style=\"display: flex; flex-direction: column; gap: 15px;\"><div><label style=\"display: block; margin-bottom: 5px; font-weight: 500; color: #333; font-size: 14px;\">Cluster</label> <select name=\"cluster\" id=\"cluster-select\" style=\"width: 100%; padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 4px; font-size: 14px;\" hx-get=\"/ui/\" hx-target=\"#main-content\" hx-trigger=\"change\" hx-include=\"[name='namespace']\"><option value=\"\">Select a cluster...</option> ")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		for _, cluster := range clusters {
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "<option value=\"")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var8 string
+			templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(cluster.Name)
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/gateway/web/app/main.templ`, Line: 66, Col: 35}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "\"")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			if cluster.Name == selectedCluster {
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, " selected")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, ">")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var9 string
+			templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(cluster.Name)
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/gateway/web/app/main.templ`, Line: 66, Col: 98}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "</option>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "</select></div><div><label style=\"display: block; margin-bottom: 5px; font-weight: 500; color: #333; font-size: 14px;\">Namespace</label> <select name=\"namespace\" id=\"namespace-select\" style=\"width: 100%; padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 4px; font-size: 14px;\"")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		if selectedCluster == "" {
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, " disabled")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, " hx-get=\"/ui/\" hx-target=\"#main-content\" hx-trigger=\"change\" hx-include=\"[name='cluster']\"><option value=\"\">Select a namespace...</option> ")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		for _, namespace := range namespaces {
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "<option value=\"")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var10 string
+			templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(namespace.Name)
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/gateway/web/app/main.templ`, Line: 85, Col: 37}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "\"")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			if namespace.Name == selectedNamespace {
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, " selected")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 17, ">")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var11 string
+			templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(namespace.Name)
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/gateway/web/app/main.templ`, Line: 85, Col: 106}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 18, "</option>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 19, "</select></div><div><button type=\"button\" style=\"padding: 8px 16px; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; width: fit-content;\" hx-get=\"/ui/\" hx-target=\"#main-content\" onclick=\"document.getElementById('cluster-select').value = ''; document.getElementById('namespace-select').value = '';\">Clear</button></div></form></div><div style=\"background: white; border-radius: 8px; border: 1px solid #e1e5e9; overflow: hidden;\">")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		if selectedCluster == "" {
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 20, "<div style=\"padding: 40px; text-align: center;\"><p style=\"color: #666; font-size: 16px;\">Please select a cluster to view applications</p></div>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+		} else if selectedNamespace == "" {
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 21, "<div style=\"padding: 40px; text-align: center;\"><p style=\"color: #666; font-size: 16px;\">Please select a namespace to view applications</p></div>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+		} else if len(applications) == 0 {
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 22, "<div style=\"padding: 40px; text-align: center;\"><p style=\"color: #666; font-size: 16px;\">No applications found in ")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var12 string
+			templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(selectedCluster)
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/gateway/web/app/main.templ`, Line: 115, Col: 88}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 23, "/")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var13 string
+			templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(selectedNamespace)
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/gateway/web/app/main.templ`, Line: 115, Col: 110}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 24, "</p></div>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+		} else {
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 25, "<div style=\"overflow-x: auto;\"><table style=\"width: 100%; border-collapse: collapse; min-width: 1500px;\"><thead style=\"background-color: #f8f9fa; border-bottom: 2px solid #e1e5e9;\"><tr><th style=\"padding: 12px 16px; text-align: left; font-weight: 600; color: #333; border-bottom: 1px solid #e1e5e9; white-space: nowrap;\">Name</th><th style=\"padding: 12px 16px; text-align: left; font-weight: 600; color: #333; border-bottom: 1px solid #e1e5e9; white-space: nowrap;\">Spark App ID</th><th style=\"padding: 12px 16px; text-align: left; font-weight: 600; color: #333; border-bottom: 1px solid #e1e5e9; white-space: nowrap;\">Submission Time</th><th style=\"padding: 12px 16px; text-align: left; font-weight: 600; color: #333; border-bottom: 1px solid #e1e5e9; white-space: nowrap;\">Termination Time</th><th style=\"padding: 12px 16px; text-align: left; font-weight: 600; color: #333; border-bottom: 1px solid #e1e5e9; white-space: nowrap;\">User</th><th style=\"padding: 12px 16px; text-align: left; font-weight: 600; color: #333; border-bottom: 1px solid #e1e5e9; white-space: nowrap;\">Driver Info</th><th style=\"padding: 12px 16px; text-align: left; font-weight: 600; color: #333; border-bottom: 1px solid #e1e5e9; white-space: nowrap;\">App State</th><th style=\"padding: 12px 16px; text-align: left; font-weight: 600; color: #333; border-bottom: 1px solid #e1e5e9; white-space: nowrap;\">Submission Attempts</th><th style=\"padding: 12px 16px; text-align: left; font-weight: 600; color: #333; border-bottom: 1px solid #e1e5e9; white-space: nowrap;\">Spec</th></tr></thead> <tbody>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			for i, app := range applications {
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 26, "<tr style=\"")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				var templ_7745c5c3_Var14 string
+				templ_7745c5c3_Var14, templ_7745c5c3_Err = templruntime.SanitizeStyleAttributeValues(templ.KV("background-color", getRowColor(i)))
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/gateway/web/app/main.templ`, Line: 135, Col: 64}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 27, "\"><td style=\"padding: 12px 16px; border-bottom: 1px solid #e1e5e9;\"><div style=\"font-weight: 500; color: #333;\">")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				var templ_7745c5c3_Var15 string
+				templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(app.SparkAppMeta.ObjectMeta.Name)
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/gateway/web/app/main.templ`, Line: 137, Col: 88}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 28, "</div></td><td style=\"padding: 12px 16px; border-bottom: 1px solid #e1e5e9;\"><code style=\"background: #f8f9fa; padding: 2px 6px; border-radius: 3px; font-size: 12px;\">")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				var templ_7745c5c3_Var16 string
+				templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinStringErrs(app.SparkAppMeta.SparkApplicationID)
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/gateway/web/app/main.templ`, Line: 140, Col: 137}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var16))
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 29, "</code></td><td style=\"padding: 12px 16px; border-bottom: 1px solid #e1e5e9;\"><div style=\"font-size: 14px; color: #333;\">")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				var templ_7745c5c3_Var17 string
+				templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs(formatTime(app.SparkAppMeta.LastSubmissionAttemptTime.Time))
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/gateway/web/app/main.templ`, Line: 143, Col: 114}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var17))
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 30, "</div></td><td style=\"padding: 12px 16px; border-bottom: 1px solid #e1e5e9;\"><div style=\"font-size: 14px; color: #333;\">")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				var templ_7745c5c3_Var18 string
+				templ_7745c5c3_Var18, templ_7745c5c3_Err = templ.JoinStringErrs(formatTime(app.SparkAppMeta.TerminationTime.Time))
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/gateway/web/app/main.templ`, Line: 146, Col: 104}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var18))
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 31, "</div></td><td style=\"padding: 12px 16px; border-bottom: 1px solid #e1e5e9;\"><div style=\"font-size: 14px; color: #333;\">")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				var templ_7745c5c3_Var19 string
+				templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.JoinStringErrs(app.User)
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/gateway/web/app/main.templ`, Line: 149, Col: 93}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var19))
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 32, "</div></td><td style=\"padding: 12px 16px; border-bottom: 1px solid #e1e5e9;\">")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				if app.SparkAppMeta.DriverInfo.PodName != "" || app.SparkAppMeta.DriverInfo.WebUIIngressAddress != "" {
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 33, "<div style=\"cursor: pointer; user-select: none; display: flex; align-items: center; gap: 4px; font-size: 14px; color: #007bff;\" data-target=\"")
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+					var templ_7745c5c3_Var20 string
+					templ_7745c5c3_Var20, templ_7745c5c3_Err = templ.JoinStringErrs("driver-info-" + fmt.Sprintf("%d", i))
+					if templ_7745c5c3_Err != nil {
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/gateway/web/app/main.templ`, Line: 155, Col: 63}
+					}
+					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var20))
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 34, "\" onclick=\"toggleDriverInfo(this.getAttribute('data-target'))\"><span id=\"")
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+					var templ_7745c5c3_Var21 string
+					templ_7745c5c3_Var21, templ_7745c5c3_Err = templ.JoinStringErrs("driver-toggle-" + fmt.Sprintf("%d", i))
+					if templ_7745c5c3_Err != nil {
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/gateway/web/app/main.templ`, Line: 158, Col: 62}
+					}
+					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var21))
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 35, "\" style=\"font-size: 12px;\">▶</span> <span>Driver Info</span></div><div id=\"")
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+					var templ_7745c5c3_Var22 string
+					templ_7745c5c3_Var22, templ_7745c5c3_Err = templ.JoinStringErrs("driver-info-" + fmt.Sprintf("%d", i))
+					if templ_7745c5c3_Err != nil {
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/gateway/web/app/main.templ`, Line: 162, Col: 54}
+					}
+					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var22))
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 36, "\" style=\"display: none; margin-top: 8px; padding: 8px; background: #f8f9fa; border-radius: 4px; font-size: 13px;\">")
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+					if app.SparkAppMeta.DriverInfo.PodName != "" {
+						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 37, "<div style=\"margin-bottom: 4px;\"><strong>Pod Name:</strong> ")
+						if templ_7745c5c3_Err != nil {
+							return templ_7745c5c3_Err
+						}
+						var templ_7745c5c3_Var23 string
+						templ_7745c5c3_Var23, templ_7745c5c3_Err = templ.JoinStringErrs(app.SparkAppMeta.DriverInfo.PodName)
+						if templ_7745c5c3_Err != nil {
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/gateway/web/app/main.templ`, Line: 167, Col: 78}
+						}
+						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var23))
+						if templ_7745c5c3_Err != nil {
+							return templ_7745c5c3_Err
+						}
+						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 38, "</div>")
+						if templ_7745c5c3_Err != nil {
+							return templ_7745c5c3_Err
+						}
+					}
+					if app.SparkAppMeta.DriverInfo.WebUIIngressAddress != "" {
+						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 39, "<div><strong>Ingress Address:</strong> ")
+						if templ_7745c5c3_Err != nil {
+							return templ_7745c5c3_Err
+						}
+						var templ_7745c5c3_Var24 string
+						templ_7745c5c3_Var24, templ_7745c5c3_Err = templ.JoinStringErrs(app.SparkAppMeta.DriverInfo.WebUIIngressAddress)
+						if templ_7745c5c3_Err != nil {
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/gateway/web/app/main.templ`, Line: 172, Col: 97}
+						}
+						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var24))
+						if templ_7745c5c3_Err != nil {
+							return templ_7745c5c3_Err
+						}
+						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 40, "</div>")
+						if templ_7745c5c3_Err != nil {
+							return templ_7745c5c3_Err
+						}
+					}
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 41, "</div>")
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+				} else {
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 42, "<span style=\"color: #6c757d; font-style: italic;\">No driver info</span>")
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 43, "</td><td style=\"padding: 12px 16px; border-bottom: 1px solid #e1e5e9;\"><span style=\"")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				var templ_7745c5c3_Var25 string
+				templ_7745c5c3_Var25, templ_7745c5c3_Err = templruntime.SanitizeStyleAttributeValues("background: " + getStateColor(formatAppState(app.SparkAppMeta.AppState)) + "; color: white; padding: 4px 8px; border-radius: 12px; font-size: 12px; font-weight: 500;")
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/gateway/web/app/main.templ`, Line: 181, Col: 191}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var25))
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 44, "\">")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				var templ_7745c5c3_Var26 string
+				templ_7745c5c3_Var26, templ_7745c5c3_Err = templ.JoinStringErrs(formatAppState(app.SparkAppMeta.AppState))
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/gateway/web/app/main.templ`, Line: 182, Col: 54}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var26))
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 45, "</span></td><td style=\"padding: 12px 16px; border-bottom: 1px solid #e1e5e9; text-align: center;\"><span style=\"font-weight: 500; color: #333;\">")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				var templ_7745c5c3_Var27 string
+				templ_7745c5c3_Var27, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", app.SparkAppMeta.SubmissionAttempts))
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/gateway/web/app/main.templ`, Line: 186, Col: 111}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var27))
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 46, "</span></td><td style=\"padding: 12px 16px; border-bottom: 1px solid #e1e5e9; text-align: center;\"><button style=\"padding: 6px 12px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;\" class=\"spec-button\" data-gateway-id=\"")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				var templ_7745c5c3_Var28 string
+				templ_7745c5c3_Var28, templ_7745c5c3_Err = templ.JoinStringErrs(app.SparkAppMeta.ObjectMeta.Name)
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/gateway/web/app/main.templ`, Line: 192, Col: 61}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var28))
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 47, "\">View Spec</button></td></tr>")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 48, "</tbody></table></div>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 49, "</div></div><script>\n\t\tfunction toggleDriverInfo(elementId) {\n\t\t\tconst content = document.getElementById(elementId);\n\t\t\tconst toggle = document.getElementById(elementId.replace('driver-info-', 'driver-toggle-'));\n\t\t\t\n\t\t\tif (content.style.display === 'none' || content.style.display === '') {\n\t\t\t\tcontent.style.display = 'block';\n\t\t\t\ttoggle.textContent = '▼';\n\t\t\t} else {\n\t\t\t\tcontent.style.display = 'none';\n\t\t\t\ttoggle.textContent = '▶';\n\t\t\t}\n\t\t}\n\n\t\tfunction showSpecPopover(gatewayId) {\n\t\t\t// Create overlay if it doesn't exist\n\t\t\tlet overlay = document.getElementById('spec-overlay');\n\t\t\tif (!overlay) {\n\t\t\t\toverlay = document.createElement('div');\n\t\t\t\toverlay.id = 'spec-overlay';\n\t\t\t\toverlay.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); display: none; z-index: 1000; justify-content: center; align-items: center;';\n\t\t\t\tdocument.body.appendChild(overlay);\n\t\t\t}\n\n\t\t\t// Create popover if it doesn't exist\n\t\t\tlet popover = document.getElementById('spec-popover');\n\t\t\tif (!popover) {\n\t\t\t\tpopover = document.createElement('div');\n\t\t\t\tpopover.id = 'spec-popover';\n\t\t\t\tpopover.style.cssText = 'background: white; padding: 20px; border-radius: 8px; max-width: 80%; max-height: 80%; overflow: auto; position: relative;';\n\t\t\t\toverlay.appendChild(popover);\n\t\t\t}\n\n\t\t\t// Show loading state\n\t\t\tpopover.innerHTML = '<div style=\"display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;\">' +\n\t\t\t\t'<h3 style=\"margin: 0;\">Spark Application Spec</h3>' +\n\t\t\t\t'<button onclick=\"hideSpecPopover()\" style=\"background: #dc3545; color: white; border: none; border-radius: 4px; padding: 8px 12px; cursor: pointer;\">Close</button>' +\n\t\t\t\t'</div><div>Loading...</div>';\n\n\t\t\t// Show the overlay\n\t\t\toverlay.style.display = 'flex';\n\n\t\t\t// Fetch spec data\n\t\t\tfetch('/ui/applications/' + gatewayId + '/spec')\n\t\t\t\t.then(response => response.json())\n\t\t\t\t.then(data => {\n\t\t\t\t\tpopover.innerHTML = '<div style=\"display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;\">' +\n\t\t\t\t\t\t'<h3 style=\"margin: 0;\">Spark Application Spec</h3>' +\n\t\t\t\t\t\t'<button onclick=\"hideSpecPopover()\" style=\"background: #dc3545; color: white; border: none; border-radius: 4px; padding: 8px 12px; cursor: pointer;\">Close</button>' +\n\t\t\t\t\t\t'</div>' +\n\t\t\t\t\t\t'<div>' +\n\t\t\t\t\t\t'<h4>YAML Specification:</h4>' +\n\t\t\t\t\t\t'<pre style=\"background: #f8f9fa; padding: 15px; border-radius: 4px; overflow: auto; max-height: 500px; font-size: 12px;\"><code>' + data.spec + '</code></pre>' +\n\t\t\t\t\t\t'</div>';\n\t\t\t\t})\n\t\t\t\t.catch(error => {\n\t\t\t\t\tpopover.innerHTML = '<div style=\"display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;\">' +\n\t\t\t\t\t\t'<h3 style=\"margin: 0;\">Spark Application Spec</h3>' +\n\t\t\t\t\t\t'<button onclick=\"hideSpecPopover()\" style=\"background: #dc3545; color: white; border: none; border-radius: 4px; padding: 8px 12px; cursor: pointer;\">Close</button>' +\n\t\t\t\t\t\t'</div>' +\n\t\t\t\t\t\t'<div style=\"color: #dc3545;\">Error loading spec: ' + error.message + '</div>';\n\t\t\t\t});\n\t\t}\n\n\t\tfunction hideSpecPopover() {\n\t\t\tconst overlay = document.getElementById('spec-overlay');\n\t\t\tif (overlay) {\n\t\t\t\toverlay.style.display = 'none';\n\t\t\t}\n\t\t}\n\n\t\t// Event delegation for spec buttons\n\t\tdocument.addEventListener('click', function(event) {\n\t\t\tif (event.target.classList.contains('spec-button')) {\n\t\t\t\tconst gatewayId = event.target.getAttribute('data-gateway-id');\n\t\t\t\tshowSpecPopover(gatewayId);\n\t\t\t}\n\t\t\t\n\t\t\t// Close popover when clicking outside\n\t\t\tconst overlay = document.getElementById('spec-overlay');\n\t\t\tif (overlay && event.target === overlay) {\n\t\t\t\thideSpecPopover();\n\t\t\t}\n\t\t});\n\t</script>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

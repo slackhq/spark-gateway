@@ -5,6 +5,7 @@ import (
 
 	"github.com/a-h/templ/examples/integration-gin/gintemplrenderer"
 	"github.com/gin-gonic/gin"
+	"github.com/kubeflow/spark-operator/v2/api/v1beta2"
 	"sigs.k8s.io/yaml"
 
 	"github.com/slackhq/spark-gateway/internal/gateway/application/handler"
@@ -43,15 +44,76 @@ func (h *WebHandler) RegisterRoutes() {
 }
 
 func (h *WebHandler) main(c *gin.Context) {
-
-	if c.GetHeader("HX-Request") == "true" {
-		r := gintemplrenderer.New(c, http.StatusOK, app.MainContent())
-		c.Render(http.StatusOK, r)
-	} else {
-		r := gintemplrenderer.New(c, http.StatusOK, app.Main())
-		c.Render(http.StatusOK, r)
+	clusters, err := h.localClusterRepo.GetAll()
+	if err != nil {
+		c.Error(err)
+		return
 	}
 
+	selectedCluster := c.Query("cluster")
+	selectedNamespace := c.Query("namespace")
+
+	var applications []*model.GatewayApplicationMeta
+	var namespaces []model.KubeNamespace
+
+	// Get applications if both cluster and namespace are selected
+	if selectedCluster != "" && selectedNamespace != "" {
+		applications, err = h.gatewayApplicationService.List(c, selectedCluster, selectedNamespace, nil)
+		if err != nil {
+			c.Error(err)
+			return
+		}
+	}
+
+	// Get namespaces if cluster is selected
+	if selectedCluster != "" {
+		for _, cluster := range clusters {
+			if cluster.Name == selectedCluster {
+				namespaces = cluster.Namespaces
+				break
+			}
+		}
+	}
+
+	// Get counts of applications in different states across all clusters
+	counts := app.ApplicationCounts{}
+	if err == nil {
+		// Define the states we want to count
+		states := map[string]v1beta2.ApplicationStateType{
+			"submitted": v1beta2.ApplicationStateSubmitted,
+			"running":   v1beta2.ApplicationStateRunning,
+			"completed": v1beta2.ApplicationStateCompleted,
+			"failed":    v1beta2.ApplicationStateFailed,
+		}
+
+		for _, cluster := range clusters {
+			for _, namespace := range cluster.Namespaces {
+				for stateName, state := range states {
+					apps, err := h.gatewayApplicationService.List(c, cluster.Name, namespace.Name, &state)
+					if err == nil {
+						switch stateName {
+						case "submitted":
+							counts.Submitted += len(apps)
+						case "running":
+							counts.Running += len(apps)
+						case "completed":
+							counts.Completed += len(apps)
+						case "failed":
+							counts.Failed += len(apps)
+						}
+					}
+				}
+			}
+		}
+	}
+
+	if c.GetHeader("HX-Request") == "true" {
+		r := gintemplrenderer.New(c, http.StatusOK, app.MainContent(counts, clusters, applications, selectedCluster, selectedNamespace, namespaces))
+		c.Render(http.StatusOK, r)
+	} else {
+		r := gintemplrenderer.New(c, http.StatusOK, app.Main(counts, clusters, applications, selectedCluster, selectedNamespace, namespaces))
+		c.Render(http.StatusOK, r)
+	}
 }
 
 func (h *WebHandler) clusters(c *gin.Context) {

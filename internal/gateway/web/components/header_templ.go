@@ -29,7 +29,7 @@ func Header() templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<header class=\"header\"><div style=\"display: flex; align-items: center; width: 100%; justify-content: space-between;\"><div style=\"display: flex; align-items: center;\"><h1 style=\"font-size: 20px; font-weight: 600; color: #333;\">Spark Gateway</h1></div><div style=\"display: flex; align-items: center; gap: 15px;\"><button style=\"padding: 8px 16px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;\" hx-get=\"/ui/refresh\" hx-trigger=\"click\" hx-target=\"#main-content\">Refresh</button><div style=\"width: 32px; height: 32px; background: #6c757d; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600;\">U</div></div></div></header>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<header class=\"header\"><div style=\"display: flex; align-items: center; width: 100%; justify-content: space-between;\"><div style=\"display: flex; align-items: center;\"><h1 style=\"font-size: 20px; font-weight: 600; color: #333;\">Spark Gateway</h1></div></div></header>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
