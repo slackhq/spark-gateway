@@ -5,10 +5,9 @@ package service
 
 import (
 	"context"
-	"sync"
-
 	"github.com/kubeflow/spark-operator/v2/api/v1beta2"
 	"github.com/slackhq/spark-gateway/internal/domain"
+	"sync"
 )
 
 // Ensure, that SparkApplicationRepositoryMock does implement SparkApplicationRepository.

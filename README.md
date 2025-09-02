@@ -22,7 +22,7 @@ project and using native Go Kubernetes client libraries.
 
 Spark-Gateway includes a REST API documentation with Swagger 2.0 running alongside the API.
 
-* **API**: `http://127.0.0.1:8080/v1/applications`
+* **API**: `http://127.0.0.1:8080/api/v1/applications`
 * **API Docs UI**: `http://127.0.0.1:8080/docs`
 
 ---
@@ -66,7 +66,7 @@ in json format: `yq -o=json . spark-pi-python.yaml > spark-pi-python.json`
 ```bash
 curl -X POST -H "Content-Type: application/json" \
   --data-binary @spark-pi-python.json \
-  "127.0.0.1:8080/v1/applications"
+  "127.0.0.1:8080/api/v1/applications"
 ```
 
 #### List SparkApplications
@@ -74,12 +74,12 @@ curl -X POST -H "Content-Type: application/json" \
 # List SparkApps in the default cluster and default namespace
 curl -X GET -H "Content-Type: application/json" \
   --user gateway-user:pass \
-  "127.0.0.1:8080/v1/applications?cluster=default&namespace=default"
+  "127.0.0.1:8080/api/v1/applications?cluster=default&namespace=default"
   
 # List all SparkApps in the default cluster
 curl -X GET -H "Content-Type: application/json" \
   --user gateway-user:pass \
-  "127.0.0.1:8080/v1/applications?cluster=default"
+  "127.0.0.1:8080/api/v1/applications?cluster=default"
 ```
 
 #### Get SparkApplication
@@ -87,12 +87,12 @@ curl -X GET -H "Content-Type: application/json" \
 # Get all fields of a SparkApplication
 curl -X GET -H "Content-Type: application/json" \
   --user gateway-user:pass \
-  "127.0.0.1:8080/v1/applications/dflt-dflt-01982d11-c2c1-7c3d-8b2f-944ae7248434"
+  "127.0.0.1:8080/api/v1/applications/dflt-dflt-01982d11-c2c1-7c3d-8b2f-944ae7248434"
 
 # Get only the status field
 curl -X GET -H "Content-Type: application/json" \
   --user gateway-user:pass \
-  "127.0.0.1:8080/v1/applications/dflt-dflt-01982d11-c2c1-7c3d-8b2f-944ae7248434/status"
+  "127.0.0.1:8080/api/v1/applications/dflt-dflt-01982d11-c2c1-7c3d-8b2f-944ae7248434/status"
 ```
 
 #### Get Driver Logs
@@ -101,14 +101,14 @@ curl -X GET -H "Content-Type: application/json" \
 # Pass the `line=x` query parameter to get a different amount. Eg: ?lines=200
 curl -X GET -H "Content-Type: application/json" \
   --user gateway-user:pass \
-  "127.0.0.1:8080/v1/applications/dflt-dflt-01982d11-c2c1-7c3d-8b2f-944ae7248434/logs"
+  "127.0.0.1:8080/api/v1/applications/dflt-dflt-01982d11-c2c1-7c3d-8b2f-944ae7248434/logs"
 ```
 
 #### Delete SparkApplication
 ```bash
 curl -X DELETE -H "Content-Type: application/json" \
   --user gateway-user:pass \
-  "127.0.0.1:8080/v1/applications/dflt-dflt-01982d11-c2c1-7c3d-8b2f-944ae7248434"
+  "127.0.0.1:8080/api/v1/applications/dflt-dflt-01982d11-c2c1-7c3d-8b2f-944ae7248434"
 ```
 
 # Architecture
@@ -164,7 +164,7 @@ Open a new terminal:
 ```bash
 curl -X GET -H "Content-Type: application/json" \
   --user gateway-user:pass \
-  "127.0.0.1:8080/v1/applications?cluster=minikube"
+  "127.0.0.1:8080/api/v1/applications?cluster=minikube"
 ```
 
 ### sqlc
@@ -189,7 +189,7 @@ RESTful API documentation with Swagger 2.0.
 Generate docs
 ```bash
 go install github.com/swaggo/swag/cmd/swag@latest
-swag init -d ./internal/gateway/api/v1/kubeflow -g application_handler.go -o ./docs/swagger --parseDependency --parseInternal
+swag init -d ./internal/gateway/api/api/v1/kubeflow -g application_handler.go -o ./docs/swagger --parseDependency --parseInternal
 ```
 
 ### 🐘 Local Postgres Database
