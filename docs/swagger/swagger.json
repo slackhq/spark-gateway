@@ -11,7 +11,7 @@
         "version": "1.0"
     },
     "paths": {
-        "/": {
+        "/v1/applications/": {
             "get": {
                 "security": [
                     {
@@ -94,7 +94,7 @@
                 }
             }
         },
-        "/{gatewayId}": {
+        "/v1/applications/{gatewayId}": {
             "get": {
                 "security": [
                     {
@@ -169,7 +169,7 @@
                 }
             }
         },
-        "/{gatewayId}/logs": {
+        "/v1/applications/{gatewayId}/logs": {
             "get": {
                 "security": [
                     {
@@ -212,7 +212,7 @@
                 }
             }
         },
-        "/{gatewayId}/status": {
+        "/v1/applications/{gatewayId}/status": {
             "get": {
                 "security": [
                     {

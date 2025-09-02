@@ -54,7 +54,7 @@ func NewKubeflowApplicationHandler(service service.SparkApplicationService, defa
 // @Param cluster query string true "Cluster name"
 // @Param namespace query string false "Namespace (optional)"
 // @Success 200 {array} domain.GatewayApplicationMeta "List of SparkApplication metadata"
-// @Router / [get]
+// @Router /v1/applications/ [get]
 func (h *ApplicationHandler) List(c *gin.Context) {
 
 	cluster := c.Query("cluster")
@@ -84,7 +84,7 @@ func (h *ApplicationHandler) List(c *gin.Context) {
 // @Security BasicAuth
 // @Param gatewayId path string true "SparkApplication Name"
 // @Success 200 {object} domain.GatewayApplication "SparkApplication resource"
-// @Router /{gatewayId} [get]
+// @Router /v1/applications/{gatewayId} [get]
 func (h *ApplicationHandler) Get(c *gin.Context) {
 
 	application, err := h.service.Get(c, c.Param("gatewayId"))
@@ -106,7 +106,7 @@ func (h *ApplicationHandler) Get(c *gin.Context) {
 // @Security BasicAuth
 // @Param gatewayId path string true "SparkApplication Name"
 // @Success 200 {object} v1beta2.SparkApplicationStatus "SparkApplication status"
-// @Router /{gatewayId}/status [get]
+// @Router /v1/applications/{gatewayId}/status [get]
 func (h *ApplicationHandler) Status(c *gin.Context) {
 
 	appStatus, err := h.service.Status(c, c.Param("gatewayId"))
@@ -129,7 +129,7 @@ func (h *ApplicationHandler) Status(c *gin.Context) {
 // @Param gatewayId path string true "SparkApplication Name"
 // @Param lines query int false "Number of log lines to retrieve (default: 100)"
 // @Success 200 {string} string "Driver logs"
-// @Router /{gatewayId}/logs [get]
+// @Router /v1/applications/{gatewayId}/logs [get]
 func (h *ApplicationHandler) Logs(c *gin.Context) {
 
 	tailLines := h.defaultLogLines
@@ -161,7 +161,7 @@ func (h *ApplicationHandler) Logs(c *gin.Context) {
 // @Security BasicAuth
 // @Param SparkApplication body v1beta2.SparkApplication true "v1beta2.SparkApplication resource"
 // @Success 201 {object} domain.GatewayApplication "SparkApplication Created"
-// @Router / [post]
+// @Router /v1/applications/ [post]
 func (h *ApplicationHandler) Create(c *gin.Context) {
 
 	var app v1beta2.SparkApplication
@@ -199,7 +199,7 @@ func (h *ApplicationHandler) Create(c *gin.Context) {
 // @Security BasicAuth
 // @Param gatewayId path string true "SparkApplication Name"
 // @Success 200 {object} map[string]string "Application deleted: {'status': 'success'}"
-// @Router /{gatewayId} [delete]
+// @Router /v1/applications/{gatewayId} [delete]
 func (h *ApplicationHandler) Delete(c *gin.Context) {
 
 	err := h.service.Delete(c, c.Param("gatewayId"))
