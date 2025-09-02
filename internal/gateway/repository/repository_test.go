@@ -48,7 +48,7 @@ var newRepoTests = []struct {
 			sparkManagerPort: "9090",
 		},
 		expected: map[string]string{
-			"testCluster": "http://testCluster-endpoint:9090",
+			"testCluster": "http://testCluster-endpoint:9090/api/v1",
 		},
 	},
 	{
@@ -66,8 +66,8 @@ var newRepoTests = []struct {
 			sparkManagerPort: "9090",
 		},
 		expected: map[string]string{
-			"testCluster":  "http://testCluster-endpoint:9090",
-			"testCluster2": "http://testCluster2-endpoint:9090",
+			"testCluster":  "http://testCluster-endpoint:9090/api/v1",
+			"testCluster2": "http://testCluster2-endpoint:9090/api/v1",
 		},
 	},
 	{
@@ -87,7 +87,7 @@ var newRepoTests = []struct {
 			},
 		},
 		expected: map[string]string{
-			"testCluster": "http://testCluster-endpoint:9091",
+			"testCluster": "http://testCluster-endpoint:9091/api/v1",
 		},
 	},
 	{
@@ -113,8 +113,8 @@ var newRepoTests = []struct {
 			},
 		},
 		expected: map[string]string{
-			"testCluster":  "http://testCluster-endpoint:9091",
-			"testCluster2": "http://testCluster2-endpoint:9092",
+			"testCluster":  "http://testCluster-endpoint:9091/api/v1",
+			"testCluster2": "http://testCluster2-endpoint:9092/api/v1",
 		},
 	},
 	{
