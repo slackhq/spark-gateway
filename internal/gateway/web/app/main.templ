@@ -2,7 +2,9 @@ package app
 
 import (
 	"fmt"
+    "time"
 	"github.com/slackhq/spark-gateway/pkg/model"
+    "github.com/kubeflow/spark-operator/v2/api/v1beta2"
 )
 
 type ApplicationCounts struct {
@@ -287,4 +289,38 @@ templ MainContent(counts ApplicationCounts, clusters []model.KubeCluster, applic
 			}
 		});
 	</script>
+}
+
+func formatTime(t time.Time) string {
+	if t.IsZero() {
+		return "-"
+	}
+	return t.Format("2006-01-02 15:04:05")
+}
+
+func formatAppState(state v1beta2.ApplicationState) string {
+	return string(state.State)
+}
+
+func getStateColor(state string) string {
+	switch state {
+	case "COMPLETED":
+		return "#28a745"
+	case "RUNNING":
+		return "#007bff"
+	case "FAILED":
+		return "#dc3545"
+	case "PENDING":
+		return "#ffc107"
+	case "SUBMISSION_FAILED":
+		return "#dc3545"
+	case "INVALIDATING":
+		return "#6c757d"
+	case "SUCCEEDING":
+		return "#17a2b8"
+	case "FAILING":
+		return "#fd7e14"
+	default:
+		return "#6c757d"
+	}
 }

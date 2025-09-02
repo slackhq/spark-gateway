@@ -10,7 +10,9 @@ import templruntime "github.com/a-h/templ/runtime"
 
 import (
 	"fmt"
+	"github.com/kubeflow/spark-operator/v2/api/v1beta2"
 	"github.com/slackhq/spark-gateway/pkg/model"
+	"time"
 )
 
 type ApplicationCounts struct {
@@ -95,7 +97,7 @@ func MainContent(counts ApplicationCounts, clusters []model.KubeCluster, applica
 		var templ_7745c5c3_Var4 string
 		templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", counts.Submitted))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/gateway/web/app/main.templ`, Line: 32, Col: 115}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/gateway/web/app/main.templ`, Line: 34, Col: 115}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 		if templ_7745c5c3_Err != nil {
@@ -108,7 +110,7 @@ func MainContent(counts ApplicationCounts, clusters []model.KubeCluster, applica
 		var templ_7745c5c3_Var5 string
 		templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", counts.Running))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/gateway/web/app/main.templ`, Line: 36, Col: 113}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/gateway/web/app/main.templ`, Line: 38, Col: 113}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 		if templ_7745c5c3_Err != nil {
@@ -121,7 +123,7 @@ func MainContent(counts ApplicationCounts, clusters []model.KubeCluster, applica
 		var templ_7745c5c3_Var6 string
 		templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", counts.Completed))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/gateway/web/app/main.templ`, Line: 40, Col: 115}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/gateway/web/app/main.templ`, Line: 42, Col: 115}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 		if templ_7745c5c3_Err != nil {
@@ -134,7 +136,7 @@ func MainContent(counts ApplicationCounts, clusters []model.KubeCluster, applica
 		var templ_7745c5c3_Var7 string
 		templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", counts.Failed))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/gateway/web/app/main.templ`, Line: 44, Col: 112}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/gateway/web/app/main.templ`, Line: 46, Col: 112}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 		if templ_7745c5c3_Err != nil {
@@ -152,7 +154,7 @@ func MainContent(counts ApplicationCounts, clusters []model.KubeCluster, applica
 			var templ_7745c5c3_Var8 string
 			templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(cluster.Name)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/gateway/web/app/main.templ`, Line: 66, Col: 35}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/gateway/web/app/main.templ`, Line: 68, Col: 35}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 			if templ_7745c5c3_Err != nil {
@@ -175,7 +177,7 @@ func MainContent(counts ApplicationCounts, clusters []model.KubeCluster, applica
 			var templ_7745c5c3_Var9 string
 			templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(cluster.Name)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/gateway/web/app/main.templ`, Line: 66, Col: 98}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/gateway/web/app/main.templ`, Line: 68, Col: 98}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 			if templ_7745c5c3_Err != nil {
@@ -208,7 +210,7 @@ func MainContent(counts ApplicationCounts, clusters []model.KubeCluster, applica
 			var templ_7745c5c3_Var10 string
 			templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(namespace.Name)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/gateway/web/app/main.templ`, Line: 85, Col: 37}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/gateway/web/app/main.templ`, Line: 87, Col: 37}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 			if templ_7745c5c3_Err != nil {
@@ -231,7 +233,7 @@ func MainContent(counts ApplicationCounts, clusters []model.KubeCluster, applica
 			var templ_7745c5c3_Var11 string
 			templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(namespace.Name)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/gateway/web/app/main.templ`, Line: 85, Col: 106}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/gateway/web/app/main.templ`, Line: 87, Col: 106}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 			if templ_7745c5c3_Err != nil {
@@ -264,7 +266,7 @@ func MainContent(counts ApplicationCounts, clusters []model.KubeCluster, applica
 			var templ_7745c5c3_Var12 string
 			templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(selectedCluster)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/gateway/web/app/main.templ`, Line: 115, Col: 88}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/gateway/web/app/main.templ`, Line: 117, Col: 88}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
 			if templ_7745c5c3_Err != nil {
@@ -277,7 +279,7 @@ func MainContent(counts ApplicationCounts, clusters []model.KubeCluster, applica
 			var templ_7745c5c3_Var13 string
 			templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(selectedNamespace)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/gateway/web/app/main.templ`, Line: 115, Col: 110}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/gateway/web/app/main.templ`, Line: 117, Col: 110}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
 			if templ_7745c5c3_Err != nil {
@@ -300,7 +302,7 @@ func MainContent(counts ApplicationCounts, clusters []model.KubeCluster, applica
 				var templ_7745c5c3_Var14 string
 				templ_7745c5c3_Var14, templ_7745c5c3_Err = templruntime.SanitizeStyleAttributeValues(templ.KV("background-color", getRowColor(i)))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/gateway/web/app/main.templ`, Line: 135, Col: 64}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/gateway/web/app/main.templ`, Line: 137, Col: 64}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
 				if templ_7745c5c3_Err != nil {
@@ -313,7 +315,7 @@ func MainContent(counts ApplicationCounts, clusters []model.KubeCluster, applica
 				var templ_7745c5c3_Var15 string
 				templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(app.SparkAppMeta.ObjectMeta.Name)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/gateway/web/app/main.templ`, Line: 137, Col: 88}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/gateway/web/app/main.templ`, Line: 139, Col: 88}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
 				if templ_7745c5c3_Err != nil {
@@ -326,7 +328,7 @@ func MainContent(counts ApplicationCounts, clusters []model.KubeCluster, applica
 				var templ_7745c5c3_Var16 string
 				templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinStringErrs(app.SparkAppMeta.SparkApplicationID)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/gateway/web/app/main.templ`, Line: 140, Col: 137}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/gateway/web/app/main.templ`, Line: 142, Col: 137}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var16))
 				if templ_7745c5c3_Err != nil {
@@ -339,7 +341,7 @@ func MainContent(counts ApplicationCounts, clusters []model.KubeCluster, applica
 				var templ_7745c5c3_Var17 string
 				templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs(formatTime(app.SparkAppMeta.LastSubmissionAttemptTime.Time))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/gateway/web/app/main.templ`, Line: 143, Col: 114}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/gateway/web/app/main.templ`, Line: 145, Col: 114}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var17))
 				if templ_7745c5c3_Err != nil {
@@ -352,7 +354,7 @@ func MainContent(counts ApplicationCounts, clusters []model.KubeCluster, applica
 				var templ_7745c5c3_Var18 string
 				templ_7745c5c3_Var18, templ_7745c5c3_Err = templ.JoinStringErrs(formatTime(app.SparkAppMeta.TerminationTime.Time))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/gateway/web/app/main.templ`, Line: 146, Col: 104}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/gateway/web/app/main.templ`, Line: 148, Col: 104}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var18))
 				if templ_7745c5c3_Err != nil {
@@ -365,7 +367,7 @@ func MainContent(counts ApplicationCounts, clusters []model.KubeCluster, applica
 				var templ_7745c5c3_Var19 string
 				templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.JoinStringErrs(app.User)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/gateway/web/app/main.templ`, Line: 149, Col: 93}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/gateway/web/app/main.templ`, Line: 151, Col: 93}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var19))
 				if templ_7745c5c3_Err != nil {
@@ -383,7 +385,7 @@ func MainContent(counts ApplicationCounts, clusters []model.KubeCluster, applica
 					var templ_7745c5c3_Var20 string
 					templ_7745c5c3_Var20, templ_7745c5c3_Err = templ.JoinStringErrs("driver-info-" + fmt.Sprintf("%d", i))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/gateway/web/app/main.templ`, Line: 155, Col: 63}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/gateway/web/app/main.templ`, Line: 157, Col: 63}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var20))
 					if templ_7745c5c3_Err != nil {
@@ -396,7 +398,7 @@ func MainContent(counts ApplicationCounts, clusters []model.KubeCluster, applica
 					var templ_7745c5c3_Var21 string
 					templ_7745c5c3_Var21, templ_7745c5c3_Err = templ.JoinStringErrs("driver-toggle-" + fmt.Sprintf("%d", i))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/gateway/web/app/main.templ`, Line: 158, Col: 62}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/gateway/web/app/main.templ`, Line: 160, Col: 62}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var21))
 					if templ_7745c5c3_Err != nil {
@@ -409,7 +411,7 @@ func MainContent(counts ApplicationCounts, clusters []model.KubeCluster, applica
 					var templ_7745c5c3_Var22 string
 					templ_7745c5c3_Var22, templ_7745c5c3_Err = templ.JoinStringErrs("driver-info-" + fmt.Sprintf("%d", i))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/gateway/web/app/main.templ`, Line: 162, Col: 54}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/gateway/web/app/main.templ`, Line: 164, Col: 54}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var22))
 					if templ_7745c5c3_Err != nil {
@@ -427,7 +429,7 @@ func MainContent(counts ApplicationCounts, clusters []model.KubeCluster, applica
 						var templ_7745c5c3_Var23 string
 						templ_7745c5c3_Var23, templ_7745c5c3_Err = templ.JoinStringErrs(app.SparkAppMeta.DriverInfo.PodName)
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/gateway/web/app/main.templ`, Line: 167, Col: 78}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/gateway/web/app/main.templ`, Line: 169, Col: 78}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var23))
 						if templ_7745c5c3_Err != nil {
@@ -446,7 +448,7 @@ func MainContent(counts ApplicationCounts, clusters []model.KubeCluster, applica
 						var templ_7745c5c3_Var24 string
 						templ_7745c5c3_Var24, templ_7745c5c3_Err = templ.JoinStringErrs(app.SparkAppMeta.DriverInfo.WebUIIngressAddress)
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/gateway/web/app/main.templ`, Line: 172, Col: 97}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/gateway/web/app/main.templ`, Line: 174, Col: 97}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var24))
 						if templ_7745c5c3_Err != nil {
@@ -474,7 +476,7 @@ func MainContent(counts ApplicationCounts, clusters []model.KubeCluster, applica
 				var templ_7745c5c3_Var25 string
 				templ_7745c5c3_Var25, templ_7745c5c3_Err = templruntime.SanitizeStyleAttributeValues("background: " + getStateColor(formatAppState(app.SparkAppMeta.AppState)) + "; color: white; padding: 4px 8px; border-radius: 12px; font-size: 12px; font-weight: 500;")
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/gateway/web/app/main.templ`, Line: 181, Col: 191}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/gateway/web/app/main.templ`, Line: 183, Col: 191}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var25))
 				if templ_7745c5c3_Err != nil {
@@ -487,7 +489,7 @@ func MainContent(counts ApplicationCounts, clusters []model.KubeCluster, applica
 				var templ_7745c5c3_Var26 string
 				templ_7745c5c3_Var26, templ_7745c5c3_Err = templ.JoinStringErrs(formatAppState(app.SparkAppMeta.AppState))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/gateway/web/app/main.templ`, Line: 182, Col: 54}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/gateway/web/app/main.templ`, Line: 184, Col: 54}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var26))
 				if templ_7745c5c3_Err != nil {
@@ -500,7 +502,7 @@ func MainContent(counts ApplicationCounts, clusters []model.KubeCluster, applica
 				var templ_7745c5c3_Var27 string
 				templ_7745c5c3_Var27, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", app.SparkAppMeta.SubmissionAttempts))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/gateway/web/app/main.templ`, Line: 186, Col: 111}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/gateway/web/app/main.templ`, Line: 188, Col: 111}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var27))
 				if templ_7745c5c3_Err != nil {
@@ -513,7 +515,7 @@ func MainContent(counts ApplicationCounts, clusters []model.KubeCluster, applica
 				var templ_7745c5c3_Var28 string
 				templ_7745c5c3_Var28, templ_7745c5c3_Err = templ.JoinStringErrs(app.SparkAppMeta.ObjectMeta.Name)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/gateway/web/app/main.templ`, Line: 192, Col: 61}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/gateway/web/app/main.templ`, Line: 194, Col: 61}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var28))
 				if templ_7745c5c3_Err != nil {
@@ -535,6 +537,40 @@ func MainContent(counts ApplicationCounts, clusters []model.KubeCluster, applica
 		}
 		return nil
 	})
+}
+
+func formatTime(t time.Time) string {
+	if t.IsZero() {
+		return "-"
+	}
+	return t.Format("2006-01-02 15:04:05")
+}
+
+func formatAppState(state v1beta2.ApplicationState) string {
+	return string(state.State)
+}
+
+func getStateColor(state string) string {
+	switch state {
+	case "COMPLETED":
+		return "#28a745"
+	case "RUNNING":
+		return "#007bff"
+	case "FAILED":
+		return "#dc3545"
+	case "PENDING":
+		return "#ffc107"
+	case "SUBMISSION_FAILED":
+		return "#dc3545"
+	case "INVALIDATING":
+		return "#6c757d"
+	case "SUCCEEDING":
+		return "#17a2b8"
+	case "FAILING":
+		return "#fd7e14"
+	default:
+		return "#6c757d"
+	}
 }
 
 var _ = templruntime.GeneratedTemplate
