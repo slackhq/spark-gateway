@@ -231,7 +231,7 @@ func ApplicationsContent(clusters []model.KubeCluster, applications []*model.Gat
 				return templ_7745c5c3_Err
 			}
 		} else {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 21, "<div style=\"overflow-x: auto;\"><table style=\"width: 100%; border-collapse: collapse; min-width: 1400px;\"><thead style=\"background-color: #f8f9fa; border-bottom: 2px solid #e1e5e9;\"><tr><th style=\"padding: 12px 16px; text-align: left; font-weight: 600; color: #333; border-bottom: 1px solid #e1e5e9; white-space: nowrap;\">Name</th><th style=\"padding: 12px 16px; text-align: left; font-weight: 600; color: #333; border-bottom: 1px solid #e1e5e9; white-space: nowrap;\">Spark App ID</th><th style=\"padding: 12px 16px; text-align: left; font-weight: 600; color: #333; border-bottom: 1px solid #e1e5e9; white-space: nowrap;\">Submission Time</th><th style=\"padding: 12px 16px; text-align: left; font-weight: 600; color: #333; border-bottom: 1px solid #e1e5e9; white-space: nowrap;\">Termination Time</th><th style=\"padding: 12px 16px; text-align: left; font-weight: 600; color: #333; border-bottom: 1px solid #e1e5e9; white-space: nowrap;\">User</th><th style=\"padding: 12px 16px; text-align: left; font-weight: 600; color: #333; border-bottom: 1px solid #e1e5e9; white-space: nowrap;\">Driver Info</th><th style=\"padding: 12px 16px; text-align: left; font-weight: 600; color: #333; border-bottom: 1px solid #e1e5e9; white-space: nowrap;\">App State</th><th style=\"padding: 12px 16px; text-align: left; font-weight: 600; color: #333; border-bottom: 1px solid #e1e5e9; white-space: nowrap;\">Submission Attempts</th></tr></thead> <tbody>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 21, "<div style=\"overflow-x: auto;\"><table style=\"width: 100%; border-collapse: collapse; min-width: 1500px;\"><thead style=\"background-color: #f8f9fa; border-bottom: 2px solid #e1e5e9;\"><tr><th style=\"padding: 12px 16px; text-align: left; font-weight: 600; color: #333; border-bottom: 1px solid #e1e5e9; white-space: nowrap;\">Name</th><th style=\"padding: 12px 16px; text-align: left; font-weight: 600; color: #333; border-bottom: 1px solid #e1e5e9; white-space: nowrap;\">Spark App ID</th><th style=\"padding: 12px 16px; text-align: left; font-weight: 600; color: #333; border-bottom: 1px solid #e1e5e9; white-space: nowrap;\">Submission Time</th><th style=\"padding: 12px 16px; text-align: left; font-weight: 600; color: #333; border-bottom: 1px solid #e1e5e9; white-space: nowrap;\">Termination Time</th><th style=\"padding: 12px 16px; text-align: left; font-weight: 600; color: #333; border-bottom: 1px solid #e1e5e9; white-space: nowrap;\">User</th><th style=\"padding: 12px 16px; text-align: left; font-weight: 600; color: #333; border-bottom: 1px solid #e1e5e9; white-space: nowrap;\">Driver Info</th><th style=\"padding: 12px 16px; text-align: left; font-weight: 600; color: #333; border-bottom: 1px solid #e1e5e9; white-space: nowrap;\">App State</th><th style=\"padding: 12px 16px; text-align: left; font-weight: 600; color: #333; border-bottom: 1px solid #e1e5e9; white-space: nowrap;\">Submission Attempts</th><th style=\"padding: 12px 16px; text-align: left; font-weight: 600; color: #333; border-bottom: 1px solid #e1e5e9; white-space: nowrap;\">Spec</th></tr></thead> <tbody>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -243,7 +243,7 @@ func ApplicationsContent(clusters []model.KubeCluster, applications []*model.Gat
 				var templ_7745c5c3_Var10 string
 				templ_7745c5c3_Var10, templ_7745c5c3_Err = templruntime.SanitizeStyleAttributeValues(templ.KV("background-color", getRowColor(i)))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/gateway/web/app/applications.templ`, Line: 107, Col: 64}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/gateway/web/app/applications.templ`, Line: 108, Col: 64}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 				if templ_7745c5c3_Err != nil {
@@ -256,7 +256,7 @@ func ApplicationsContent(clusters []model.KubeCluster, applications []*model.Gat
 				var templ_7745c5c3_Var11 string
 				templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(app.SparkAppMeta.ObjectMeta.Name)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/gateway/web/app/applications.templ`, Line: 109, Col: 88}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/gateway/web/app/applications.templ`, Line: 110, Col: 88}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 				if templ_7745c5c3_Err != nil {
@@ -269,7 +269,7 @@ func ApplicationsContent(clusters []model.KubeCluster, applications []*model.Gat
 				var templ_7745c5c3_Var12 string
 				templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(app.SparkAppMeta.SparkApplicationID)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/gateway/web/app/applications.templ`, Line: 112, Col: 137}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/gateway/web/app/applications.templ`, Line: 113, Col: 137}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
 				if templ_7745c5c3_Err != nil {
@@ -282,7 +282,7 @@ func ApplicationsContent(clusters []model.KubeCluster, applications []*model.Gat
 				var templ_7745c5c3_Var13 string
 				templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(formatTime(app.SparkAppMeta.LastSubmissionAttemptTime.Time))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/gateway/web/app/applications.templ`, Line: 115, Col: 114}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/gateway/web/app/applications.templ`, Line: 116, Col: 114}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
 				if templ_7745c5c3_Err != nil {
@@ -295,7 +295,7 @@ func ApplicationsContent(clusters []model.KubeCluster, applications []*model.Gat
 				var templ_7745c5c3_Var14 string
 				templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(formatTime(app.SparkAppMeta.TerminationTime.Time))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/gateway/web/app/applications.templ`, Line: 118, Col: 104}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/gateway/web/app/applications.templ`, Line: 119, Col: 104}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
 				if templ_7745c5c3_Err != nil {
@@ -308,7 +308,7 @@ func ApplicationsContent(clusters []model.KubeCluster, applications []*model.Gat
 				var templ_7745c5c3_Var15 string
 				templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(app.User)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/gateway/web/app/applications.templ`, Line: 121, Col: 93}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/gateway/web/app/applications.templ`, Line: 122, Col: 93}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
 				if templ_7745c5c3_Err != nil {
@@ -326,7 +326,7 @@ func ApplicationsContent(clusters []model.KubeCluster, applications []*model.Gat
 					var templ_7745c5c3_Var16 string
 					templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinStringErrs("driver-info-" + fmt.Sprintf("%d", i))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/gateway/web/app/applications.templ`, Line: 127, Col: 63}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/gateway/web/app/applications.templ`, Line: 128, Col: 63}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var16))
 					if templ_7745c5c3_Err != nil {
@@ -339,7 +339,7 @@ func ApplicationsContent(clusters []model.KubeCluster, applications []*model.Gat
 					var templ_7745c5c3_Var17 string
 					templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs("driver-toggle-" + fmt.Sprintf("%d", i))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/gateway/web/app/applications.templ`, Line: 130, Col: 62}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/gateway/web/app/applications.templ`, Line: 131, Col: 62}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var17))
 					if templ_7745c5c3_Err != nil {
@@ -352,7 +352,7 @@ func ApplicationsContent(clusters []model.KubeCluster, applications []*model.Gat
 					var templ_7745c5c3_Var18 string
 					templ_7745c5c3_Var18, templ_7745c5c3_Err = templ.JoinStringErrs("driver-info-" + fmt.Sprintf("%d", i))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/gateway/web/app/applications.templ`, Line: 134, Col: 54}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/gateway/web/app/applications.templ`, Line: 135, Col: 54}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var18))
 					if templ_7745c5c3_Err != nil {
@@ -370,7 +370,7 @@ func ApplicationsContent(clusters []model.KubeCluster, applications []*model.Gat
 						var templ_7745c5c3_Var19 string
 						templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.JoinStringErrs(app.SparkAppMeta.DriverInfo.PodName)
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/gateway/web/app/applications.templ`, Line: 139, Col: 78}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/gateway/web/app/applications.templ`, Line: 140, Col: 78}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var19))
 						if templ_7745c5c3_Err != nil {
@@ -389,7 +389,7 @@ func ApplicationsContent(clusters []model.KubeCluster, applications []*model.Gat
 						var templ_7745c5c3_Var20 string
 						templ_7745c5c3_Var20, templ_7745c5c3_Err = templ.JoinStringErrs(app.SparkAppMeta.DriverInfo.WebUIIngressAddress)
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/gateway/web/app/applications.templ`, Line: 144, Col: 97}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/gateway/web/app/applications.templ`, Line: 145, Col: 97}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var20))
 						if templ_7745c5c3_Err != nil {
@@ -417,7 +417,7 @@ func ApplicationsContent(clusters []model.KubeCluster, applications []*model.Gat
 				var templ_7745c5c3_Var21 string
 				templ_7745c5c3_Var21, templ_7745c5c3_Err = templruntime.SanitizeStyleAttributeValues("background: " + getStateColor(formatAppState(app.SparkAppMeta.AppState)) + "; color: white; padding: 4px 8px; border-radius: 12px; font-size: 12px; font-weight: 500;")
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/gateway/web/app/applications.templ`, Line: 153, Col: 191}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/gateway/web/app/applications.templ`, Line: 154, Col: 191}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var21))
 				if templ_7745c5c3_Err != nil {
@@ -430,7 +430,7 @@ func ApplicationsContent(clusters []model.KubeCluster, applications []*model.Gat
 				var templ_7745c5c3_Var22 string
 				templ_7745c5c3_Var22, templ_7745c5c3_Err = templ.JoinStringErrs(formatAppState(app.SparkAppMeta.AppState))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/gateway/web/app/applications.templ`, Line: 154, Col: 54}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/gateway/web/app/applications.templ`, Line: 155, Col: 54}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var22))
 				if templ_7745c5c3_Err != nil {
@@ -443,23 +443,36 @@ func ApplicationsContent(clusters []model.KubeCluster, applications []*model.Gat
 				var templ_7745c5c3_Var23 string
 				templ_7745c5c3_Var23, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", app.SparkAppMeta.SubmissionAttempts))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/gateway/web/app/applications.templ`, Line: 158, Col: 111}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/gateway/web/app/applications.templ`, Line: 159, Col: 111}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var23))
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 42, "</span></td></tr>")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 42, "</span></td><td style=\"padding: 12px 16px; border-bottom: 1px solid #e1e5e9; text-align: center;\"><button style=\"padding: 6px 12px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;\" class=\"spec-button\" data-gateway-id=\"")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				var templ_7745c5c3_Var24 string
+				templ_7745c5c3_Var24, templ_7745c5c3_Err = templ.JoinStringErrs(app.SparkAppMeta.ObjectMeta.Name)
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/gateway/web/app/applications.templ`, Line: 165, Col: 61}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var24))
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 43, "\">View Spec</button></td></tr>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 43, "</tbody></table></div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 44, "</tbody></table></div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 44, "</div></div><script>\n\t\tfunction toggleDriverInfo(elementId) {\n\t\t\tconst content = document.getElementById(elementId);\n\t\t\tconst toggle = document.getElementById(elementId.replace('driver-info-', 'driver-toggle-'));\n\t\t\t\n\t\t\tif (content.style.display === 'none' || content.style.display === '') {\n\t\t\t\tcontent.style.display = 'block';\n\t\t\t\ttoggle.textContent = '▼';\n\t\t\t} else {\n\t\t\t\tcontent.style.display = 'none';\n\t\t\t\ttoggle.textContent = '▶';\n\t\t\t}\n\t\t}\n\t</script>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 45, "</div></div><script>\n\t\tfunction toggleDriverInfo(elementId) {\n\t\t\tconst content = document.getElementById(elementId);\n\t\t\tconst toggle = document.getElementById(elementId.replace('driver-info-', 'driver-toggle-'));\n\t\t\t\n\t\t\tif (content.style.display === 'none' || content.style.display === '') {\n\t\t\t\tcontent.style.display = 'block';\n\t\t\t\ttoggle.textContent = '▼';\n\t\t\t} else {\n\t\t\t\tcontent.style.display = 'none';\n\t\t\t\ttoggle.textContent = '▶';\n\t\t\t}\n\t\t}\n\n\t\tfunction showSpecPopover(gatewayId) {\n\t\t\t// Create overlay if it doesn't exist\n\t\t\tlet overlay = document.getElementById('spec-overlay');\n\t\t\tif (!overlay) {\n\t\t\t\toverlay = document.createElement('div');\n\t\t\t\toverlay.id = 'spec-overlay';\n\t\t\t\toverlay.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); display: none; z-index: 1000; justify-content: center; align-items: center;';\n\t\t\t\tdocument.body.appendChild(overlay);\n\t\t\t}\n\n\t\t\t// Create popover if it doesn't exist\n\t\t\tlet popover = document.getElementById('spec-popover');\n\t\t\tif (!popover) {\n\t\t\t\tpopover = document.createElement('div');\n\t\t\t\tpopover.id = 'spec-popover';\n\t\t\t\tpopover.style.cssText = 'background: white; padding: 20px; border-radius: 8px; max-width: 80%; max-height: 80%; overflow: auto; position: relative;';\n\t\t\t\toverlay.appendChild(popover);\n\t\t\t}\n\n\t\t\t// Show loading state\n\t\t\tpopover.innerHTML = '<div style=\"display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;\">' +\n\t\t\t\t'<h3 style=\"margin: 0;\">Spark Application Spec</h3>' +\n\t\t\t\t'<button onclick=\"hideSpecPopover()\" style=\"background: #dc3545; color: white; border: none; border-radius: 4px; padding: 8px 12px; cursor: pointer;\">Close</button>' +\n\t\t\t\t'</div><div>Loading...</div>';\n\n\t\t\t// Show the overlay\n\t\t\toverlay.style.display = 'flex';\n\n\t\t\t// Fetch spec data\n\t\t\tfetch('/ui/applications/' + gatewayId + '/spec')\n\t\t\t\t.then(response => response.json())\n\t\t\t\t.then(data => {\n\t\t\t\t\tpopover.innerHTML = '<div style=\"display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;\">' +\n\t\t\t\t\t\t'<h3 style=\"margin: 0;\">Spark Application Spec</h3>' +\n\t\t\t\t\t\t'<button onclick=\"hideSpecPopover()\" style=\"background: #dc3545; color: white; border: none; border-radius: 4px; padding: 8px 12px; cursor: pointer;\">Close</button>' +\n\t\t\t\t\t\t'</div>' +\n\t\t\t\t\t\t'<div>' +\n\t\t\t\t\t\t'<h4>YAML Specification:</h4>' +\n\t\t\t\t\t\t'<pre style=\"background: #f8f9fa; padding: 15px; border-radius: 4px; overflow: auto; max-height: 500px; font-size: 12px;\"><code>' + data.spec + '</code></pre>' +\n\t\t\t\t\t\t'</div>';\n\t\t\t\t})\n\t\t\t\t.catch(error => {\n\t\t\t\t\tpopover.innerHTML = '<div style=\"display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;\">' +\n\t\t\t\t\t\t'<h3 style=\"margin: 0;\">Spark Application Spec</h3>' +\n\t\t\t\t\t\t'<button onclick=\"hideSpecPopover()\" style=\"background: #dc3545; color: white; border: none; border-radius: 4px; padding: 8px 12px; cursor: pointer;\">Close</button>' +\n\t\t\t\t\t\t'</div>' +\n\t\t\t\t\t\t'<div style=\"color: #dc3545;\">Error loading spec: ' + error.message + '</div>';\n\t\t\t\t});\n\t\t}\n\n\t\tfunction hideSpecPopover() {\n\t\t\tconst overlay = document.getElementById('spec-overlay');\n\t\t\tif (overlay) {\n\t\t\t\toverlay.style.display = 'none';\n\t\t\t}\n\t\t}\n\n\t\t// Event delegation for spec buttons\n\t\tdocument.addEventListener('click', function(event) {\n\t\t\tif (event.target.classList.contains('spec-button')) {\n\t\t\t\tconst gatewayId = event.target.getAttribute('data-gateway-id');\n\t\t\t\tshowSpecPopover(gatewayId);\n\t\t\t}\n\t\t\t\n\t\t\t// Close popover when clicking outside\n\t\t\tconst overlay = document.getElementById('spec-overlay');\n\t\t\tif (overlay && event.target === overlay) {\n\t\t\t\thideSpecPopover();\n\t\t\t}\n\t\t});\n\t</script>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

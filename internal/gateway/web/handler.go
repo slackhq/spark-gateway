@@ -5,6 +5,7 @@ import (
 
 	"github.com/a-h/templ/examples/integration-gin/gintemplrenderer"
 	"github.com/gin-gonic/gin"
+	"sigs.k8s.io/yaml"
 
 	"github.com/slackhq/spark-gateway/internal/gateway/application/handler"
 	"github.com/slackhq/spark-gateway/internal/gateway/cluster"
@@ -37,6 +38,7 @@ func (h *WebHandler) RegisterRoutes() {
 	uiGroup.GET("/", h.main)
 	uiGroup.GET("/clusters", h.clusters)
 	uiGroup.GET("/applications", h.applications)
+	uiGroup.GET("/applications/:gatewayId/spec", h.applicationSpec)
 
 }
 
@@ -111,4 +113,33 @@ func (h *WebHandler) applications(c *gin.Context) {
 		r := gintemplrenderer.New(c, http.StatusOK, app.Applications(clusters, applications, selectedCluster, selectedNamespace, namespaces))
 		c.Render(http.StatusOK, r)
 	}
+}
+
+func (h *WebHandler) applicationSpec(c *gin.Context) {
+	gatewayId := c.Param("gatewayId")
+	if gatewayId == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "gatewayId is required"})
+		return
+	}
+
+	// Get the full application data using the service
+	gatewayApp, err := h.gatewayApplicationService.Get(c, gatewayId)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Convert SparkApplication to YAML
+	yamlData, err := yaml.Marshal(gatewayApp.SparkApplication)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to marshal application to YAML"})
+		return
+	}
+
+	// Return YAML spec only
+	response := gin.H{
+		"spec": string(yamlData),
+	}
+
+	c.JSON(http.StatusOK, response)
 }
