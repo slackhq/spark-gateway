@@ -21,7 +21,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/slackhq/spark-gateway/internal/domain"
 	"github.com/slackhq/spark-gateway/internal/shared/gatewayerrors"
 	"github.com/slackhq/spark-gateway/internal/shared/util"
 	"github.com/slackhq/spark-gateway/internal/sparkManager/kube"
@@ -47,9 +46,9 @@ func NewSparkApplicationRepository(controller *kube.SparkController, sparkClient
 	}, nil
 }
 
-func (k *SparkApplicationRepository) Get(namespace string, name string) (*v1beta2.SparkApplication, error) {
+func (s *SparkApplicationRepository) Get(namespace string, name string) (*v1beta2.SparkApplication, error) {
 
-	sparkApp, err := k.controller.SparkLister.SparkApplications(namespace).Get(name)
+	sparkApp, err := s.controller.SparkLister.SparkApplications(namespace).Get(name)
 	if err != nil {
 		return nil, gatewayerrors.MapK8sErrorToGatewayError(fmt.Errorf("error getting SparkApplication '%s/%s': %w", namespace, name, err))
 	}
@@ -58,31 +57,25 @@ func (k *SparkApplicationRepository) Get(namespace string, name string) (*v1beta
 
 }
 
-func (k *SparkApplicationRepository) List(namespace string) ([]*domain.SparkManagerApplicationMeta, error) {
+func (s *SparkApplicationRepository) List(namespace string) ([]*v1beta2.SparkApplication, error) {
 
-	sparkApps, err := k.controller.SparkLister.SparkApplications(namespace).List(labels.Everything())
+	sparkApps, err := s.controller.SparkLister.SparkApplications(namespace).List(labels.Everything())
 
 	if err != nil {
 		return nil, gatewayerrors.MapK8sErrorToGatewayError(fmt.Errorf("error listing SparkApplications in namespace [%s]: %w", namespace, err))
 	}
 
-	var appMetaList []*domain.SparkManagerApplicationMeta
-
-	for _, sparkApp := range sparkApps {
-		sparkAppMeta := domain.NewSparkManagerApplicationMeta(sparkApp)
-		appMetaList = append(appMetaList, sparkAppMeta)
-	}
-	return appMetaList, nil
+	return sparkApps, nil
 
 }
 
-func (k *SparkApplicationRepository) GetLogs(namespace string, name string, tailLines int64) (*string, error) {
+func (s *SparkApplicationRepository) GetLogs(namespace string, name string, tailLines int64) (*string, error) {
 
-	sparkApp, err := k.Get(namespace, name)
+	sparkApp, err := s.Get(namespace, name)
 	if err != nil {
 		return nil, gatewayerrors.MapK8sErrorToGatewayError(fmt.Errorf("error getting SparkApplication '%s/%s' to get Spark Driver Pod name for logs: %w", sparkApp.Namespace, sparkApp.Name, err))
 	}
-	logString, err := util.GetLogs(sparkApp.Status.DriverInfo.PodName, sparkApp.Namespace, tailLines, k.k8sClient)
+	logString, err := util.GetLogs(sparkApp.Status.DriverInfo.PodName, sparkApp.Namespace, tailLines, s.k8sClient)
 	if err != nil {
 		return nil, err
 	}
@@ -92,16 +85,16 @@ func (k *SparkApplicationRepository) GetLogs(namespace string, name string, tail
 	return formattedLogString, nil
 }
 
-func (k *SparkApplicationRepository) Create(ctx context.Context, application *v1beta2.SparkApplication) (*v1beta2.SparkApplication, error) {
+func (s *SparkApplicationRepository) Create(ctx context.Context, application *v1beta2.SparkApplication) (*v1beta2.SparkApplication, error) {
 
-	sparkApp, err := k.sparkClient.SparkoperatorV1beta2().SparkApplications(application.Namespace).Create(ctx, application, v1.CreateOptions{})
+	sparkApp, err := s.sparkClient.SparkoperatorV1beta2().SparkApplications(application.Namespace).Create(ctx, application, v1.CreateOptions{})
 	if err != nil {
 		return nil, gatewayerrors.MapK8sErrorToGatewayError(fmt.Errorf("error creating SparkApplication: %w", err))
 	}
 
 	counter := 5
 	for counter > 0 {
-		sparkApp, err = k.Get(application.Namespace, application.Name)
+		sparkApp, err = s.Get(application.Namespace, application.Name)
 		if err != nil {
 			if getErr, ok := err.(gatewayerrors.GatewayError); ok {
 				if getErr.Status == http.StatusNotFound {
@@ -126,8 +119,8 @@ func (k *SparkApplicationRepository) Create(ctx context.Context, application *v1
 	return sparkApp, nil
 }
 
-func (k *SparkApplicationRepository) Delete(ctx context.Context, namespace string, name string) error {
-	if err := k.sparkClient.SparkoperatorV1beta2().SparkApplications(namespace).Delete(ctx, name, v1.DeleteOptions{}); err != nil {
+func (s *SparkApplicationRepository) Delete(ctx context.Context, namespace string, name string) error {
+	if err := s.sparkClient.SparkoperatorV1beta2().SparkApplications(namespace).Delete(ctx, name, v1.DeleteOptions{}); err != nil {
 		return gatewayerrors.MapK8sErrorToGatewayError(fmt.Errorf("error deleting SparkApplication: %w", err))
 	}
 

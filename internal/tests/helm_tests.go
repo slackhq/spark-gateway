@@ -126,7 +126,7 @@ func TestGetSparkApplication(ctx context.Context, sparkApplication *v1beta2.Spar
 
 	// Check a few fields
 	if sparkApplication.ObjectMeta.Name != app.SparkApplication.Name ||
-		sparkApplication.ObjectMeta.Namespace != app.SparkApplication.ObjectMeta.Namespace ||
+		sparkApplication.ObjectMeta.Namespace != app.SparkApplication.Namespace ||
 		*sparkApplication.Spec.MainApplicationFile != *app.SparkApplication.Spec.MainApplicationFile ||
 		*sparkApplication.Spec.MainClass != *app.SparkApplication.Spec.MainClass {
 		klog.Errorf("TestGetSparkApplication failed")

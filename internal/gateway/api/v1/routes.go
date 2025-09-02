@@ -1,4 +1,4 @@
-package v1kubeflow
+package v1
 
 import (
 	"github.com/gin-gonic/gin"
@@ -6,10 +6,10 @@ import (
 	"github.com/slackhq/spark-gateway/internal/shared/config"
 )
 
-// RegisterKubeflowApplicationRoutes registers routes handling Kubeflow SparkOperator SparkApplication submissions
-func RegisterKubeflowApplicationRoutes(rg *gin.RouterGroup, sgConf *config.SparkGatewayConfig, appService service.SparkApplicationService) {
+// RegisterApplicationRoutes registers routes handling GatewayApplication submissions
+func RegisterGatewayApplicationRoutes(rg *gin.RouterGroup, sgConf *config.SparkGatewayConfig, appService service.GatewayApplicationService) {
 
-	h := NewKubeflowApplicationHandler(appService, sgConf.DefaultLogLines)
+	h := NewGatewayApplicationHandler(appService, sgConf.DefaultLogLines)
 
 	rg.GET("/applications", h.List)
 	rg.POST("/applications", h.Create)

@@ -1,7 +1,7 @@
 {
     "swagger": "2.0",
     "info": {
-        "description": "REST API for managing SparkApplication resources across multiple clusters",
+        "description": "REST API for managing GatewayApplication resources across multiple clusters",
         "title": "Spark Gateway",
         "contact": {},
         "license": {
@@ -18,7 +18,7 @@
                         "BasicAuth": []
                     }
                 ],
-                "description": "Lists SparkApplications metadata in the specified cluster. Optionally filter by namespace.",
+                "description": "Lists summaries of applications in specified cluster. Optionally filter by namespace.",
                 "consumes": [
                     "application/json"
                 ],
@@ -28,7 +28,7 @@
                 "tags": [
                     "Applications"
                 ],
-                "summary": "List SparkApplications",
+                "summary": "List GatewayApplicationSummary",
                 "parameters": [
                     {
                         "type": "string",
@@ -46,11 +46,11 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "List of SparkApplication metadata",
+                        "description": "List of GatewayApplicationSummary objects",
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/domain.GatewayApplicationMeta"
+                                "$ref": "#/definitions/domain.GatewayApplicationSummary"
                             }
                         }
                     }
@@ -62,7 +62,7 @@
                         "BasicAuth": []
                     }
                 ],
-                "description": "Submits the provided SparkApplication to the given namespace.",
+                "description": "Submits the provided GatewayApplication to the given namespace.",
                 "consumes": [
                     "application/json"
                 ],
@@ -72,7 +72,7 @@
                 "tags": [
                     "Applications"
                 ],
-                "summary": "Submit a new SparkApplication",
+                "summary": "Submit a new GatewayApplication",
                 "parameters": [
                     {
                         "description": "v1beta2.SparkApplication resource",
@@ -86,7 +86,7 @@
                 ],
                 "responses": {
                     "201": {
-                        "description": "SparkApplication Created",
+                        "description": "GatewayApplication Created",
                         "schema": {
                             "$ref": "#/definitions/domain.GatewayApplication"
                         }
@@ -101,7 +101,7 @@
                         "BasicAuth": []
                     }
                 ],
-                "description": "Retrieves the full SparkApplication resource by ID.",
+                "description": "Retrieves the full GatewayApplication resource by ID.",
                 "consumes": [
                     "application/json"
                 ],
@@ -111,11 +111,11 @@
                 "tags": [
                     "Applications"
                 ],
-                "summary": "Get a SparkApplication",
+                "summary": "Get a GatewayApplication",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "SparkApplication Name",
+                        "description": "GatewayApplication Name",
                         "name": "gatewayId",
                         "in": "path",
                         "required": true
@@ -123,7 +123,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "SparkApplication resource",
+                        "description": "GatewayApplication resource",
                         "schema": {
                             "$ref": "#/definitions/domain.GatewayApplication"
                         }
@@ -136,7 +136,7 @@
                         "BasicAuth": []
                     }
                 ],
-                "description": "Deletes the specified SparkApplication",
+                "description": "Deletes the specified GatewayApplication",
                 "consumes": [
                     "application/json"
                 ],
@@ -146,11 +146,11 @@
                 "tags": [
                     "Applications"
                 ],
-                "summary": "Delete a SparkApplication",
+                "summary": "Delete a GatewayApplication",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "SparkApplication Name",
+                        "description": "GatewayApplication Name",
                         "name": "gatewayId",
                         "in": "path",
                         "required": true
@@ -176,7 +176,7 @@
                         "BasicAuth": []
                     }
                 ],
-                "description": "Retrieves the last N lines of driver logs for the specified SparkApplication. Defaults to the last 100 lines.",
+                "description": "Retrieves the last N lines of driver logs for the specified GatewayApplication. Defaults to the last 100 lines.",
                 "consumes": [
                     "application/json"
                 ],
@@ -186,11 +186,11 @@
                 "tags": [
                     "Applications"
                 ],
-                "summary": "Get driver logs of a SparkApplication",
+                "summary": "Get driver logs of a GatewayApplication",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "SparkApplication Name",
+                        "description": "GatewayApplication Name",
                         "name": "gatewayId",
                         "in": "path",
                         "required": true
@@ -219,7 +219,7 @@
                         "BasicAuth": []
                     }
                 ],
-                "description": "Retrieves only the status field of a SparkApplication.",
+                "description": "Retrieves only the status field of a GatewayApplication.",
                 "consumes": [
                     "application/json"
                 ],
@@ -229,11 +229,11 @@
                 "tags": [
                     "Applications"
                 ],
-                "summary": "Get SparkApplication status",
+                "summary": "Get GatewayApplication status",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "SparkApplication Name",
+                        "description": "GatewayApplication Name",
                         "name": "gatewayId",
                         "in": "path",
                         "required": true
@@ -241,7 +241,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "SparkApplication status",
+                        "description": "GatewayApplication status",
                         "schema": {
                             "$ref": "#/definitions/v1beta2.SparkApplicationStatus"
                         }
@@ -261,7 +261,7 @@
                     "type": "string"
                 },
                 "sparkApplication": {
-                    "$ref": "#/definitions/v1beta2.SparkApplication"
+                    "$ref": "#/definitions/domain.GatewaySparkApplication"
                 },
                 "sparkLogURLs": {
                     "$ref": "#/definitions/domain.SparkLogURLs"
@@ -274,11 +274,323 @@
         "domain.GatewayApplicationMeta": {
             "type": "object",
             "properties": {
+                "annotations": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "apiVersion": {
+                    "type": "string"
+                },
+                "kind": {
+                    "type": "string"
+                },
+                "labels": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "name": {
+                    "type": "string"
+                },
+                "namespace": {
+                    "type": "string"
+                }
+            }
+        },
+        "domain.GatewayApplicationSpec": {
+            "type": "object",
+            "properties": {
+                "arguments": {
+                    "description": "Arguments is a list of arguments to be passed to the application.\n+optional",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "batchScheduler": {
+                    "description": "BatchScheduler configures which batch scheduler will be used for scheduling\n+optional",
+                    "type": "string"
+                },
+                "batchSchedulerOptions": {
+                    "description": "BatchSchedulerOptions provides fine-grained control on how to batch scheduling.\n+optional",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/v1beta2.BatchSchedulerConfiguration"
+                        }
+                    ]
+                },
+                "deps": {
+                    "description": "Deps captures all possible types of dependencies of a Spark application.\n+optional",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/v1beta2.Dependencies"
+                        }
+                    ]
+                },
+                "driver": {
+                    "description": "Driver is the driver specification.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/v1beta2.DriverSpec"
+                        }
+                    ]
+                },
+                "driverIngressOptions": {
+                    "description": "DriverIngressOptions allows configuring the Service and the Ingress to expose ports inside Spark Driver\n+optional",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/v1beta2.DriverIngressConfiguration"
+                    }
+                },
+                "dynamicAllocation": {
+                    "description": "DynamicAllocation configures dynamic allocation that becomes available for the Kubernetes\nscheduler backend since Spark 3.0.\n+optional",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/v1beta2.DynamicAllocation"
+                        }
+                    ]
+                },
+                "executor": {
+                    "description": "Executor is the executor specification.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/v1beta2.ExecutorSpec"
+                        }
+                    ]
+                },
+                "failureRetries": {
+                    "description": "FailureRetries is the number of times to retry a failed application before giving up.\nThis is best effort and actual retry attempts can be \u003e= the value specified.\n+optional",
+                    "type": "integer"
+                },
+                "hadoopConf": {
+                    "description": "HadoopConf carries user-specified Hadoop configuration properties as they would use the \"--conf\" option\nin spark-submit. The SparkApplication controller automatically adds prefix \"spark.hadoop.\" to Hadoop\nconfiguration properties.\n+optional",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "hadoopConfigMap": {
+                    "description": "HadoopConfigMap carries the name of the ConfigMap containing Hadoop configuration files such as core-site.xml.\nThe controller will add environment variable HADOOP_CONF_DIR to the path where the ConfigMap is mounted to.\n+optional",
+                    "type": "string"
+                },
+                "image": {
+                    "description": "Image is the container image for the driver, executor, and init-container. Any custom container images for the\ndriver, executor, or init-container takes precedence over this.\n+optional",
+                    "type": "string"
+                },
+                "imagePullPolicy": {
+                    "description": "ImagePullPolicy is the image pull policy for the driver, executor, and init-container.\n+optional",
+                    "type": "string"
+                },
+                "imagePullSecrets": {
+                    "description": "ImagePullSecrets is the list of image-pull secrets.\n+optional",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "mainApplicationFile": {
+                    "description": "MainFile is the path to a bundled JAR, Python, or R file of the application.",
+                    "type": "string"
+                },
+                "mainClass": {
+                    "description": "MainClass is the fully-qualified main class of the Spark application.\nThis only applies to Java/Scala Spark applications.\n+optional",
+                    "type": "string"
+                },
+                "memoryOverheadFactor": {
+                    "description": "This sets the Memory Overhead Factor that will allocate memory to non-JVM memory.\nFor JVM-based jobs this value will default to 0.10, for non-JVM jobs 0.40. Value of this field will\nbe overridden by `Spec.Driver.MemoryOverhead` and `Spec.Executor.MemoryOverhead` if they are set.\n+optional",
+                    "type": "string"
+                },
+                "mode": {
+                    "description": "Mode is the deployment mode of the Spark application.\n+kubebuilder:validation:Enum={cluster,client}",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/v1beta2.DeployMode"
+                        }
+                    ]
+                },
+                "monitoring": {
+                    "description": "Monitoring configures how monitoring is handled.\n+optional",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/v1beta2.MonitoringSpec"
+                        }
+                    ]
+                },
+                "nodeSelector": {
+                    "description": "NodeSelector is the Kubernetes node selector to be added to the driver and executor pods.\nThis field is mutually exclusive with nodeSelector at podSpec level (driver or executor).\nThis field will be deprecated in future versions (at SparkApplicationSpec level).\n+optional",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "proxyUser": {
+                    "description": "ProxyUser specifies the user to impersonate when submitting the application.\nIt maps to the command-line flag \"--proxy-user\" in spark-submit.\n+optional",
+                    "type": "string"
+                },
+                "pythonVersion": {
+                    "description": "This sets the major Python version of the docker\nimage used to run the driver and executor containers. Can either be 2 or 3, default 2.\n+optional\n+kubebuilder:validation:Enum={\"2\",\"3\"}",
+                    "type": "string"
+                },
+                "restartPolicy": {
+                    "description": "RestartPolicy defines the policy on if and in which conditions the controller should restart an application.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/v1beta2.RestartPolicy"
+                        }
+                    ]
+                },
+                "retryInterval": {
+                    "description": "RetryInterval is the unit of intervals in seconds between submission retries.\n+optional",
+                    "type": "integer"
+                },
+                "sparkConf": {
+                    "description": "SparkConf carries user-specified Spark configuration properties as they would use the  \"--conf\" option in\nspark-submit.\n+optional",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "sparkConfigMap": {
+                    "description": "SparkConfigMap carries the name of the ConfigMap containing Spark configuration files such as log4j.properties.\nThe controller will add environment variable SPARK_CONF_DIR to the path where the ConfigMap is mounted to.\n+optional",
+                    "type": "string"
+                },
+                "sparkUIOptions": {
+                    "description": "SparkUIOptions allows configuring the Service and the Ingress to expose the sparkUI\n+optional",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/v1beta2.SparkUIConfiguration"
+                        }
+                    ]
+                },
+                "sparkVersion": {
+                    "description": "SparkVersion is the version of Spark the application uses.",
+                    "type": "string"
+                },
+                "timeToLiveSeconds": {
+                    "description": "TimeToLiveSeconds defines the Time-To-Live (TTL) duration in seconds for this SparkApplication\nafter its termination.\nThe SparkApplication object will be garbage collected if the current time is more than the\nTimeToLiveSeconds since its termination.\n+optional",
+                    "type": "integer"
+                },
+                "type": {
+                    "description": "Type tells the type of the Spark application.\n+kubebuilder:validation:Enum={Java,Python,Scala,R}",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/v1beta2.SparkApplicationType"
+                        }
+                    ]
+                },
+                "volumes": {
+                    "description": "Volumes is the list of Kubernetes volumes that can be mounted by the driver and/or executors.\n+optional",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/v1.Volume"
+                    }
+                }
+            }
+        },
+        "domain.GatewayApplicationStatus": {
+            "type": "object",
+            "properties": {
+                "applicationState": {
+                    "description": "AppState tells the overall application state.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/v1beta2.ApplicationState"
+                        }
+                    ]
+                },
+                "driverInfo": {
+                    "description": "DriverInfo has information about the driver.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/v1beta2.DriverInfo"
+                        }
+                    ]
+                },
+                "executionAttempts": {
+                    "description": "ExecutionAttempts is the total number of attempts to run a submitted application to completion.\nIncremented upon each attempted run of the application and reset upon invalidation.",
+                    "type": "integer"
+                },
+                "executorState": {
+                    "description": "ExecutorState records the state of executors by executor Pod names.",
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/definitions/v1beta2.ExecutorState"
+                    }
+                },
+                "lastSubmissionAttemptTime": {
+                    "description": "LastSubmissionAttemptTime is the time for the last application submission attempt.\n+nullable",
+                    "type": "string"
+                },
+                "sparkApplicationId": {
+                    "description": "SparkApplicationID is set by the spark-distribution(via spark.app.id config) on the driver and executor pods",
+                    "type": "string"
+                },
+                "submissionAttempts": {
+                    "description": "SubmissionAttempts is the total number of attempts to submit an application to run.\nIncremented upon each attempted submission of the application and reset upon invalidation and rerun.",
+                    "type": "integer"
+                },
+                "submissionID": {
+                    "description": "SubmissionID is a unique ID of the current submission of the application.",
+                    "type": "string"
+                },
+                "terminationTime": {
+                    "description": "CompletionTime is the time when the application runs to completion if it does.\n+nullable",
+                    "type": "string"
+                }
+            }
+        },
+        "domain.GatewayApplicationSummary": {
+            "type": "object",
+            "properties": {
+                "annotations": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "apiVersion": {
+                    "type": "string"
+                },
                 "cluster": {
                     "type": "string"
                 },
-                "sparkAppMetadata": {
-                    "$ref": "#/definitions/domain.SparkManagerApplicationMeta"
+                "gatewayId": {
+                    "type": "string"
+                },
+                "kind": {
+                    "type": "string"
+                },
+                "labels": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "name": {
+                    "type": "string"
+                },
+                "namespace": {
+                    "type": "string"
+                },
+                "status": {
+                    "$ref": "#/definitions/domain.GatewayApplicationStatus"
+                }
+            }
+        },
+        "domain.GatewaySparkApplication": {
+            "type": "object",
+            "properties": {
+                "metadata": {
+                    "$ref": "#/definitions/domain.GatewayApplicationMeta"
+                },
+                "spec": {
+                    "$ref": "#/definitions/domain.GatewayApplicationSpec"
+                },
+                "status": {
+                    "$ref": "#/definitions/domain.GatewayApplicationStatus"
                 }
             }
         },
@@ -292,39 +604,6 @@
                     "type": "string"
                 },
                 "sparkUI": {
-                    "type": "string"
-                }
-            }
-        },
-        "domain.SparkManagerApplicationMeta": {
-            "type": "object",
-            "properties": {
-                "applicationState": {
-                    "$ref": "#/definitions/v1beta2.ApplicationState"
-                },
-                "driverInfo": {
-                    "$ref": "#/definitions/v1beta2.DriverInfo"
-                },
-                "executionAttempts": {
-                    "type": "integer"
-                },
-                "lastSubmissionAttemptTime": {
-                    "type": "string"
-                },
-                "metadata": {
-                    "$ref": "#/definitions/v1.ObjectMeta"
-                },
-                "sparkApplicationId": {
-                    "description": "All fields below come from v1beta2.SparkApplicationStatus\nCurrently it's all fields except for ExecutorState because it can get pretty large",
-                    "type": "string"
-                },
-                "submissionAttempts": {
-                    "type": "integer"
-                },
-                "submissionID": {
-                    "type": "string"
-                },
-                "terminationTime": {
                     "type": "string"
                 }
             }

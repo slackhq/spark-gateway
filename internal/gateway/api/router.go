@@ -7,13 +7,13 @@ import (
 	"github.com/slackhq/spark-gateway/internal/gateway/api/health"
 	"github.com/slackhq/spark-gateway/internal/gateway/api/middleware"
 	"github.com/slackhq/spark-gateway/internal/gateway/api/swagger"
-	v1kubeflow "github.com/slackhq/spark-gateway/internal/gateway/api/v1/kubeflow"
+	v1 "github.com/slackhq/spark-gateway/internal/gateway/api/v1"
 	"github.com/slackhq/spark-gateway/internal/gateway/service"
 	"github.com/slackhq/spark-gateway/internal/shared/config"
 	sgMiddleware "github.com/slackhq/spark-gateway/internal/shared/middleware"
 )
 
-func NewRouter(sgConf *config.SparkGatewayConfig, appService service.SparkApplicationService) (*gin.Engine, error) {
+func NewRouter(sgConf *config.SparkGatewayConfig, appService service.GatewayApplicationService) (*gin.Engine, error) {
 
 	router := gin.Default()
 	router.Use(sgMiddleware.ApplicationErrorHandler)
@@ -33,7 +33,7 @@ func NewRouter(sgConf *config.SparkGatewayConfig, appService service.SparkApplic
 		return nil, fmt.Errorf("error adding middlewares to routes: %w", err)
 	}
 
-	v1kubeflow.RegisterKubeflowApplicationRoutes(v1Group, sgConf, appService)
+	v1.RegisterGatewayApplicationRoutes(v1Group, sgConf, appService)
 
 	return router, nil
 

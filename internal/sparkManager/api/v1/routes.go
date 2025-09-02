@@ -1,4 +1,4 @@
-package v1kubeflow
+package v1
 
 import (
 	"github.com/gin-gonic/gin"

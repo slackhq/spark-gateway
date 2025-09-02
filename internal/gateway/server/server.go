@@ -19,7 +19,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/google/uuid"
+	"net/http"
+	"reflect"
+	"time"
+
 	"github.com/slackhq/spark-gateway/internal/domain"
 	"github.com/slackhq/spark-gateway/internal/gateway/api"
 	"github.com/slackhq/spark-gateway/internal/gateway/clusterrouter"
@@ -27,24 +30,11 @@ import (
 	"github.com/slackhq/spark-gateway/internal/gateway/service"
 	cfg "github.com/slackhq/spark-gateway/internal/shared/config"
 	"k8s.io/klog/v2"
-	"net/http"
-	"reflect"
-	"time"
 )
 
 type GatewayServer struct {
 	httpServer *http.Server
 	ctx        context.Context
-}
-
-func GenUUIDv7() (string, error) {
-	uuid, err := uuid.NewV7()
-
-	if err != nil {
-		return "", err
-	}
-
-	return uuid.String(), nil
 }
 
 func NewGateway(ctx context.Context, sgConfig *cfg.SparkGatewayConfig, sparkManagerHostnameTemplate string) (*GatewayServer, error) {
@@ -93,7 +83,7 @@ func NewGateway(ctx context.Context, sgConfig *cfg.SparkGatewayConfig, sparkMana
 		sgConfig.GatewayConfig,
 		sgConfig.SelectorKey,
 		sgConfig.SelectorValue,
-		domain.GatewayIdGenerator{UuidGenerator: GenUUIDv7},
+		domain.NewId,
 	)
 
 	router, err := api.NewRouter(sgConfig, appService)

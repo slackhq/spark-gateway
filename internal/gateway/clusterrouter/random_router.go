@@ -34,9 +34,9 @@ func NewRandomClusterRouter(repo repository.ClusterRepository) ClusterRouter {
 }
 
 func (r *RandomClusterRouter) GetCluster(ctx context.Context, namespace string) (*domain.KubeCluster, error) {
-	clusters, err := r.clusterRepository.GetAllWithNamespace(namespace)
-	if err != nil || len(clusters) == 0 {
-		return nil, fmt.Errorf("error listing clusters: %w", err)
+	clusters := r.clusterRepository.GetAllWithNamespace(namespace)
+	if len(clusters) == 0 {
+		return nil, fmt.Errorf("no clusters with namespace %s returned", namespace)
 	}
 	return &clusters[rand.Intn(len(clusters))], nil
 }
