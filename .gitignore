@@ -30,3 +30,5 @@ go.work.sum
 .run/
 
 .DS_Store
+
+gateway-config-dev*.yaml
