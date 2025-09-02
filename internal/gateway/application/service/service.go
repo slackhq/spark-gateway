@@ -17,7 +17,6 @@ package service
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"strings"
 
@@ -109,16 +108,16 @@ func (s *service) Get(ctx context.Context, gatewayId string) (*model.GatewayAppl
 		return nil, gatewayerrors.NewFrom(fmt.Errorf("error getting SparkApplication '%s': %w", gatewayId, err))
 	}
 
-	user, ok := sparkApp.Labels[model.GATEWAY_USER_LABEL]
-	if !ok {
-		return nil, gatewayerrors.NewFrom(errors.New("no gateway user associated with this application, possibly not created through spark-gateway?"))
+	user, err := model.GetUser(sparkApp.Labels)
+	if err != nil {
+		return nil, gatewayerrors.NewFrom(err)
 	}
 
 	gatewayApp := &model.GatewayApplication{
 		SparkApplication: sparkApp,
 		GatewayId:        sparkApp.Name,
 		Cluster:          cluster.Name,
-		User:             user,
+		User:             *user,
 		SparkLogURLs:     GetRenderedURLs(s.config.StatusUrlTemplates, sparkApp),
 	}
 
@@ -155,7 +154,11 @@ func (s *service) List(ctx context.Context, cluster string, namespace string, ap
 		}
 
 		for _, appMeta := range nsAppMetas {
-			appMetaList = append(appMetaList, model.NewGatewayApplicationMeta(appMeta, cluster))
+			user, err := model.GetUser(appMeta.ObjectMeta.Labels)
+			if user == nil || err != nil {
+				continue
+			}
+			appMetaList = append(appMetaList, model.NewGatewayApplicationMeta(appMeta, cluster, *user))
 		}
 
 	}

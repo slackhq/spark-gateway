@@ -16,6 +16,7 @@
 package model
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
@@ -79,6 +80,14 @@ func ParseGatewayIdUUID(gatewayId string) (*uuid.UUID, error) {
 	return nil, fmt.Errorf("error parsing gatewayId (%s). Format must be 'cluster-namespace-uuid'", gatewayId)
 }
 
+func GetUser(sparkAppLabels map[string]string) (*string, error) {
+	user, ok := sparkAppLabels[GATEWAY_USER_LABEL]
+	if !ok {
+		return nil, errors.New("no gateway user associated with this application, possibly not created through spark-gateway")
+	}
+	return &user, nil
+}
+
 type SparkManagerApplicationMeta struct {
 	ObjectMeta metav1.ObjectMeta `json:"metadata"`
 	// All fields below come from v1beta2.SparkApplicationStatus
@@ -96,6 +105,7 @@ type SparkManagerApplicationMeta struct {
 type GatewayApplicationMeta struct {
 	SparkAppMeta SparkManagerApplicationMeta `json:"sparkAppMetadata"`
 	Cluster      string                      `json:"cluster"`
+	User         string                      `json:"user"`
 }
 
 func NewSparkManagerApplicationMeta(sparkApp *v1beta2.SparkApplication) *SparkManagerApplicationMeta {
@@ -122,10 +132,11 @@ func NewSparkManagerApplicationMeta(sparkApp *v1beta2.SparkApplication) *SparkMa
 
 }
 
-func NewGatewayApplicationMeta(smAppMeta *SparkManagerApplicationMeta, cluster string) *GatewayApplicationMeta {
+func NewGatewayApplicationMeta(smAppMeta *SparkManagerApplicationMeta, cluster string, user string) *GatewayApplicationMeta {
 	return &GatewayApplicationMeta{
 		SparkAppMeta: *smAppMeta,
 		Cluster:      cluster,
+		User:         user,
 	}
 }
 
