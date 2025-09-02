@@ -98,7 +98,6 @@ templ ApplicationsContent(clusters []model.KubeCluster, applications []*model.Ga
 								<th style="padding: 12px 16px; text-align: left; font-weight: 600; color: #333; border-bottom: 1px solid #e1e5e9; white-space: nowrap;">Termination Time</th>
 								<th style="padding: 12px 16px; text-align: left; font-weight: 600; color: #333; border-bottom: 1px solid #e1e5e9; white-space: nowrap;">Driver Info</th>
 								<th style="padding: 12px 16px; text-align: left; font-weight: 600; color: #333; border-bottom: 1px solid #e1e5e9; white-space: nowrap;">App State</th>
-								<th style="padding: 12px 16px; text-align: left; font-weight: 600; color: #333; border-bottom: 1px solid #e1e5e9; white-space: nowrap;">Execution Attempts</th>
 								<th style="padding: 12px 16px; text-align: left; font-weight: 600; color: #333; border-bottom: 1px solid #e1e5e9; white-space: nowrap;">Submission Attempts</th>
 							</tr>
 						</thead>
@@ -118,7 +117,7 @@ templ ApplicationsContent(clusters []model.KubeCluster, applications []*model.Ga
 										<div style="font-size: 14px; color: #333;">{ formatTime(app.SparkAppMeta.TerminationTime.Time) }</div>
 									</td>
 									<td style="padding: 12px 16px; border-bottom: 1px solid #e1e5e9;">
-										if app.SparkAppMeta.DriverInfo.PodName != "" || app.SparkAppMeta.DriverInfo.WebUIAddress != "" {
+										if app.SparkAppMeta.DriverInfo.PodName != "" || app.SparkAppMeta.DriverInfo.WebUIIngressAddress != "" {
 											<div 
 												style="cursor: pointer; user-select: none; display: flex; align-items: center; gap: 4px; font-size: 14px; color: #007bff;"
 												data-target={ "driver-info-" + fmt.Sprintf("%d", i) }
@@ -136,9 +135,9 @@ templ ApplicationsContent(clusters []model.KubeCluster, applications []*model.Ga
 														<strong>Pod Name:</strong> { app.SparkAppMeta.DriverInfo.PodName }
 													</div>
 												}
-												if app.SparkAppMeta.DriverInfo.WebUIAddress != "" {
+												if app.SparkAppMeta.DriverInfo.WebUIIngressAddress != "" {
 													<div>
-														<strong>Ingress Address:</strong> { app.SparkAppMeta.DriverInfo.WebUIAddress }
+														<strong>Ingress Address:</strong> { app.SparkAppMeta.DriverInfo.WebUIIngressAddress }
 													</div>
 												}
 											</div>
@@ -150,9 +149,6 @@ templ ApplicationsContent(clusters []model.KubeCluster, applications []*model.Ga
 										<span style={ "background: " + getStateColor(formatAppState(app.SparkAppMeta.AppState)) + "; color: white; padding: 4px 8px; border-radius: 12px; font-size: 12px; font-weight: 500;" }>
 											{ formatAppState(app.SparkAppMeta.AppState) }
 										</span>
-									</td>
-									<td style="padding: 12px 16px; border-bottom: 1px solid #e1e5e9; text-align: center;">
-										<span style="font-weight: 500; color: #333;">{ fmt.Sprintf("%d", app.SparkAppMeta.ExecutionAttempts) }</span>
 									</td>
 									<td style="padding: 12px 16px; border-bottom: 1px solid #e1e5e9; text-align: center;">
 										<span style="font-weight: 500; color: #333;">{ fmt.Sprintf("%d", app.SparkAppMeta.SubmissionAttempts) }</span>
