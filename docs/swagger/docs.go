@@ -19,7 +19,7 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/": {
+        "/v1/applications/": {
             "get": {
                 "security": [
                     {
@@ -102,7 +102,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/{gatewayId}": {
+        "/v1/applications/{gatewayId}": {
             "get": {
                 "security": [
                     {
@@ -177,7 +177,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/{gatewayId}/logs": {
+        "/v1/applications/{gatewayId}/logs": {
             "get": {
                 "security": [
                     {
@@ -220,7 +220,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/{gatewayId}/status": {
+        "/v1/applications/{gatewayId}/status": {
             "get": {
                 "security": [
                     {

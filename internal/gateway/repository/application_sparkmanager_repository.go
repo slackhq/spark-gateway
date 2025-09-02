@@ -28,7 +28,7 @@ import (
 	"github.com/slackhq/spark-gateway/internal/domain"
 	"github.com/slackhq/spark-gateway/internal/shared/config"
 	"github.com/slackhq/spark-gateway/internal/shared/gatewayerrors"
-	sharedHttp "github.com/slackhq/spark-gateway/internal/shared/http"
+	sgHttp "github.com/slackhq/spark-gateway/internal/shared/http"
 	"github.com/slackhq/spark-gateway/internal/shared/util"
 	"github.com/slackhq/spark-gateway/internal/sparkManager/kube"
 )
@@ -39,7 +39,7 @@ type SparkManagerRepository struct {
 
 func NewSparkManagerRepository(clusters []domain.KubeCluster, sparkManagerHostnameTemplate string, sparkManagerPort string, debugPorts map[string]config.DebugPort) (*SparkManagerRepository, error) {
 
-	hostNameF := "http://%s:%s"
+	hostNameF := "http://%s:%s/api/v1"
 	clusterEndpoints := map[string]string{}
 
 	// Pretemplate the hostname with debug port if any
@@ -73,7 +73,7 @@ func NewSparkManagerRepository(clusters []domain.KubeCluster, sparkManagerHostna
 func (r *SparkManagerRepository) Get(ctx context.Context, cluster domain.KubeCluster, namespace string, name string) (*v1beta2.SparkApplication, error) {
 
 	clusterEndpoint := r.ClusterEndpoints[cluster.Name]
-	// Url: http://host:port/namespace/name
+	// Url: http://host:port/api/v1/namespace/name
 	url := fmt.Sprintf("%s/%s/%s", clusterEndpoint, namespace, name)
 
 	request, err := http.NewRequest(http.MethodGet, url, nil)
@@ -81,12 +81,12 @@ func (r *SparkManagerRepository) Get(ctx context.Context, cluster domain.KubeClu
 		return nil, gatewayerrors.NewFrom(fmt.Errorf("error creating %s request: %w", http.MethodGet, err))
 	}
 
-	resp, respBody, err := sharedHttp.HttpRequest(ctx, &http.Client{}, request)
+	resp, respBody, err := sgHttp.HttpRequest(ctx, &http.Client{}, request)
 	if err != nil {
 		return nil, gatewayerrors.NewFrom(err)
 	}
 
-	err = sharedHttp.CheckJsonResponse(resp, respBody)
+	err = sgHttp.CheckJsonResponse(resp, respBody)
 	if err != nil {
 		return nil, gatewayerrors.NewFrom(err)
 	}
@@ -102,7 +102,7 @@ func (r *SparkManagerRepository) Get(ctx context.Context, cluster domain.KubeClu
 func (r *SparkManagerRepository) List(ctx context.Context, cluster domain.KubeCluster, namespace string) ([]*domain.SparkManagerApplicationMeta, error) {
 
 	clusterEndpoint := r.ClusterEndpoints[cluster.Name]
-	// Url: http://host:port/namespace
+	// Url: http://host:port/api/v1/namespace
 	url := fmt.Sprintf("%s/%s", clusterEndpoint, namespace)
 
 	request, err := http.NewRequest(http.MethodGet, url, nil)
@@ -110,12 +110,12 @@ func (r *SparkManagerRepository) List(ctx context.Context, cluster domain.KubeCl
 		return nil, gatewayerrors.NewFrom(fmt.Errorf("error creating %s request: %w", http.MethodGet, err))
 	}
 
-	resp, respBody, err := sharedHttp.HttpRequest(ctx, &http.Client{}, request)
+	resp, respBody, err := sgHttp.HttpRequest(ctx, &http.Client{}, request)
 	if err != nil {
 		return nil, gatewayerrors.NewFrom(err)
 	}
 
-	err = sharedHttp.CheckJsonResponse(resp, respBody)
+	err = sgHttp.CheckJsonResponse(resp, respBody)
 	if err != nil {
 		return nil, gatewayerrors.NewFrom(err)
 	}
@@ -131,7 +131,7 @@ func (r *SparkManagerRepository) List(ctx context.Context, cluster domain.KubeCl
 func (r *SparkManagerRepository) Status(ctx context.Context, cluster domain.KubeCluster, namespace string, name string) (*v1beta2.SparkApplicationStatus, error) {
 
 	clusterEndpoint := r.ClusterEndpoints[cluster.Name]
-	// Url: http://host:port/namespace/name/status
+	// Url: http://host:port/api/v1/namespace/name/status
 	url := fmt.Sprintf("%s/%s/%s/status", clusterEndpoint, namespace, name)
 
 	request, err := http.NewRequest(http.MethodGet, url, nil)
@@ -139,12 +139,12 @@ func (r *SparkManagerRepository) Status(ctx context.Context, cluster domain.Kube
 		return nil, gatewayerrors.NewFrom(fmt.Errorf("error creating %s request: %w", http.MethodGet, err))
 	}
 
-	resp, respBody, err := sharedHttp.HttpRequest(ctx, &http.Client{}, request)
+	resp, respBody, err := sgHttp.HttpRequest(ctx, &http.Client{}, request)
 	if err != nil {
 		return nil, gatewayerrors.NewFrom(err)
 	}
 
-	err = sharedHttp.CheckJsonResponse(resp, respBody)
+	err = sgHttp.CheckJsonResponse(resp, respBody)
 	if err != nil {
 		return nil, gatewayerrors.NewFrom(err)
 	}
@@ -160,7 +160,7 @@ func (r *SparkManagerRepository) Status(ctx context.Context, cluster domain.Kube
 func (r *SparkManagerRepository) Logs(ctx context.Context, cluster domain.KubeCluster, namespace string, name string, tailLines int) (*string, error) {
 
 	clusterEndpoint := r.ClusterEndpoints[cluster.Name]
-	// Url: http://host:port/namespace/name/logs?lines=lineCount
+	// Url: http://host:port/api/v1/namespace/name/logs?lines=lineCount
 	url := fmt.Sprintf("%s/%s/%s/logs?lines=%d", clusterEndpoint, namespace, name, tailLines)
 
 	request, err := http.NewRequest(http.MethodGet, url, nil)
@@ -168,12 +168,12 @@ func (r *SparkManagerRepository) Logs(ctx context.Context, cluster domain.KubeCl
 		return nil, gatewayerrors.NewFrom(fmt.Errorf("error creating %s request: %w", http.MethodGet, err))
 	}
 
-	resp, respBody, err := sharedHttp.HttpRequest(ctx, &http.Client{}, request)
+	resp, respBody, err := sgHttp.HttpRequest(ctx, &http.Client{}, request)
 	if err != nil {
 		return nil, gatewayerrors.NewFrom(err)
 	}
 
-	err = sharedHttp.CheckJsonResponse(resp, respBody)
+	err = sgHttp.CheckJsonResponse(resp, respBody)
 	if err != nil {
 		return nil, gatewayerrors.NewFrom(err)
 	}
@@ -189,7 +189,7 @@ func (r *SparkManagerRepository) Logs(ctx context.Context, cluster domain.KubeCl
 func (r *SparkManagerRepository) Create(ctx context.Context, cluster domain.KubeCluster, sparkApplication *v1beta2.SparkApplication) (*v1beta2.SparkApplication, error) {
 
 	clusterEndpoint := r.ClusterEndpoints[cluster.Name]
-	// Url: http://host:port/namespace/name
+	// Url: http://host:port/api/v1/namespace/name
 	url := fmt.Sprintf("%s/%s/%s", clusterEndpoint, sparkApplication.Namespace, sparkApplication.Name)
 
 	body, err := json.Marshal(sparkApplication)
@@ -203,12 +203,12 @@ func (r *SparkManagerRepository) Create(ctx context.Context, cluster domain.Kube
 	}
 	request.Header.Set("Content-Type", "application/json")
 
-	resp, respBody, err := sharedHttp.HttpRequest(ctx, &http.Client{}, request)
+	resp, respBody, err := sgHttp.HttpRequest(ctx, &http.Client{}, request)
 	if err != nil {
 		return nil, gatewayerrors.NewFrom(err)
 	}
 
-	err = sharedHttp.CheckJsonResponse(resp, respBody)
+	err = sgHttp.CheckJsonResponse(resp, respBody)
 	if err != nil {
 		return nil, gatewayerrors.NewFrom(err)
 	}
@@ -224,7 +224,7 @@ func (r *SparkManagerRepository) Create(ctx context.Context, cluster domain.Kube
 func (r *SparkManagerRepository) Delete(ctx context.Context, cluster domain.KubeCluster, namespace string, name string) error {
 
 	clusterEndpoint := r.ClusterEndpoints[cluster.Name]
-	// Url: http://host:port/namespace/name
+	// Url: http://host:port/api/v1/namespace/name
 	url := fmt.Sprintf("%s/%s/%s", clusterEndpoint, namespace, name)
 
 	request, err := http.NewRequest(http.MethodDelete, url, nil)
@@ -232,12 +232,12 @@ func (r *SparkManagerRepository) Delete(ctx context.Context, cluster domain.Kube
 		return gatewayerrors.NewFrom(fmt.Errorf("error creating %s request: %w", http.MethodDelete, err))
 	}
 
-	resp, respBody, err := sharedHttp.HttpRequest(ctx, &http.Client{}, request)
+	resp, respBody, err := sgHttp.HttpRequest(ctx, &http.Client{}, request)
 	if err != nil {
 		return gatewayerrors.NewFrom(err)
 	}
 
-	err = sharedHttp.CheckJsonResponse(resp, respBody)
+	err = sgHttp.CheckJsonResponse(resp, respBody)
 	if err != nil {
 		return gatewayerrors.NewFrom(err)
 	}

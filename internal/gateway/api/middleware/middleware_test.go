@@ -76,14 +76,13 @@ func TestAddMiddleware(t *testing.T) {
 
 		t.Run(test.test, func(t *testing.T) {
 			router := gin.New()
+			root := router.Group("/test")
 
-			mwChain, err := AddMiddleware(test.mwDefs)
+			err := AddMiddleware(test.mwDefs, root)
 			if err != nil {
 				assert.Equal(t, test.err, err.Error(), "errors should match")
 				return
 			}
-
-			router.Use(mwChain...)
 
 			if test.expectedUser != "" {
 				// User check
@@ -95,9 +94,9 @@ func TestAddMiddleware(t *testing.T) {
 
 			}
 
-			router.GET("/")
+			root.GET("")
 
-			req, _ := http.NewRequest("GET", "/", nil)
+			req, _ := http.NewRequest("GET", "/test", nil)
 			if test.authHeader != "" {
 				req.Header.Add("Authorization", test.authHeader)
 			}
