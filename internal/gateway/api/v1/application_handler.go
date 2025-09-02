@@ -46,7 +46,7 @@ func NewGatewayApplicationHandler(service service.GatewayApplicationService, def
 
 // ListGatewayApplicationSummaries godoc
 // @Summary List GatewayApplicationSummary
-// @Description Lists GatewayApplicationSummary of applications in specified cluster. Optionally filter by namespace.
+// @Description Lists summaries of applications in specified cluster. Optionally filter by namespace.
 // @Tags Applications
 // @Accept json
 // @Produce json
