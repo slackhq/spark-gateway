@@ -22,8 +22,8 @@ templ ApplicationsContent(clusters []model.KubeCluster, applications []*model.Ga
 		
 		<div style="background: white; padding: 20px; border-radius: 8px; border: 1px solid #e1e5e9; margin-bottom: 20px;">
 			<h3 style="font-size: 18px; font-weight: 600; color: #333; margin-bottom: 15px;">Filters</h3>
-			<form style="display: flex; gap: 15px; align-items: end;">
-				<div style="flex: 1;">
+			<form style="display: flex; flex-direction: column; gap: 15px;">
+				<div>
 					<label style="display: block; margin-bottom: 5px; font-weight: 500; color: #333; font-size: 14px;">Cluster</label>
 					<select 
 						name="cluster" 
@@ -41,7 +41,7 @@ templ ApplicationsContent(clusters []model.KubeCluster, applications []*model.Ga
 					</select>
 				</div>
 				
-				<div style="flex: 1;">
+				<div>
 					<label style="display: block; margin-bottom: 5px; font-weight: 500; color: #333; font-size: 14px;">Namespace</label>
 					<select 
 						name="namespace" 
@@ -63,7 +63,7 @@ templ ApplicationsContent(clusters []model.KubeCluster, applications []*model.Ga
 				<div>
 					<button 
 						type="button"
-						style="padding: 8px 16px; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px;"
+						style="padding: 8px 16px; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; width: fit-content;"
 						hx-get="/ui/applications"
 						hx-target="#main-content"
 						onclick="document.getElementById('cluster-select').value = ''; document.getElementById('namespace-select').value = '';"
