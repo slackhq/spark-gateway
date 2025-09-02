@@ -8,35 +8,39 @@ import (
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func TestBaseNewApplication(t *testing.T) {
+func TestNewGatewaySparkApplication(t *testing.T) {
 	inApp := v1beta2.SparkApplication{
+		TypeMeta: v1.TypeMeta{
+			Kind:       "SparkApplication",
+			APIVersion: "apiVersion",
+		},
 		ObjectMeta: v1.ObjectMeta{
-			Name:      "BaseTest",
 			Namespace: "test",
 		},
 	}
 
-	expected := GatewayApplication{
-		SparkApplication: GatewaySparkApplication{
-			GatewayApplicationMeta: GatewayApplicationMeta{
-				Namespace: "test",
-				Labels:    map[string]string{},
-				Annotations: map[string]string{
-					"applicationName": "BaseTest",
-				},
-			},
+	expected := GatewaySparkApplication{
+		GatewayApplicationMeta: GatewayApplicationMeta{
+			Kind:        "SparkApplication",
+			APIVersion:  "apiVersion",
+			Namespace:   "test",
+			Labels:      map[string]string{},
+			Annotations: map[string]string{},
 		},
 	}
 
-	newApp := NewGatewayApplication(&inApp)
+	gotApp := NewGatewaySparkApplication(&inApp)
 
-	assert.Equal(t, &expected, newApp, "applications should be the same")
+	assert.Equal(t, &expected, gotApp, "applications should be the same")
 }
 
-func TestBaseNewApplicationWithLabelsAnnotations(t *testing.T) {
+func TestNewGatewaySparkApplicationWithLabelsAnnotations(t *testing.T) {
 	inApp := v1beta2.SparkApplication{
+		TypeMeta: v1.TypeMeta{
+			Kind:       "SparkApplication",
+			APIVersion: "apiVersion",
+		},
 		ObjectMeta: v1.ObjectMeta{
-			Name:      "BaseTest",
 			Namespace: "test",
 			Annotations: map[string]string{
 				"annotation": "1",
@@ -47,141 +51,219 @@ func TestBaseNewApplicationWithLabelsAnnotations(t *testing.T) {
 		},
 	}
 
-	expected := GatewayApplication{
-		SparkApplication: GatewaySparkApplication{
-			GatewayApplicationMeta: GatewayApplicationMeta{
-				Namespace: "test",
-				Annotations: map[string]string{
-					"annotation":      "1",
-					"applicationName": "BaseTest",
-				},
-				Labels: map[string]string{
-					"label": "1",
-				},
+	expected := GatewaySparkApplication{
+		GatewayApplicationMeta: GatewayApplicationMeta{
+			Kind:       "SparkApplication",
+			APIVersion: "apiVersion",
+			Namespace:  "test",
+			Annotations: map[string]string{
+				"annotation": "1",
+			},
+			Labels: map[string]string{
+				"label": "1",
 			},
 		},
 	}
 
-	newApp := NewGatewayApplication(&inApp)
+	gotApp := NewGatewaySparkApplication(&inApp)
 
-	assert.Equal(t, &expected, newApp, "applications should be the same")
+	assert.Equal(t, &expected, gotApp, "applications should be the same")
 }
 
-func TestBaseNewApplicationWithUser(t *testing.T) {
+func TestNewGatewaySparkApplicationWithUser(t *testing.T) {
 
 	userStr := "user"
 
 	inApp := v1beta2.SparkApplication{
-		ObjectMeta: v1.ObjectMeta{
-			Name:      "BaseTest",
-			Namespace: "test",
+		TypeMeta: v1.TypeMeta{
+			Kind:       "SparkApplication",
+			APIVersion: "apiVersion",
 		},
-	}
-
-	expected := GatewayApplication{
-		SparkApplication: GatewaySparkApplication{
-			GatewayApplicationMeta: GatewayApplicationMeta{
-				Namespace: "test",
-				Labels: map[string]string{
-					GATEWAY_USER_LABEL: "user",
-				},
-				Annotations: map[string]string{
-					"applicationName": "BaseTest",
-				},
-			},
-			Spec: GatewayApplicationSpec{
-				SparkApplicationSpec: v1beta2.SparkApplicationSpec{
-					ProxyUser: &userStr,
-				},
-			},
-		},
-		User: "user",
-	}
-
-	newApp := NewGatewayApplication(&inApp, WithUser("user"))
-
-	assert.Equal(t, &expected, newApp, "applications should be the same")
-}
-
-func TestBaseNewApplicationWithSelector(t *testing.T) {
-
-	inApp := v1beta2.SparkApplication{
-		ObjectMeta: v1.ObjectMeta{
-			Name:      "BaseTest",
-			Namespace: "test",
-		},
-	}
-
-	expected := GatewayApplication{
-		SparkApplication: GatewaySparkApplication{
-			GatewayApplicationMeta: GatewayApplicationMeta{
-				Namespace: "test",
-				Labels: map[string]string{
-					"key": "value",
-				},
-				Annotations: map[string]string{
-					"applicationName": "BaseTest",
-				},
-			},
-		},
-	}
-
-	newApp := NewGatewayApplication(&inApp, WithSelector(map[string]string{
-		"key": "value",
-	}))
-
-	assert.Equal(t, &expected, newApp, "applications should be the same")
-}
-
-func TestBaseNewApplicationWithIdNoName(t *testing.T) {
-
-	inApp := v1beta2.SparkApplication{
 		ObjectMeta: v1.ObjectMeta{
 			Namespace: "test",
 		},
 	}
 
-	expected := GatewayApplication{
-		SparkApplication: GatewaySparkApplication{
-			GatewayApplicationMeta: GatewayApplicationMeta{
-				Name:        "id",
-				Namespace:   "test",
-				Labels:      map[string]string{},
-				Annotations: map[string]string{},
+	expected := GatewaySparkApplication{
+		GatewayApplicationMeta: GatewayApplicationMeta{
+			Kind:       "SparkApplication",
+			APIVersion: "apiVersion",
+			Namespace:  "test",
+			Labels: map[string]string{
+				GATEWAY_USER_LABEL: "user",
+			},
+			Annotations: map[string]string{},
+		},
+		Spec: GatewayApplicationSpec{
+			SparkApplicationSpec: v1beta2.SparkApplicationSpec{
+				ProxyUser: &userStr,
 			},
 		},
-		GatewayId: "id",
 	}
 
-	newApp := NewGatewayApplication(&inApp, WithId("id"))
+	gotApp := NewGatewaySparkApplication(&inApp, WithUser(userStr))
 
-	assert.Equal(t, &expected, newApp, "applications should be the same")
+	assert.Equal(t, &expected, gotApp, "applications should be the same")
 }
 
-func TestBaseNewApplicationWithIdName(t *testing.T) {
+func TestNewGatewaySparkApplicationWithSelector(t *testing.T) {
 
 	inApp := v1beta2.SparkApplication{
+		TypeMeta: v1.TypeMeta{
+			Kind:       "SparkApplication",
+			APIVersion: "apiVersion",
+		},
+		ObjectMeta: v1.ObjectMeta{
+			Namespace: "test",
+		},
+	}
+
+	expected := GatewaySparkApplication{
+		GatewayApplicationMeta: GatewayApplicationMeta{
+			Kind:       "SparkApplication",
+			APIVersion: "apiVersion",
+			Namespace:  "test",
+			Labels: map[string]string{
+				"key": "value",
+			},
+			Annotations: map[string]string{},
+		},
+	}
+
+	gotApp := NewGatewaySparkApplication(&inApp, WithSelector(map[string]string{"key": "value"}))
+
+	assert.Equal(t, &expected, gotApp, "applications should be the same")
+}
+
+func TestNewGatewaySparkApplicationWithIdNoName(t *testing.T) {
+
+	inApp := v1beta2.SparkApplication{
+		TypeMeta: v1.TypeMeta{
+			Kind:       "SparkApplication",
+			APIVersion: "apiVersion",
+		},
+		ObjectMeta: v1.ObjectMeta{
+			Namespace: "test",
+		},
+	}
+
+	expected := GatewaySparkApplication{
+		GatewayApplicationMeta: GatewayApplicationMeta{
+			Kind:        "SparkApplication",
+			APIVersion:  "apiVersion",
+			Name:        "id",
+			Namespace:   "test",
+			Labels:      map[string]string{},
+			Annotations: map[string]string{},
+		},
+	}
+
+	gotApp := NewGatewaySparkApplication(&inApp, WithId("id"))
+
+	assert.Equal(t, &expected, gotApp, "applications should be the same")
+}
+
+func TestNewGatewaySparkApplicationWithIdName(t *testing.T) {
+
+	inApp := v1beta2.SparkApplication{
+		TypeMeta: v1.TypeMeta{
+			Kind:       "SparkApplication",
+			APIVersion: "apiVersion",
+		},
 		ObjectMeta: v1.ObjectMeta{
 			Name:      "appName",
 			Namespace: "test",
 		},
 	}
 
-	expected := GatewayApplication{
-		SparkApplication: GatewaySparkApplication{
-			GatewayApplicationMeta: GatewayApplicationMeta{
-				Name:      "id",
-				Namespace: "test",
-				Labels:    map[string]string{},
-				Annotations: map[string]string{
-					"applicationName": "appName",
-				},
+	expected := GatewaySparkApplication{
+		GatewayApplicationMeta: GatewayApplicationMeta{
+			Kind:       "SparkApplication",
+			APIVersion: "apiVersion",
+			Name:       "id",
+			Namespace:  "test",
+			Labels:     map[string]string{},
+			Annotations: map[string]string{
+				"applicationName": "appName",
 			},
 		},
-		GatewayId: "id",
 	}
 
-	newApp := NewGatewayApplication(&inApp, WithId("id"))
+	gotApp := NewGatewaySparkApplication(&inApp, WithId("id"))
 
-	assert.Equal(t, &expected, newApp, "applications should be the same")
+	assert.Equal(t, &expected, gotApp, "applications should be the same")
+}
+
+func TestNewGatewaySparkApplicationWithCluster(t *testing.T) {
+
+	inApp := v1beta2.SparkApplication{
+		TypeMeta: v1.TypeMeta{
+			Kind:       "SparkApplication",
+			APIVersion: "apiVersion",
+		},
+		ObjectMeta: v1.ObjectMeta{
+			Namespace: "test",
+		},
+	}
+
+	expected := GatewaySparkApplication{
+		GatewayApplicationMeta: GatewayApplicationMeta{
+			Kind:       "SparkApplication",
+			APIVersion: "apiVersion",
+			Namespace:  "test",
+			Labels: map[string]string{
+				GATEWAY_CLUSTER_LABEL: "cluster",
+			},
+			Annotations: map[string]string{},
+		},
+	}
+
+	gotApp := NewGatewaySparkApplication(&inApp, WithCluster("cluster"))
+
+	assert.Equal(t, &expected, gotApp, "applications should be the same")
+}
+
+func TestNewGatewaySparkApplicationWithAll(t *testing.T) {
+
+	user := "user"
+
+	inApp := v1beta2.SparkApplication{
+		TypeMeta: v1.TypeMeta{
+			Kind:       "SparkApplication",
+			APIVersion: "apiVersion",
+		},
+		ObjectMeta: v1.ObjectMeta{
+			Namespace: "test",
+		},
+	}
+
+	expected := GatewaySparkApplication{
+		GatewayApplicationMeta: GatewayApplicationMeta{
+			Kind:       "SparkApplication",
+			APIVersion: "apiVersion",
+			Name:       "id",
+			Namespace:  "test",
+			Labels: map[string]string{
+				GATEWAY_USER_LABEL:    "user",
+				GATEWAY_CLUSTER_LABEL: "cluster",
+				"key":                 "value",
+			},
+			Annotations: map[string]string{},
+		},
+		Spec: GatewayApplicationSpec{
+			SparkApplicationSpec: v1beta2.SparkApplicationSpec{
+				ProxyUser: &user,
+			},
+		},
+	}
+
+	gotApp := NewGatewaySparkApplication(
+		&inApp,
+		WithCluster("cluster"),
+		WithId("id"),
+		WithUser("user"),
+		WithSelector(map[string]string{"key": "value"}),
+	)
+
+	assert.Equal(t, &expected, gotApp, "applications should be the same")
 }

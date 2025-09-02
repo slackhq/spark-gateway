@@ -34,7 +34,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-const TEST_USER = "user"
+var TEST_USER string = "user"
 
 // Structs
 var testSgConfig config.SparkGatewayConfig = config.SparkGatewayConfig{
@@ -44,9 +44,9 @@ var testSgConfig config.SparkGatewayConfig = config.SparkGatewayConfig{
 
 var testGatewayConfig config.GatewayConfig = config.GatewayConfig{
 	StatusUrlTemplates: domain.StatusUrlTemplates{
-		SparkUI:        "{{.Status.DriverInfo.WebUIIngressAddress}}",
-		SparkHistoryUI: "https://spark-history-{{.Namespace}}.test.com/history/{{.Status.SparkApplicationID}}/jobs",
-		LogsUI:         "https://logs.test.com/app/discover#/?_g=(_a=(interval:auto,query:(language:lucene,query:'host:%20%22{{.Name}}-driver%22')",
+		SparkUITemplate:        "{{.Status.DriverInfo.WebUIIngressAddress}}",
+		SparkHistoryUITemplate: "https://spark-history-{{.Namespace}}.test.com/history/{{.Status.SparkApplicationID}}/jobs",
+		LogsUITemplate:         "https://logs.test.com/app/discover#/?_g=(_a=(interval:auto,query:(language:lucene,query:'host:%20%22{{.Name}}-driver%22')",
 	},
 }
 
@@ -62,20 +62,95 @@ var testCluster domain.KubeCluster = domain.KubeCluster{
 	},
 }
 
-var expectedGatewayApplication domain.GatewayApplication = *domain.NewGatewayApplication(&v1beta2.SparkApplication{
+var inputSparkApp *v1beta2.SparkApplication = &v1beta2.SparkApplication{
+	TypeMeta: v1.TypeMeta{
+		Kind:       "SparkApplication",
+		APIVersion: "sparkoperator.k8s.io/v1beta2",
+	},
 	ObjectMeta: v1.ObjectMeta{
+		Name:      "appName",
 		Namespace: "testNamespace",
+		Labels: map[string]string{
+			domain.GATEWAY_CLUSTER_LABEL: "test-cluster",
+			domain.GATEWAY_USER_LABEL:    "user",
+		},
+		Annotations: map[string]string{
+			domain.GATEWAY_APPLICATION_NAME_ANNOTATION: "appName",
+		},
 	},
 	Spec: v1beta2.SparkApplicationSpec{},
 	Status: v1beta2.SparkApplicationStatus{
-		SubmissionID: "test123",
+		SubmissionID:       "test123",
+		SparkApplicationID: "sparkAppID",
 	},
-}, domain.WithUser(TEST_USER), domain.WithId("clusterid-nsid-testid"))
+}
+
+var expectedSparkApp *v1beta2.SparkApplication = &v1beta2.SparkApplication{
+	TypeMeta: v1.TypeMeta{
+		Kind:       "SparkApplication",
+		APIVersion: "sparkoperator.k8s.io/v1beta2",
+	},
+	ObjectMeta: v1.ObjectMeta{
+		Name:      "clusterid-nsid-uuid",
+		Namespace: "testNamespace",
+		Labels: map[string]string{
+			domain.GATEWAY_CLUSTER_LABEL: "test-cluster",
+			domain.GATEWAY_USER_LABEL:    "user",
+		},
+		Annotations: map[string]string{
+			domain.GATEWAY_APPLICATION_NAME_ANNOTATION: "appName",
+		},
+	},
+	Spec: v1beta2.SparkApplicationSpec{
+		ProxyUser: &TEST_USER,
+	},
+	Status: v1beta2.SparkApplicationStatus{
+		SubmissionID:       "test123",
+		SparkApplicationID: "sparkAppID",
+	},
+}
+
+var expectedGatewayApplication domain.GatewayApplication = domain.GatewayApplication{
+	SparkApplication: domain.GatewaySparkApplication{
+		GatewayApplicationMeta: domain.GatewayApplicationMeta{
+			Kind:       "SparkApplication",
+			APIVersion: "sparkoperator.k8s.io/v1beta2",
+			Name:       "clusterid-nsid-uuid",
+			Namespace:  "testNamespace",
+			Labels: map[string]string{
+				domain.GATEWAY_CLUSTER_LABEL: "test-cluster",
+				domain.GATEWAY_USER_LABEL:    "user",
+			},
+			Annotations: map[string]string{
+				domain.GATEWAY_APPLICATION_NAME_ANNOTATION: "appName",
+			},
+		},
+		Spec: domain.GatewayApplicationSpec{
+			SparkApplicationSpec: v1beta2.SparkApplicationSpec{
+				ProxyUser: &TEST_USER,
+			},
+		},
+		Status: domain.GatewayApplicationStatus{
+			SparkApplicationStatus: v1beta2.SparkApplicationStatus{
+				SubmissionID:       "test123",
+				SparkApplicationID: "sparkAppID",
+			},
+		},
+	},
+	GatewayId: "clusterid-nsid-uuid",
+	Cluster:   "test-cluster",
+	User:      TEST_USER,
+	SparkLogURLs: domain.SparkLogURLs{
+		SparkUI:        "",
+		SparkHistoryUI: "https://spark-history-testNamespace.test.com/history/sparkAppID/jobs",
+		LogsUI:         "https://logs.test.com/app/discover#/?_g=(_a=(interval:auto,query:(language:lucene,query:'host:%20%22clusterid-nsid-uuid-driver%22')",
+	},
+}
 
 var expectedGatewayApplicationSummaries []*domain.GatewayApplicationSummary = []*domain.GatewayApplicationSummary{
-	&domain.GatewayApplicationSummary{
+	{
 		GatewayApplicationMeta: domain.GatewayApplicationMeta{
-			Name:      "clusterid-nsid-testid",
+			Name:      "clusterid-nsid-uuid",
 			Namespace: "testNamespace",
 		},
 		GatewayApplicationStatus: domain.GatewayApplicationStatus{
@@ -84,9 +159,9 @@ var expectedGatewayApplicationSummaries []*domain.GatewayApplicationSummary = []
 			},
 		},
 	},
-	&domain.GatewayApplicationSummary{
+	{
 		GatewayApplicationMeta: domain.GatewayApplicationMeta{
-			Name:      "clusterid-nsid-testid2",
+			Name:      "clusterid-nsid-uuid2",
 			Namespace: "testNamespace",
 		},
 		GatewayApplicationStatus: domain.GatewayApplicationStatus{
@@ -115,7 +190,7 @@ func (s *FailClusterRouter) GetCluster(ctx context.Context, namespace string) (*
 
 // TestGatewayIdGenerator
 func GatewayIdGenerator_Success(cluster domain.KubeCluster, namespace string) (string, error) {
-	return "clusterid-nsid-testid", nil
+	return "clusterid-nsid-uuid", nil
 }
 
 // TestGatewayIdGenerator
@@ -160,8 +235,8 @@ var mockGatewayAppRepository_Success GatewayApplicationRepositoryMock = GatewayA
 	DeleteFunc: func(ctx context.Context, cluster domain.KubeCluster, namespace, name string) error {
 		return nil
 	},
-	GetFunc: func(ctx context.Context, cluster domain.KubeCluster, namespace, name string) (*domain.GatewayApplication, error) {
-		return &expectedGatewayApplication, nil
+	GetFunc: func(ctx context.Context, cluster domain.KubeCluster, namespace, name string) (*v1beta2.SparkApplication, error) {
+		return expectedSparkApp, nil
 	},
 	ListFunc: func(ctx context.Context, cluster domain.KubeCluster, namespace string) ([]*domain.GatewayApplicationSummary, error) {
 		return expectedGatewayApplicationSummaries, nil
@@ -169,8 +244,8 @@ var mockGatewayAppRepository_Success GatewayApplicationRepositoryMock = GatewayA
 	LogsFunc: func(ctx context.Context, cluster domain.KubeCluster, namespace, name string, tailLines int) (*string, error) {
 		return &logString, nil
 	},
-	StatusFunc: func(ctx context.Context, cluster domain.KubeCluster, namespace, name string) (*domain.GatewayApplicationStatus, error) {
-		return &expectedGatewayApplication.SparkApplication.Status, nil
+	StatusFunc: func(ctx context.Context, cluster domain.KubeCluster, namespace, name string) (*v1beta2.SparkApplicationStatus, error) {
+		return &expectedSparkApp.Status, nil
 	},
 }
 
@@ -181,7 +256,7 @@ var mockGatewayAppRepository_Failure GatewayApplicationRepositoryMock = GatewayA
 	DeleteFunc: func(ctx context.Context, cluster domain.KubeCluster, namespace, name string) error {
 		return errors.New("error deleting SparkApp")
 	},
-	GetFunc: func(ctx context.Context, cluster domain.KubeCluster, namespace, name string) (*domain.GatewayApplication, error) {
+	GetFunc: func(ctx context.Context, cluster domain.KubeCluster, namespace, name string) (*v1beta2.SparkApplication, error) {
 		return nil, gatewayerrors.NewNotFound(fmt.Errorf("error getting GatewayApplication '%s/%s'", namespace, name))
 	},
 	ListFunc: func(ctx context.Context, cluster domain.KubeCluster, namespace string) ([]*domain.GatewayApplicationSummary, error) {
@@ -190,7 +265,7 @@ var mockGatewayAppRepository_Failure GatewayApplicationRepositoryMock = GatewayA
 	LogsFunc: func(ctx context.Context, cluster domain.KubeCluster, namespace, name string, tailLines int) (*string, error) {
 		return nil, errors.New("error getting logs")
 	},
-	StatusFunc: func(ctx context.Context, cluster domain.KubeCluster, namespace, name string) (*domain.GatewayApplicationStatus, error) {
+	StatusFunc: func(ctx context.Context, cluster domain.KubeCluster, namespace, name string) (*v1beta2.SparkApplicationStatus, error) {
 		return nil, errors.New("error getting application status:")
 	},
 }
@@ -206,7 +281,7 @@ func TestServiceGet(t *testing.T) {
 		"",
 		GatewayIdGenerator_Success,
 	)
-	gatewayApp, _ := appService.Get(context.Background(), "clusterid-nsid-testid")
+	gatewayApp, _ := appService.Get(context.Background(), "clusterid-nsid-uuid")
 	assert.Equal(t, &expectedGatewayApplication, gatewayApp, "returned GatewayApplication should match")
 }
 
@@ -222,10 +297,10 @@ func TestServiceGetNotFound(t *testing.T) {
 		"",
 		GatewayIdGenerator_Success,
 	)
-	gatewayApp, err := appService.Get(context.Background(), "clusterid-nsid-testid")
+	gatewayApp, err := appService.Get(context.Background(), "clusterid-nsid-uuid")
 
 	assert.Equal(t, (*domain.GatewayApplication)(nil), gatewayApp, "returned GatewayApplication should be nil")
-	assert.Contains(t, err.Error(), "error getting GatewayApplication 'testNamespace/clusterid-nsid-testid'", "error should match")
+	assert.Contains(t, err.Error(), "error getting GatewayApplication 'testNamespace/clusterid-nsid-uuid'", "error should match")
 
 }
 
@@ -281,44 +356,31 @@ func TestListAppRepoFail(t *testing.T) {
 
 	summaries, err := appService.List(context.Background(), "test-cluster", "testNamespace")
 
-	assert.Equal(t, []*domain.GatewayApplicationSummary(nil), summaries, "returned GatewayApplication should be nil")
+	assert.Nil(t, summaries, "returned GatewayApplication should be nil")
 	assert.Contains(t, err.Error(), "error getting applications:", "err should match")
 
 }
 
-func TestServiceCreateNoLabels(t *testing.T) {
+func TestServiceCreateClusterFail(t *testing.T) {
 
 	appService := NewApplicationService(
 		&mockGatewayAppRepository_Success,
 		mockClusterRepo_Success,
-		&SuccessClusterRouter{},
-		&SuccessClusterRouter{},
+		&FailClusterRouter{},
+		&FailClusterRouter{},
 		testGatewayConfig,
 		"",
 		"",
 		GatewayIdGenerator_Success,
 	)
 
-	inApp := &v1beta2.SparkApplication{
-		ObjectMeta: v1.ObjectMeta{
-			Namespace: "testNamespace",
-		},
-		Status: v1beta2.SparkApplicationStatus{
-			SubmissionID: "test123",
-		},
-	}
+	gatewayApp, err := appService.Create(context.Background(), inputSparkApp, TEST_USER)
 
-	testExpectedApp := expectedGatewayApplication
-	testExpectedApp.SparkLogURLs.SparkHistoryUI = "https://spark-history-testNamespace.test.com/history//jobs"
-	testExpectedApp.SparkLogURLs.LogsUI = "https://logs.test.com/app/discover#/?_g=(_a=(interval:auto,query:(language:lucene,query:'host:%20%22clusterid-nsid-testid-driver%22')"
-
-	gatewayApp, err := appService.Create(context.Background(), inApp, TEST_USER)
-
-	assert.Equal(t, &testExpectedApp, gatewayApp, "returned GatewayApplication should match")
-	assert.Equal(t, nil, err, "err should be nil")
+	assert.Nil(t, gatewayApp, "returned GatewayApplication should be nil")
+	assert.Contains(t, err.Error(), "error getting routing cluster:", "err should match")
 }
 
-func TestServiceCreateLabelsExist(t *testing.T) {
+func TestServiceCreateGenIDFail(t *testing.T) {
 
 	appService := NewApplicationService(
 		&mockGatewayAppRepository_Success,
@@ -328,34 +390,35 @@ func TestServiceCreateLabelsExist(t *testing.T) {
 		testGatewayConfig,
 		"",
 		"",
-		GatewayIdGenerator_Success,
+		GatewayIdGenerator_Failure,
 	)
 
-	inApp := &v1beta2.SparkApplication{
-		ObjectMeta: v1.ObjectMeta{
-			Namespace: "testNamespace",
-			Labels: map[string]string{
-				"test": "label1",
-			},
-		},
-		Status: v1beta2.SparkApplicationStatus{
-			SubmissionID: "test123",
-		},
-	}
+	gatewayApp, err := appService.Create(context.Background(), inputSparkApp, TEST_USER)
 
-	testExpectedApp := expectedGatewayApplication
-	testExpectedApp.SparkApplication.Labels["test"] = "label1"
-
-	testExpectedApp.SparkLogURLs.SparkHistoryUI = "https://spark-history-testNamespace.test.com/history//jobs"
-	testExpectedApp.SparkLogURLs.LogsUI = "https://logs.test.com/app/discover#/?_g=(_a=(interval:auto,query:(language:lucene,query:'host:%20%22clusterid-nsid-testid-driver%22')"
-
-	gatewayApp, err := appService.Create(context.Background(), inApp, TEST_USER)
-
-	assert.Equal(t, &testExpectedApp, gatewayApp, "returned GatewayApplication should match")
-	assert.Equal(t, nil, err, "err should be nil")
+	assert.Nil(t, gatewayApp, "returned GatewayApplication should be nil")
+	assert.Contains(t, err.Error(), "error generating GatewayId for GatewayApplication:", "err should match")
 }
 
-func TestServiceCreateNoName(t *testing.T) {
+func TestServiceCreateRepoFail(t *testing.T) {
+
+	appService := NewApplicationService(
+		&mockGatewayAppRepository_Failure,
+		mockClusterRepo_Success,
+		&SuccessClusterRouter{},
+		&SuccessClusterRouter{},
+		testGatewayConfig,
+		"",
+		"",
+		GatewayIdGenerator_Success,
+	)
+
+	gatewayApp, err := appService.Create(context.Background(), inputSparkApp, TEST_USER)
+
+	assert.Nil(t, gatewayApp, "returned GatewayApplication should be nil")
+	assert.Contains(t, err.Error(), "error creating GatewayApplication 'testNamespace/clusterid-nsid-uuid':", "err should match")
+}
+
+func TestServiceCreateRepoSuccess(t *testing.T) {
 
 	appService := NewApplicationService(
 		&mockGatewayAppRepository_Success,
@@ -368,48 +431,10 @@ func TestServiceCreateNoName(t *testing.T) {
 		GatewayIdGenerator_Success,
 	)
 
-	inApp := &v1beta2.SparkApplication{
-		ObjectMeta: v1.ObjectMeta{
-			Namespace: "testNamespace",
-		},
-		Status: v1beta2.SparkApplicationStatus{
-			SubmissionID: "test123",
-		},
-	}
+	gatewayApp, err := appService.Create(context.Background(), inputSparkApp, TEST_USER)
 
-	var user string = "user"
-
-	expected := domain.GatewayApplication{
-		User:      user,
-		GatewayId: "clusterid-nsid-testid",
-		SparkApplication: domain.GatewaySparkApplication{
-			GatewayApplicationMeta: domain.GatewayApplicationMeta{
-				Name:      "clusterid-nsid-testid",
-				Namespace: "testNamespace",
-				Labels: map[string]string{
-					domain.GATEWAY_USER_LABEL: "user",
-				},
-				Annotations: map[string]string{},
-			},
-			Spec: domain.GatewayApplicationSpec{
-				SparkApplicationSpec: v1beta2.SparkApplicationSpec{
-					ProxyUser: &user,
-				},
-			},
-			Status: domain.GatewayApplicationStatus{
-				SparkApplicationStatus: v1beta2.SparkApplicationStatus{
-					SubmissionID: "test123",
-				},
-			},
-		},
-	}
-
-	expected.SparkLogURLs.SparkHistoryUI = "https://spark-history-testNamespace.test.com/history//jobs"
-	expected.SparkLogURLs.LogsUI = "https://logs.test.com/app/discover#/?_g=(_a=(interval:auto,query:(language:lucene,query:'host:%20%22clusterid-nsid-testid-driver%22')"
-
-	gatewayApp, err := appService.Create(context.Background(), inApp, TEST_USER)
-	assert.Equal(t, &expected, gatewayApp, "returned GatewayApplication should match")
-	assert.Equal(t, nil, err, "err should be nil")
+	assert.Equal(t, &expectedGatewayApplication, gatewayApp, "returned GatewayApplication should match")
+	assert.Nil(t, err, "err should be nil")
 }
 
 func TestServiceCreateRoutingError(t *testing.T) {
@@ -464,13 +489,9 @@ func TestServiceStatus(t *testing.T) {
 		GatewayIdGenerator_Failure,
 	)
 
-	expected := &domain.GatewayApplicationStatus{SparkApplicationStatus: v1beta2.SparkApplicationStatus{
-		SubmissionID: "test123",
-	}}
+	gotStatus, _ := appService.Status(context.Background(), "clusterid-nsid-uuid")
 
-	resp, _ := appService.Status(context.Background(), "clusterid-nsid-testid")
-
-	assert.Equal(t, expected, resp, "returned response should match")
+	assert.Equal(t, &expectedGatewayApplication.SparkApplication.Status, gotStatus, "returned response should match")
 }
 
 func TestServiceBadStatus(t *testing.T) {
@@ -485,7 +506,7 @@ func TestServiceBadStatus(t *testing.T) {
 		GatewayIdGenerator_Failure,
 	)
 
-	gatewayApp, err := appService.Status(context.Background(), "clusterid-nsid-testid")
+	gatewayApp, err := appService.Status(context.Background(), "clusterid-nsid-uuid")
 
 	assert.Equal(t, (*domain.GatewayApplicationStatus)(nil), gatewayApp, "returned GatewayApplication should be nil")
 	assert.Contains(t, err.Error(), "error getting status for GatewayApplication", "err should match")
@@ -503,7 +524,7 @@ func TestServiceLogs(t *testing.T) {
 		GatewayIdGenerator_Failure,
 	)
 
-	gatewayLogs, _ := appService.Logs(context.Background(), "clusterid-nsid-testid", 100)
+	gatewayLogs, _ := appService.Logs(context.Background(), "clusterid-nsid-uuid", 100)
 
 	assert.Equal(t, &logString, gatewayLogs, "returned Gateway logs should be same")
 }
@@ -520,7 +541,7 @@ func TestServiceBadLogs(t *testing.T) {
 		GatewayIdGenerator_Failure,
 	)
 
-	gatewayLogs, err := appService.Logs(context.Background(), "clusterid-nsid-testid", 100)
+	gatewayLogs, err := appService.Logs(context.Background(), "clusterid-nsid-uuid", 100)
 
 	assert.Equal(t, (*string)(nil), gatewayLogs, "returned logs should be nil")
 	assert.Contains(t, err.Error(), "error getting logs for GatewayApplication", "err should match")
@@ -537,6 +558,29 @@ func TestServiceDeleteError(t *testing.T) {
 		"",
 		GatewayIdGenerator_Failure,
 	)
-	assert.Contains(t, appService.Delete(context.Background(), "clusterid-nsid-testid").Error(), "error deleting GatewayApplication 'clusterid-nsid-testid': error deleting SparkApp", "errors should match")
+	assert.Contains(t, appService.Delete(context.Background(), "clusterid-nsid-uuid").Error(), "error deleting GatewayApplication 'clusterid-nsid-uuid': error deleting SparkApp", "errors should match")
 
+}
+
+func TestRenderURLs(t *testing.T) {
+	urlTemplates := domain.StatusUrlTemplates{
+		SparkUITemplate:        "host.com/ui/{{.Namespace}}/{{.Name}}",
+		SparkHistoryUITemplate: "host.com/history/ui/{{.Namespace}}/{{.Name}}",
+		LogsUITemplate:         "host.com/logs/ui/{{.Namespace}}/{{.Name}}",
+	}
+
+	gaSparkApp := domain.GatewaySparkApplication{
+		GatewayApplicationMeta: domain.GatewayApplicationMeta{
+			Name:      "clusterid-nsid-uuid",
+			Namespace: "namespace",
+		},
+	}
+
+	expected := domain.SparkLogURLs{
+		SparkUI:        "host.com/ui/namespace/clusterid-nsid-uuid",
+		SparkHistoryUI: "host.com/history/ui/namespace/clusterid-nsid-uuid",
+		LogsUI:         "host.com/logs/ui/namespace/clusterid-nsid-uuid",
+	}
+
+	assert.Equal(t, expected, GetRenderedURLs(urlTemplates, &gaSparkApp))
 }

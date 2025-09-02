@@ -26,11 +26,19 @@ import (
 )
 
 const GATEWAY_USER_LABEL = "spark-gateway/user"
+const GATEWAY_CLUSTER_LABEL = "spark-gateway/cluster"
+const GATEWAY_APPLICATION_NAME_ANNOTATION = "applicationName"
 
 type StatusUrlTemplates struct {
-	SparkUI        string `koanf:"sparkUI"`
-	SparkHistoryUI string `koanf:"sparkHistoryUI"`
-	LogsUI         string `koanf:"logsUI"`
+	SparkUITemplate        string `koanf:"sparkUI"`
+	SparkHistoryUITemplate string `koanf:"sparkHistoryUI"`
+	LogsUITemplate         string `koanf:"logsUI"`
+}
+
+type SparkLogURLs struct {
+	SparkUI        string `json:"sparkUI"`
+	SparkHistoryUI string `json:"sparkHistoryUI"`
+	LogsUI         string `json:"logsUI"`
 }
 
 // Most models here are simply wrappers for corresponding v1beta2 types with some fields removed or defaulted. These will most likely need
@@ -55,18 +63,33 @@ type GatewayApplicationSpec struct {
 }
 
 type GatewayApplicationMeta struct {
+	Kind        string            `json:"kind"`
+	APIVersion  string            `json:"apiVersion"`
 	Name        string            `json:"name"`
 	Namespace   string            `json:"namespace"`
 	Labels      map[string]string `json:"labels"`
 	Annotations map[string]string `json:"annotations"`
 }
 
-func NewGatewayApplicationMeta(appMeta metav1.ObjectMeta) *GatewayApplicationMeta {
+func NewGatewayApplicationMeta(appMeta metav1.ObjectMeta, appType metav1.TypeMeta) *GatewayApplicationMeta {
+	// Default labels and annotations because these can be nil
+	annotations := map[string]string{}
+	labels := map[string]string{}
+	if appMeta.Annotations != nil {
+		annotations = appMeta.Annotations
+	}
+
+	if appMeta.Labels != nil {
+		labels = appMeta.Labels
+	}
+
 	return &GatewayApplicationMeta{
+		Kind:        appType.Kind,
+		APIVersion:  appType.APIVersion,
 		Name:        appMeta.Name,
 		Namespace:   appMeta.Namespace,
-		Annotations: appMeta.Annotations,
-		Labels:      appMeta.Labels,
+		Annotations: annotations,
+		Labels:      labels,
 	}
 }
 
@@ -80,7 +103,7 @@ type GatewayApplicationSummary struct {
 func NewGatewayApplicationSummary(sparkApp *v1beta2.SparkApplication, cluster string) *GatewayApplicationSummary {
 	return &GatewayApplicationSummary{
 		// Name should always be GatewayId due to model mappings etc.
-		GatewayApplicationMeta:   *NewGatewayApplicationMeta(sparkApp.ObjectMeta),
+		GatewayApplicationMeta:   *NewGatewayApplicationMeta(sparkApp.ObjectMeta, sparkApp.TypeMeta),
 		GatewayApplicationStatus: *NewGatewayApplicationStatus(sparkApp.Status),
 		GatewayId:                sparkApp.Name,
 		Cluster:                  cluster,
@@ -95,6 +118,10 @@ type GatewaySparkApplication struct {
 
 func (gsa *GatewaySparkApplication) ToV1Beta2SparkApplication() *v1beta2.SparkApplication {
 	return &v1beta2.SparkApplication{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "SparkApplication",
+			APIVersion: "sparkoperator.k8s.io/v1beta2",
+		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:        gsa.Name,
 			Namespace:   gsa.Namespace,
@@ -106,9 +133,26 @@ func (gsa *GatewaySparkApplication) ToV1Beta2SparkApplication() *v1beta2.SparkAp
 	}
 }
 
+func NewGatewaySparkApplication(sparkApp *v1beta2.SparkApplication, opts ...func(*GatewaySparkApplication)) *GatewaySparkApplication {
+
+	gaSparkApp := &GatewaySparkApplication{
+		GatewayApplicationMeta: *NewGatewayApplicationMeta(sparkApp.ObjectMeta, sparkApp.TypeMeta),
+		Spec:                   GatewayApplicationSpec{SparkApplicationSpec: sparkApp.Spec},
+		Status:                 *NewGatewayApplicationStatus(sparkApp.Status),
+	}
+
+	// Apply opts
+	for _, o := range opts {
+		o(gaSparkApp)
+	}
+
+	return gaSparkApp
+
+}
+
 func GatewaySparkApplicationFromV1Beta2SparkApplication(sparkApp v1beta2.SparkApplication) *GatewaySparkApplication {
 	return &GatewaySparkApplication{
-		GatewayApplicationMeta: *NewGatewayApplicationMeta(sparkApp.ObjectMeta),
+		GatewayApplicationMeta: *NewGatewayApplicationMeta(sparkApp.ObjectMeta, sparkApp.TypeMeta),
 		Spec:                   GatewayApplicationSpec{SparkApplicationSpec: sparkApp.Spec},
 		Status:                 *NewGatewayApplicationStatus(sparkApp.Status),
 	}
@@ -119,77 +163,53 @@ type GatewayApplication struct {
 	GatewayId        string                  `json:"gatewayId"`
 	Cluster          string                  `json:"cluster"`
 	User             string                  `json:"user"`
-	SparkLogURLs     StatusUrlTemplates      `json:"sparkLogURLs"`
+	SparkLogURLs     SparkLogURLs            `json:"sparkLogURLs"`
 }
 
-// NewGatewayApplication will return a new GatewayApplication by first mapping the input v1beta2.SparkApplication and then applying any
-// opt functions to the mapped application
-func NewGatewayApplication(sparkApp *v1beta2.SparkApplication, opts ...func(*GatewayApplication)) *GatewayApplication {
+func GatewayApplicationFromV1Beta2SparkApplication(sparkApp *v1beta2.SparkApplication) *GatewayApplication {
+	gatewayId := sparkApp.Name
+	appUser := sparkApp.Labels[GATEWAY_USER_LABEL]
+	cluster := sparkApp.Labels[GATEWAY_CLUSTER_LABEL]
 
-	// Default labels and annotations
-	annotations := map[string]string{}
-	labels := map[string]string{}
-	if sparkApp.Annotations != nil {
-		annotations = sparkApp.Annotations
-	}
-
-	if sparkApp.Labels != nil {
-		labels = sparkApp.Labels
-	}
-
-	status := GatewayApplicationStatus{SparkApplicationStatus: sparkApp.Status}
-	status.ExecutorState = nil
-
-	gaSparkApp := GatewaySparkApplication{
-		GatewayApplicationMeta: GatewayApplicationMeta{
-			Namespace:   sparkApp.Namespace,
-			Annotations: annotations,
-			Labels:      labels,
-		},
-		Spec:   GatewayApplicationSpec{SparkApplicationSpec: sparkApp.Spec},
-		Status: status,
-	}
-
-	// If the application already has a name, we set it as an annotation because
-	// all GatewayApplication names are GatewayIds
-	if sparkApp.ObjectMeta.Name != "" {
-		gaSparkApp.Annotations["applicationName"] = sparkApp.Name
-	}
-
-	gatewayApp := GatewayApplication{
-		SparkApplication: gaSparkApp,
-	}
-
-	// Apply opts
-	for _, o := range opts {
-		o(&gatewayApp)
-	}
-
-	return &gatewayApp
-
-}
-
-func WithUser(user string) func(*GatewayApplication) {
-	return func(ga *GatewayApplication) {
-		ga.User = user
-		ga.SparkApplication.Labels[GATEWAY_USER_LABEL] = user
-		ga.SparkApplication.Spec.ProxyUser = &user
+	return &GatewayApplication{
+		SparkApplication: *GatewaySparkApplicationFromV1Beta2SparkApplication(*sparkApp),
+		GatewayId:        gatewayId,
+		Cluster:          cluster,
+		User:             appUser,
 	}
 }
 
-func WithSelector(selectorMap map[string]string) func(*GatewayApplication) {
-	return func(ga *GatewayApplication) {
+func WithUser(user string) func(*GatewaySparkApplication) {
+	return func(gsa *GatewaySparkApplication) {
+		gsa.Labels[GATEWAY_USER_LABEL] = user
+		gsa.Spec.ProxyUser = &user
+	}
+}
+
+func WithCluster(cluster string) func(*GatewaySparkApplication) {
+	return func(gsa *GatewaySparkApplication) {
+		gsa.Labels[GATEWAY_CLUSTER_LABEL] = cluster
+	}
+}
+
+func WithSelector(selectorMap map[string]string) func(*GatewaySparkApplication) {
+	return func(gsa *GatewaySparkApplication) {
 		// Add selector values if they exist
 		if len(selectorMap) != 0 {
-			ga.SparkApplication.Labels = util.MergeMaps(ga.SparkApplication.Labels, selectorMap)
+			gsa.Labels = util.MergeMaps(gsa.Labels, selectorMap)
 		}
 	}
 }
 
-func WithId(gatewayId string) func(*GatewayApplication) {
-	return func(ga *GatewayApplication) {
-		ga.GatewayId = gatewayId
-		ga.SparkApplication.Name = gatewayId
+func WithId(gatewayId string) func(*GatewaySparkApplication) {
+	return func(gsa *GatewaySparkApplication) {
+		// If the application already has a name, we set it as an annotation because
+		// all GatewayApplication names are GatewayIds
+		if gsa.Name != "" {
+			gsa.Annotations[GATEWAY_APPLICATION_NAME_ANNOTATION] = gsa.Name
+		}
+
+		gsa.Name = gatewayId
 	}
 }
 

@@ -37,9 +37,9 @@ type GatewayIdGenerator func(cluster domain.KubeCluster, namespace string) (stri
 //go:generate moq -rm  -out mocksparkapplicationrepository.go . GatewayApplicationRepository
 
 type GatewayApplicationRepository interface {
-	Get(ctx context.Context, cluster domain.KubeCluster, namespace string, name string) (*domain.GatewayApplication, error)
+	Get(ctx context.Context, cluster domain.KubeCluster, namespace string, name string) (*v1beta2.SparkApplication, error)
 	List(ctx context.Context, cluster domain.KubeCluster, namespace string) ([]*domain.GatewayApplicationSummary, error)
-	Status(ctx context.Context, cluster domain.KubeCluster, namespace string, name string) (*domain.GatewayApplicationStatus, error)
+	Status(ctx context.Context, cluster domain.KubeCluster, namespace string, name string) (*v1beta2.SparkApplicationStatus, error)
 	Logs(ctx context.Context, cluster domain.KubeCluster, namespace string, name string, tailLines int) (*string, error)
 	Create(ctx context.Context, cluster domain.KubeCluster, application *v1beta2.SparkApplication) (*v1beta2.SparkApplication, error)
 	Delete(ctx context.Context, cluster domain.KubeCluster, namespace string, name string) error
@@ -113,11 +113,13 @@ func (s *service) Get(ctx context.Context, gatewayId string) (*domain.GatewayApp
 		return nil, err
 	}
 
-	gatewayApp, err := s.gatewayAppRepo.Get(ctx, *cluster, namespace, gatewayId)
+	sparkApp, err := s.gatewayAppRepo.Get(ctx, *cluster, namespace, gatewayId)
 
 	if err != nil {
 		return nil, fmt.Errorf("error getting GatewayApplication '%s': %w", gatewayId, err)
 	}
+
+	gatewayApp := domain.GatewayApplicationFromV1Beta2SparkApplication(sparkApp)
 
 	// Set log URLs
 	gatewayApp.SparkLogURLs = GetRenderedURLs(s.config.StatusUrlTemplates, &gatewayApp.SparkApplication)
@@ -187,15 +189,15 @@ func (s *service) Create(ctx context.Context, application *v1beta2.SparkApplicat
 		selectorMap[s.selectorKey] = s.selectorValue
 	}
 
-	gatewayApp := domain.NewGatewayApplication(application, domain.WithUser(user), domain.WithSelector(selectorMap), domain.WithId(gatewayId))
+	gaSparkApp := domain.NewGatewaySparkApplication(application, domain.WithCluster(cluster.Name), domain.WithUser(user), domain.WithSelector(selectorMap), domain.WithId(gatewayId))
 
 	// Create SparkApp
-	createdApp, err := s.gatewayAppRepo.Create(ctx, *cluster, gatewayApp.SparkApplication.ToV1Beta2SparkApplication())
+	createdApp, err := s.gatewayAppRepo.Create(ctx, *cluster, gaSparkApp.ToV1Beta2SparkApplication())
 	if err != nil {
-		return nil, fmt.Errorf("error creating GatewayApplication '%s/%s': %w", gatewayApp.SparkApplication.Namespace, gatewayApp.SparkApplication.Name, err)
+		return nil, fmt.Errorf("error creating GatewayApplication '%s/%s': %w", gaSparkApp.Namespace, gaSparkApp.Name, err)
 	}
 
-	gatewayApp.SparkApplication = *domain.GatewaySparkApplicationFromV1Beta2SparkApplication(*createdApp)
+	gatewayApp := domain.GatewayApplicationFromV1Beta2SparkApplication(createdApp)
 
 	// Set log URLs
 	gatewayApp.SparkLogURLs = GetRenderedURLs(s.config.StatusUrlTemplates, &gatewayApp.SparkApplication)
@@ -209,12 +211,12 @@ func (s *service) Status(ctx context.Context, gatewayId string) (*domain.Gateway
 		return nil, err
 	}
 
-	gatewayApp, err := s.gatewayAppRepo.Get(ctx, *cluster, namespace, gatewayId)
+	sparkAppStatus, err := s.gatewayAppRepo.Status(ctx, *cluster, namespace, gatewayId)
 	if err != nil {
 		return nil, fmt.Errorf("error getting status for GatewayApplication '%s': %w", gatewayId, err)
 	}
 
-	return &gatewayApp.SparkApplication.Status, nil
+	return domain.NewGatewayApplicationStatus(*sparkAppStatus), nil
 }
 
 func (s *service) Logs(ctx context.Context, gatewayId string, tailLines int) (*string, error) {
@@ -244,27 +246,27 @@ func (s *service) Delete(ctx context.Context, gatewayId string) error {
 	return nil
 }
 
-func GetRenderedURLs(templates domain.StatusUrlTemplates, gaSparkApp *domain.GatewaySparkApplication) domain.StatusUrlTemplates {
+func GetRenderedURLs(templates domain.StatusUrlTemplates, gaSparkApp *domain.GatewaySparkApplication) domain.SparkLogURLs {
 	// Render URLs
-	sparkUI, err := util.RenderTemplate(templates.SparkUI, gaSparkApp)
+	sparkUI, err := util.RenderTemplate(templates.SparkUITemplate, gaSparkApp)
 	if err != nil {
 		klog.Errorf("unable to render SparkUI template: %v", err)
 		sparkUI = new(string)
 	}
 
-	logsUI, err := util.RenderTemplate(templates.LogsUI, gaSparkApp)
+	logsUI, err := util.RenderTemplate(templates.LogsUITemplate, gaSparkApp)
 	if err != nil {
 		klog.Errorf("unable to render LogsUI template: %v", err)
 		logsUI = new(string)
 	}
 
-	sparkHistoryUI, err := util.RenderTemplate(templates.SparkHistoryUI, gaSparkApp)
+	sparkHistoryUI, err := util.RenderTemplate(templates.SparkHistoryUITemplate, gaSparkApp)
 	if err != nil {
 		klog.Errorf("unable to render SparkHistoryUI template: %v", err)
 		sparkHistoryUI = new(string)
 	}
 
-	return domain.StatusUrlTemplates{
+	return domain.SparkLogURLs{
 		SparkUI:        *sparkUI,
 		LogsUI:         *logsUI,
 		SparkHistoryUI: *sparkHistoryUI,

@@ -26,7 +26,7 @@ var _ GatewayApplicationRepository = &GatewayApplicationRepositoryMock{}
 //			DeleteFunc: func(ctx context.Context, cluster domain.KubeCluster, namespace string, name string) error {
 //				panic("mock out the Delete method")
 //			},
-//			GetFunc: func(ctx context.Context, cluster domain.KubeCluster, namespace string, name string) (*domain.GatewayApplication, error) {
+//			GetFunc: func(ctx context.Context, cluster domain.KubeCluster, namespace string, name string) (*v1beta2.SparkApplication, error) {
 //				panic("mock out the Get method")
 //			},
 //			ListFunc: func(ctx context.Context, cluster domain.KubeCluster, namespace string) ([]*domain.GatewayApplicationSummary, error) {
@@ -35,7 +35,7 @@ var _ GatewayApplicationRepository = &GatewayApplicationRepositoryMock{}
 //			LogsFunc: func(ctx context.Context, cluster domain.KubeCluster, namespace string, name string, tailLines int) (*string, error) {
 //				panic("mock out the Logs method")
 //			},
-//			StatusFunc: func(ctx context.Context, cluster domain.KubeCluster, namespace string, name string) (*domain.GatewayApplicationStatus, error) {
+//			StatusFunc: func(ctx context.Context, cluster domain.KubeCluster, namespace string, name string) (*v1beta2.SparkApplicationStatus, error) {
 //				panic("mock out the Status method")
 //			},
 //		}
@@ -52,7 +52,7 @@ type GatewayApplicationRepositoryMock struct {
 	DeleteFunc func(ctx context.Context, cluster domain.KubeCluster, namespace string, name string) error
 
 	// GetFunc mocks the Get method.
-	GetFunc func(ctx context.Context, cluster domain.KubeCluster, namespace string, name string) (*domain.GatewayApplication, error)
+	GetFunc func(ctx context.Context, cluster domain.KubeCluster, namespace string, name string) (*v1beta2.SparkApplication, error)
 
 	// ListFunc mocks the List method.
 	ListFunc func(ctx context.Context, cluster domain.KubeCluster, namespace string) ([]*domain.GatewayApplicationSummary, error)
@@ -61,7 +61,7 @@ type GatewayApplicationRepositoryMock struct {
 	LogsFunc func(ctx context.Context, cluster domain.KubeCluster, namespace string, name string, tailLines int) (*string, error)
 
 	// StatusFunc mocks the Status method.
-	StatusFunc func(ctx context.Context, cluster domain.KubeCluster, namespace string, name string) (*domain.GatewayApplicationStatus, error)
+	StatusFunc func(ctx context.Context, cluster domain.KubeCluster, namespace string, name string) (*v1beta2.SparkApplicationStatus, error)
 
 	// calls tracks calls to the methods.
 	calls struct {
@@ -223,7 +223,7 @@ func (mock *GatewayApplicationRepositoryMock) DeleteCalls() []struct {
 }
 
 // Get calls GetFunc.
-func (mock *GatewayApplicationRepositoryMock) Get(ctx context.Context, cluster domain.KubeCluster, namespace string, name string) (*domain.GatewayApplication, error) {
+func (mock *GatewayApplicationRepositoryMock) Get(ctx context.Context, cluster domain.KubeCluster, namespace string, name string) (*v1beta2.SparkApplication, error) {
 	if mock.GetFunc == nil {
 		panic("GatewayApplicationRepositoryMock.GetFunc: method is nil but GatewayApplicationRepository.Get was just called")
 	}
@@ -355,7 +355,7 @@ func (mock *GatewayApplicationRepositoryMock) LogsCalls() []struct {
 }
 
 // Status calls StatusFunc.
-func (mock *GatewayApplicationRepositoryMock) Status(ctx context.Context, cluster domain.KubeCluster, namespace string, name string) (*domain.GatewayApplicationStatus, error) {
+func (mock *GatewayApplicationRepositoryMock) Status(ctx context.Context, cluster domain.KubeCluster, namespace string, name string) (*v1beta2.SparkApplicationStatus, error) {
 	if mock.StatusFunc == nil {
 		panic("GatewayApplicationRepositoryMock.StatusFunc: method is nil but GatewayApplicationRepository.Status was just called")
 	}
