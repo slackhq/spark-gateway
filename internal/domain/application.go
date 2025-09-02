@@ -150,35 +150,6 @@ func NewGatewaySparkApplication(sparkApp *v1beta2.SparkApplication, opts ...func
 
 }
 
-func GatewaySparkApplicationFromV1Beta2SparkApplication(sparkApp v1beta2.SparkApplication) *GatewaySparkApplication {
-	return &GatewaySparkApplication{
-		GatewayApplicationMeta: *NewGatewayApplicationMeta(sparkApp.ObjectMeta, sparkApp.TypeMeta),
-		Spec:                   GatewayApplicationSpec{SparkApplicationSpec: sparkApp.Spec},
-		Status:                 *NewGatewayApplicationStatus(sparkApp.Status),
-	}
-}
-
-type GatewayApplication struct {
-	SparkApplication GatewaySparkApplication `json:"sparkApplication"`
-	GatewayId        string                  `json:"gatewayId"`
-	Cluster          string                  `json:"cluster"`
-	User             string                  `json:"user"`
-	SparkLogURLs     SparkLogURLs            `json:"sparkLogURLs"`
-}
-
-func GatewayApplicationFromV1Beta2SparkApplication(sparkApp *v1beta2.SparkApplication) *GatewayApplication {
-	gatewayId := sparkApp.Name
-	appUser := sparkApp.Labels[GATEWAY_USER_LABEL]
-	cluster := sparkApp.Labels[GATEWAY_CLUSTER_LABEL]
-
-	return &GatewayApplication{
-		SparkApplication: *GatewaySparkApplicationFromV1Beta2SparkApplication(*sparkApp),
-		GatewayId:        gatewayId,
-		Cluster:          cluster,
-		User:             appUser,
-	}
-}
-
 func WithUser(user string) func(*GatewaySparkApplication) {
 	return func(gsa *GatewaySparkApplication) {
 		gsa.Labels[GATEWAY_USER_LABEL] = user
@@ -210,6 +181,27 @@ func WithId(gatewayId string) func(*GatewaySparkApplication) {
 		}
 
 		gsa.Name = gatewayId
+	}
+}
+
+type GatewayApplication struct {
+	SparkApplication GatewaySparkApplication `json:"sparkApplication"`
+	GatewayId        string                  `json:"gatewayId"`
+	Cluster          string                  `json:"cluster"`
+	User             string                  `json:"user"`
+	SparkLogURLs     SparkLogURLs            `json:"sparkLogURLs"`
+}
+
+func GatewayApplicationFromV1Beta2SparkApplication(sparkApp *v1beta2.SparkApplication) *GatewayApplication {
+	gatewayId := sparkApp.Name
+	appUser := sparkApp.Labels[GATEWAY_USER_LABEL]
+	cluster := sparkApp.Labels[GATEWAY_CLUSTER_LABEL]
+
+	return &GatewayApplication{
+		SparkApplication: *NewGatewaySparkApplication(sparkApp),
+		GatewayId:        gatewayId,
+		Cluster:          cluster,
+		User:             appUser,
 	}
 }
 
