@@ -27,7 +27,7 @@ jobs:
           set -eu
           
           go install github.com/swaggo/swag/cmd/swag@latest
-          SWAG_INIT_CMD="swag init -d ./internal/gateway/application/handler/ -g handler.go -o ./docs/swagger --parseDependency --parseInternal"
+          SWAG_INIT_CMD="swag init -d ./internal/gateway/api/v1/kubeflow -g application_handler.go -o ./docs/swagger --parseDependency --parseInternal"
           eval "$SWAG_INIT_CMD"
           
           # Check diff

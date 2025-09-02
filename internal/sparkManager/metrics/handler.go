@@ -23,11 +23,10 @@ import (
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/slackhq/spark-gateway/internal/shared/config"
 	"k8s.io/klog/v2"
 
 	"github.com/prometheus/client_golang/prometheus"
-
-	"github.com/slackhq/spark-gateway/pkg/config"
 )
 
 type Service interface {
