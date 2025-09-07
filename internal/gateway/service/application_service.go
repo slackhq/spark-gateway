@@ -149,7 +149,7 @@ func (s *service) List(ctx context.Context, cluster string, namespace string) ([
 		}
 	}
 
-	var appSummaryList []*domain.GatewayApplicationSummary
+	appSummaryList := []*domain.GatewayApplicationSummary{}
 	for _, ns := range namespaces {
 		nsAppSummaries, err := s.gatewayAppRepo.List(ctx, *kubeCluster, ns)
 		if err != nil {
