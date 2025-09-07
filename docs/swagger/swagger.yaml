@@ -18,10 +18,6 @@ definitions:
         additionalProperties:
           type: string
         type: object
-      apiVersion:
-        type: string
-      kind:
-        type: string
       labels:
         additionalProperties:
           type: string
@@ -31,277 +27,61 @@ definitions:
       namespace:
         type: string
     type: object
-  domain.GatewayApplicationSpec:
-    properties:
-      arguments:
-        description: |-
-          Arguments is a list of arguments to be passed to the application.
-          +optional
-        items:
-          type: string
-        type: array
-      batchScheduler:
-        description: |-
-          BatchScheduler configures which batch scheduler will be used for scheduling
-          +optional
-        type: string
-      batchSchedulerOptions:
-        allOf:
-        - $ref: '#/definitions/v1beta2.BatchSchedulerConfiguration'
-        description: |-
-          BatchSchedulerOptions provides fine-grained control on how to batch scheduling.
-          +optional
-      deps:
-        allOf:
-        - $ref: '#/definitions/v1beta2.Dependencies'
-        description: |-
-          Deps captures all possible types of dependencies of a Spark application.
-          +optional
-      driver:
-        allOf:
-        - $ref: '#/definitions/v1beta2.DriverSpec'
-        description: Driver is the driver specification.
-      driverIngressOptions:
-        description: |-
-          DriverIngressOptions allows configuring the Service and the Ingress to expose ports inside Spark Driver
-          +optional
-        items:
-          $ref: '#/definitions/v1beta2.DriverIngressConfiguration'
-        type: array
-      dynamicAllocation:
-        allOf:
-        - $ref: '#/definitions/v1beta2.DynamicAllocation'
-        description: |-
-          DynamicAllocation configures dynamic allocation that becomes available for the Kubernetes
-          scheduler backend since Spark 3.0.
-          +optional
-      executor:
-        allOf:
-        - $ref: '#/definitions/v1beta2.ExecutorSpec'
-        description: Executor is the executor specification.
-      failureRetries:
-        description: |-
-          FailureRetries is the number of times to retry a failed application before giving up.
-          This is best effort and actual retry attempts can be >= the value specified.
-          +optional
-        type: integer
-      hadoopConf:
-        additionalProperties:
-          type: string
-        description: |-
-          HadoopConf carries user-specified Hadoop configuration properties as they would use the "--conf" option
-          in spark-submit. The SparkApplication controller automatically adds prefix "spark.hadoop." to Hadoop
-          configuration properties.
-          +optional
-        type: object
-      hadoopConfigMap:
-        description: |-
-          HadoopConfigMap carries the name of the ConfigMap containing Hadoop configuration files such as core-site.xml.
-          The controller will add environment variable HADOOP_CONF_DIR to the path where the ConfigMap is mounted to.
-          +optional
-        type: string
-      image:
-        description: |-
-          Image is the container image for the driver, executor, and init-container. Any custom container images for the
-          driver, executor, or init-container takes precedence over this.
-          +optional
-        type: string
-      imagePullPolicy:
-        description: |-
-          ImagePullPolicy is the image pull policy for the driver, executor, and init-container.
-          +optional
-        type: string
-      imagePullSecrets:
-        description: |-
-          ImagePullSecrets is the list of image-pull secrets.
-          +optional
-        items:
-          type: string
-        type: array
-      mainApplicationFile:
-        description: MainFile is the path to a bundled JAR, Python, or R file of the
-          application.
-        type: string
-      mainClass:
-        description: |-
-          MainClass is the fully-qualified main class of the Spark application.
-          This only applies to Java/Scala Spark applications.
-          +optional
-        type: string
-      memoryOverheadFactor:
-        description: |-
-          This sets the Memory Overhead Factor that will allocate memory to non-JVM memory.
-          For JVM-based jobs this value will default to 0.10, for non-JVM jobs 0.40. Value of this field will
-          be overridden by `Spec.Driver.MemoryOverhead` and `Spec.Executor.MemoryOverhead` if they are set.
-          +optional
-        type: string
-      mode:
-        allOf:
-        - $ref: '#/definitions/v1beta2.DeployMode'
-        description: |-
-          Mode is the deployment mode of the Spark application.
-          +kubebuilder:validation:Enum={cluster,client}
-      monitoring:
-        allOf:
-        - $ref: '#/definitions/v1beta2.MonitoringSpec'
-        description: |-
-          Monitoring configures how monitoring is handled.
-          +optional
-      nodeSelector:
-        additionalProperties:
-          type: string
-        description: |-
-          NodeSelector is the Kubernetes node selector to be added to the driver and executor pods.
-          This field is mutually exclusive with nodeSelector at podSpec level (driver or executor).
-          This field will be deprecated in future versions (at SparkApplicationSpec level).
-          +optional
-        type: object
-      proxyUser:
-        description: |-
-          ProxyUser specifies the user to impersonate when submitting the application.
-          It maps to the command-line flag "--proxy-user" in spark-submit.
-          +optional
-        type: string
-      pythonVersion:
-        description: |-
-          This sets the major Python version of the docker
-          image used to run the driver and executor containers. Can either be 2 or 3, default 2.
-          +optional
-          +kubebuilder:validation:Enum={"2","3"}
-        type: string
-      restartPolicy:
-        allOf:
-        - $ref: '#/definitions/v1beta2.RestartPolicy'
-        description: RestartPolicy defines the policy on if and in which conditions
-          the controller should restart an application.
-      retryInterval:
-        description: |-
-          RetryInterval is the unit of intervals in seconds between submission retries.
-          +optional
-        type: integer
-      sparkConf:
-        additionalProperties:
-          type: string
-        description: |-
-          SparkConf carries user-specified Spark configuration properties as they would use the  "--conf" option in
-          spark-submit.
-          +optional
-        type: object
-      sparkConfigMap:
-        description: |-
-          SparkConfigMap carries the name of the ConfigMap containing Spark configuration files such as log4j.properties.
-          The controller will add environment variable SPARK_CONF_DIR to the path where the ConfigMap is mounted to.
-          +optional
-        type: string
-      sparkUIOptions:
-        allOf:
-        - $ref: '#/definitions/v1beta2.SparkUIConfiguration'
-        description: |-
-          SparkUIOptions allows configuring the Service and the Ingress to expose the sparkUI
-          +optional
-      sparkVersion:
-        description: SparkVersion is the version of Spark the application uses.
-        type: string
-      timeToLiveSeconds:
-        description: |-
-          TimeToLiveSeconds defines the Time-To-Live (TTL) duration in seconds for this SparkApplication
-          after its termination.
-          The SparkApplication object will be garbage collected if the current time is more than the
-          TimeToLiveSeconds since its termination.
-          +optional
-        type: integer
-      type:
-        allOf:
-        - $ref: '#/definitions/v1beta2.SparkApplicationType'
-        description: |-
-          Type tells the type of the Spark application.
-          +kubebuilder:validation:Enum={Java,Python,Scala,R}
-      volumes:
-        description: |-
-          Volumes is the list of Kubernetes volumes that can be mounted by the driver and/or executors.
-          +optional
-        items:
-          $ref: '#/definitions/v1.Volume'
-        type: array
-    type: object
-  domain.GatewayApplicationStatus:
-    properties:
-      applicationState:
-        allOf:
-        - $ref: '#/definitions/v1beta2.ApplicationState'
-        description: AppState tells the overall application state.
-      driverInfo:
-        allOf:
-        - $ref: '#/definitions/v1beta2.DriverInfo'
-        description: DriverInfo has information about the driver.
-      executionAttempts:
-        description: |-
-          ExecutionAttempts is the total number of attempts to run a submitted application to completion.
-          Incremented upon each attempted run of the application and reset upon invalidation.
-        type: integer
-      executorState:
-        additionalProperties:
-          $ref: '#/definitions/v1beta2.ExecutorState'
-        description: ExecutorState records the state of executors by executor Pod
-          names.
-        type: object
-      lastSubmissionAttemptTime:
-        description: |-
-          LastSubmissionAttemptTime is the time for the last application submission attempt.
-          +nullable
-        type: string
-      sparkApplicationId:
-        description: SparkApplicationID is set by the spark-distribution(via spark.app.id
-          config) on the driver and executor pods
-        type: string
-      submissionAttempts:
-        description: |-
-          SubmissionAttempts is the total number of attempts to submit an application to run.
-          Incremented upon each attempted submission of the application and reset upon invalidation and rerun.
-        type: integer
-      submissionID:
-        description: SubmissionID is a unique ID of the current submission of the
-          application.
-        type: string
-      terminationTime:
-        description: |-
-          CompletionTime is the time when the application runs to completion if it does.
-          +nullable
-        type: string
-    type: object
   domain.GatewayApplicationSummary:
     properties:
-      annotations:
-        additionalProperties:
-          type: string
-        type: object
       apiVersion:
+        description: |-
+          APIVersion defines the versioned schema of this representation of an object.
+          Servers should convert recognized schemas to the latest internal value, and
+          may reject unrecognized values.
+          More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
+          +optional
         type: string
       cluster:
         type: string
       gatewayId:
         type: string
       kind:
+        description: |-
+          Kind is a string value representing the REST resource this object represents.
+          Servers may infer this from the endpoint the client submits requests to.
+          Cannot be updated.
+          In CamelCase.
+          More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+          +optional
         type: string
-      labels:
-        additionalProperties:
-          type: string
-        type: object
-      name:
-        type: string
-      namespace:
-        type: string
+      metadata:
+        $ref: '#/definitions/domain.GatewayApplicationMeta'
       status:
-        $ref: '#/definitions/domain.GatewayApplicationStatus'
+        $ref: '#/definitions/v1beta2.SparkApplicationStatus'
+      user:
+        type: string
     type: object
   domain.GatewaySparkApplication:
     properties:
+      apiVersion:
+        description: |-
+          APIVersion defines the versioned schema of this representation of an object.
+          Servers should convert recognized schemas to the latest internal value, and
+          may reject unrecognized values.
+          More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
+          +optional
+        type: string
+      kind:
+        description: |-
+          Kind is a string value representing the REST resource this object represents.
+          Servers may infer this from the endpoint the client submits requests to.
+          Cannot be updated.
+          In CamelCase.
+          More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+          +optional
+        type: string
       metadata:
         $ref: '#/definitions/domain.GatewayApplicationMeta'
       spec:
-        $ref: '#/definitions/domain.GatewayApplicationSpec'
+        $ref: '#/definitions/v1beta2.SparkApplicationSpec'
       status:
-        $ref: '#/definitions/domain.GatewayApplicationStatus'
+        $ref: '#/definitions/v1beta2.SparkApplicationStatus'
     type: object
   domain.SparkLogURLs:
     properties:
@@ -6622,7 +6402,7 @@ info:
   title: Spark Gateway
   version: "1.0"
 paths:
-  /v1/applications/:
+  /v1/applications:
     get:
       consumes:
       - application/json
@@ -6652,6 +6432,7 @@ paths:
       summary: List GatewayApplicationSummary
       tags:
       - Applications
+  /v1/applications/:
     post:
       consumes:
       - application/json
