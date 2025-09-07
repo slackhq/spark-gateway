@@ -113,10 +113,8 @@ var expectedSparkApp *v1beta2.SparkApplication = &v1beta2.SparkApplication{
 var expectedGatewayApplication domain.GatewayApplication = domain.GatewayApplication{
 	SparkApplication: domain.GatewaySparkApplication{
 		GatewayApplicationMeta: domain.GatewayApplicationMeta{
-			Kind:       "SparkApplication",
-			APIVersion: "sparkoperator.k8s.io/v1beta2",
-			Name:       "clusterid-nsid-uuid",
-			Namespace:  "testNamespace",
+			Name:      "clusterid-nsid-uuid",
+			Namespace: "testNamespace",
 			Labels: map[string]string{
 				domain.GATEWAY_CLUSTER_LABEL: "test-cluster",
 				domain.GATEWAY_USER_LABEL:    "user",
@@ -125,16 +123,12 @@ var expectedGatewayApplication domain.GatewayApplication = domain.GatewayApplica
 				domain.GATEWAY_APPLICATION_NAME_ANNOTATION: "appName",
 			},
 		},
-		Spec: domain.GatewayApplicationSpec{
-			SparkApplicationSpec: v1beta2.SparkApplicationSpec{
-				ProxyUser: &TEST_USER,
-			},
+		Spec: v1beta2.SparkApplicationSpec{
+			ProxyUser: &TEST_USER,
 		},
-		Status: domain.GatewayApplicationStatus{
-			SparkApplicationStatus: v1beta2.SparkApplicationStatus{
-				SubmissionID:       "test123",
-				SparkApplicationID: "sparkAppID",
-			},
+		Status: v1beta2.SparkApplicationStatus{
+			SubmissionID:       "test123",
+			SparkApplicationID: "sparkAppID",
 		},
 	},
 	GatewayId: "clusterid-nsid-uuid",
@@ -147,28 +141,87 @@ var expectedGatewayApplication domain.GatewayApplication = domain.GatewayApplica
 	},
 }
 
-var expectedGatewayApplicationSummaries []*domain.GatewayApplicationSummary = []*domain.GatewayApplicationSummary{
+var expectedSparkManagerSparkApplicationSummaries = []*domain.SparkManagerSparkApplicationSummary{
 	{
+		TypeMeta: v1.TypeMeta{
+			Kind:       "SparkApplication",
+			APIVersion: "sparkoperator.k8s.io/v1beta2",
+		},
 		GatewayApplicationMeta: domain.GatewayApplicationMeta{
 			Name:      "clusterid-nsid-uuid",
 			Namespace: "testNamespace",
-		},
-		GatewayApplicationStatus: domain.GatewayApplicationStatus{
-			SparkApplicationStatus: v1beta2.SparkApplicationStatus{
-				SubmissionID: "test123",
+			Labels: map[string]string{
+				domain.GATEWAY_USER_LABEL:    TEST_USER,
+				domain.GATEWAY_CLUSTER_LABEL: "test-cluster",
 			},
+		},
+		Status: v1beta2.SparkApplicationStatus{
+			SubmissionID: "test123",
 		},
 	},
 	{
+		TypeMeta: v1.TypeMeta{
+			Kind:       "SparkApplication",
+			APIVersion: "sparkoperator.k8s.io/v1beta2",
+		},
 		GatewayApplicationMeta: domain.GatewayApplicationMeta{
 			Name:      "clusterid-nsid-uuid2",
 			Namespace: "testNamespace",
-		},
-		GatewayApplicationStatus: domain.GatewayApplicationStatus{
-			SparkApplicationStatus: v1beta2.SparkApplicationStatus{
-				SubmissionID: "test1234",
+			Labels: map[string]string{
+				domain.GATEWAY_USER_LABEL:    TEST_USER,
+				domain.GATEWAY_CLUSTER_LABEL: "test-cluster",
 			},
 		},
+		Status: v1beta2.SparkApplicationStatus{
+			SubmissionID: "test124",
+		},
+	},
+}
+
+var expectedGatewayApplicationSummaries []*domain.GatewayApplicationSummary = []*domain.GatewayApplicationSummary{
+	{
+		SparkManagerSparkApplicationSummary: domain.SparkManagerSparkApplicationSummary{
+			TypeMeta: v1.TypeMeta{
+				Kind:       "SparkApplication",
+				APIVersion: "sparkoperator.k8s.io/v1beta2",
+			},
+			GatewayApplicationMeta: domain.GatewayApplicationMeta{
+				Name:      "clusterid-nsid-uuid",
+				Namespace: "testNamespace",
+				Labels: map[string]string{
+					domain.GATEWAY_USER_LABEL:    TEST_USER,
+					domain.GATEWAY_CLUSTER_LABEL: "test-cluster",
+				},
+			},
+			Status: v1beta2.SparkApplicationStatus{
+				SubmissionID: "test123",
+			},
+		},
+		GatewayId: "clusterid-nsid-uuid",
+		Cluster:   "test-cluster",
+		User:      TEST_USER,
+	},
+	{
+		SparkManagerSparkApplicationSummary: domain.SparkManagerSparkApplicationSummary{
+			TypeMeta: v1.TypeMeta{
+				Kind:       "SparkApplication",
+				APIVersion: "sparkoperator.k8s.io/v1beta2",
+			},
+			GatewayApplicationMeta: domain.GatewayApplicationMeta{
+				Name:      "clusterid-nsid-uuid2",
+				Namespace: "testNamespace",
+				Labels: map[string]string{
+					domain.GATEWAY_USER_LABEL:    TEST_USER,
+					domain.GATEWAY_CLUSTER_LABEL: "test-cluster",
+				},
+			},
+			Status: v1beta2.SparkApplicationStatus{
+				SubmissionID: "test124",
+			},
+		},
+		GatewayId: "clusterid-nsid-uuid2",
+		Cluster:   "test-cluster",
+		User:      TEST_USER,
 	},
 }
 
@@ -238,8 +291,8 @@ var mockGatewayAppRepository_Success GatewayApplicationRepositoryMock = GatewayA
 	GetFunc: func(ctx context.Context, cluster domain.KubeCluster, namespace, name string) (*v1beta2.SparkApplication, error) {
 		return expectedSparkApp, nil
 	},
-	ListFunc: func(ctx context.Context, cluster domain.KubeCluster, namespace string) ([]*domain.GatewayApplicationSummary, error) {
-		return expectedGatewayApplicationSummaries, nil
+	ListFunc: func(ctx context.Context, cluster domain.KubeCluster, namespace string) ([]*domain.SparkManagerSparkApplicationSummary, error) {
+		return expectedSparkManagerSparkApplicationSummaries, nil
 	},
 	LogsFunc: func(ctx context.Context, cluster domain.KubeCluster, namespace, name string, tailLines int) (*string, error) {
 		return &logString, nil
@@ -259,7 +312,7 @@ var mockGatewayAppRepository_Failure GatewayApplicationRepositoryMock = GatewayA
 	GetFunc: func(ctx context.Context, cluster domain.KubeCluster, namespace, name string) (*v1beta2.SparkApplication, error) {
 		return nil, gatewayerrors.NewNotFound(fmt.Errorf("error getting GatewayApplication '%s/%s'", namespace, name))
 	},
-	ListFunc: func(ctx context.Context, cluster domain.KubeCluster, namespace string) ([]*domain.GatewayApplicationSummary, error) {
+	ListFunc: func(ctx context.Context, cluster domain.KubeCluster, namespace string) ([]*domain.SparkManagerSparkApplicationSummary, error) {
 		return nil, errors.New("error getting application summaries:")
 	},
 	LogsFunc: func(ctx context.Context, cluster domain.KubeCluster, namespace, name string, tailLines int) (*string, error) {
@@ -508,7 +561,7 @@ func TestServiceBadStatus(t *testing.T) {
 
 	gatewayApp, err := appService.Status(context.Background(), "clusterid-nsid-uuid")
 
-	assert.Equal(t, (*domain.GatewayApplicationStatus)(nil), gatewayApp, "returned GatewayApplication should be nil")
+	assert.Equal(t, (*v1beta2.SparkApplicationStatus)(nil), gatewayApp, "returned GatewayApplication should be nil")
 	assert.Contains(t, err.Error(), "error getting status for GatewayApplication", "err should match")
 }
 

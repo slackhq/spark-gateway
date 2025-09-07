@@ -105,7 +105,7 @@ func (h *GatewayApplicationHandler) Get(c *gin.Context) {
 // @Produce json
 // @Security BasicAuth
 // @Param gatewayId path string true "GatewayApplication Name"
-// @Success 200 {object} v1beta2.GatewayApplicationStatus "GatewayApplication status"
+// @Success 200 {object} v1beta2.SparkApplicationStatus "GatewayApplication status"
 // @Router /v1/applications/{gatewayId}/status [get]
 func (h *GatewayApplicationHandler) Status(c *gin.Context) {
 

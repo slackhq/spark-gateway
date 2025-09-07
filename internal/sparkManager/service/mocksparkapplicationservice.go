@@ -29,7 +29,7 @@ var _ SparkApplicationService = &SparkApplicationServiceMock{}
 //			GetFunc: func(namespace string, name string) (*v1beta2.SparkApplication, error) {
 //				panic("mock out the Get method")
 //			},
-//			ListFunc: func(namespace string) ([]*domain.GatewayApplicationSummary, error) {
+//			ListFunc: func(namespace string) ([]*domain.SparkManagerSparkApplicationSummary, error) {
 //				panic("mock out the List method")
 //			},
 //			LogsFunc: func(namespace string, name string, tailLines int64) (*string, error) {
@@ -55,7 +55,7 @@ type SparkApplicationServiceMock struct {
 	GetFunc func(namespace string, name string) (*v1beta2.SparkApplication, error)
 
 	// ListFunc mocks the List method.
-	ListFunc func(namespace string) ([]*domain.GatewayApplicationSummary, error)
+	ListFunc func(namespace string) ([]*domain.SparkManagerSparkApplicationSummary, error)
 
 	// LogsFunc mocks the Logs method.
 	LogsFunc func(namespace string, name string, tailLines int64) (*string, error)
@@ -231,7 +231,7 @@ func (mock *SparkApplicationServiceMock) GetCalls() []struct {
 }
 
 // List calls ListFunc.
-func (mock *SparkApplicationServiceMock) List(namespace string) ([]*domain.GatewayApplicationSummary, error) {
+func (mock *SparkApplicationServiceMock) List(namespace string) ([]*domain.SparkManagerSparkApplicationSummary, error) {
 	if mock.ListFunc == nil {
 		panic("SparkApplicationServiceMock.ListFunc: method is nil but SparkApplicationService.List was just called")
 	}

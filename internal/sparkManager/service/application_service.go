@@ -41,7 +41,7 @@ type SparkApplicationRepository interface {
 
 type SparkApplicationService interface {
 	Get(namespace string, name string) (*v1beta2.SparkApplication, error)
-	List(namespace string) ([]*domain.GatewayApplicationSummary, error)
+	List(namespace string) ([]*domain.SparkManagerSparkApplicationSummary, error)
 	Status(namespace string, name string) (*v1beta2.SparkApplicationStatus, error)
 	Logs(namespace string, name string, tailLines int64) (*string, error)
 	Create(ctx context.Context, application *v1beta2.SparkApplication) (*v1beta2.SparkApplication, error)
@@ -69,7 +69,7 @@ func (s *ApplicationService) Get(namespace string, name string) (*v1beta2.SparkA
 	return sparkApp, nil
 }
 
-func (s *ApplicationService) List(namespace string) ([]*domain.GatewayApplicationSummary, error) {
+func (s *ApplicationService) List(namespace string) ([]*domain.SparkManagerSparkApplicationSummary, error) {
 
 	sparkApps, err := s.sparkApplicationRepository.List(namespace)
 
@@ -77,9 +77,9 @@ func (s *ApplicationService) List(namespace string) ([]*domain.GatewayApplicatio
 		return nil, gatewayerrors.NewFrom(err)
 	}
 
-	appSummaries := []*domain.GatewayApplicationSummary{}
+	appSummaries := []*domain.SparkManagerSparkApplicationSummary{}
 	for _, sparkApp := range sparkApps {
-		appSummary := domain.NewGatewayApplicationSummary(sparkApp, s.cluster.Name)
+		appSummary := domain.NewSparkManagerSparkApplicationSummary(sparkApp)
 		appSummaries = append(appSummaries, appSummary)
 	}
 

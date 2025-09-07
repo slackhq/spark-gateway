@@ -29,6 +29,10 @@ const GATEWAY_USER_LABEL = "spark-gateway/user"
 const GATEWAY_CLUSTER_LABEL = "spark-gateway/cluster"
 const GATEWAY_APPLICATION_NAME_ANNOTATION = "applicationName"
 
+// Most models here are simply wrappers for corresponding v1beta2 types with some fields removed or defaulted. These will most likely need
+// to be expanded into individual models like what Batch Processing Gateway did to fully decouple everything, but since we're
+// focusing on Kubeflow Spark Operator for now, we will target their models
+
 type StatusUrlTemplates struct {
 	SparkUITemplate        string `koanf:"sparkUI"`
 	SparkHistoryUITemplate string `koanf:"sparkHistoryUI"`
@@ -41,37 +45,28 @@ type SparkLogURLs struct {
 	LogsUI         string `json:"logsUI"`
 }
 
-// Most models here are simply wrappers for corresponding v1beta2 types with some fields removed or defaulted. These will most likely need
-// to be expanded into individual models like what Batch Processing Gateway did to fully decouple everything, but since we're
-// focusing on Kubeflow Spark Operator for now, we will target their models
-type GatewayApplicationStatus struct {
-	v1beta2.SparkApplicationStatus
-}
-
-func NewGatewayApplicationStatus(status v1beta2.SparkApplicationStatus) *GatewayApplicationStatus {
-	gatewayStatus := &GatewayApplicationStatus{
-		SparkApplicationStatus: status,
-	}
+// NewGatewayApplicationStatus takes in a v1beta2.SparkApplicationStatus and returns a copy with some fields we deem
+// unnecessary nil'd out
+func NewGatewayApplicationStatus(status v1beta2.SparkApplicationStatus) *v1beta2.SparkApplicationStatus {
+	gatewayStatus := status
 
 	gatewayStatus.ExecutorState = nil
 
-	return gatewayStatus
+	return &gatewayStatus
 }
 
-type GatewayApplicationSpec struct {
-	v1beta2.SparkApplicationSpec
-}
-
+// GatewayApplicationMeta is essentially a metav1.ObjectMeta with only fields we deem necessary for GatewayApplications
 type GatewayApplicationMeta struct {
-	Kind        string            `json:"kind"`
-	APIVersion  string            `json:"apiVersion"`
 	Name        string            `json:"name"`
 	Namespace   string            `json:"namespace"`
 	Labels      map[string]string `json:"labels"`
 	Annotations map[string]string `json:"annotations"`
 }
 
-func NewGatewayApplicationMeta(appMeta metav1.ObjectMeta, appType metav1.TypeMeta) *GatewayApplicationMeta {
+// NewGatewayApplicationMeta takes metav1.ObjectMeta and returns a GatewayApplicationMeta with
+// some defaults to ensure no nil values as SparkApplication meta's can often have nil labels,
+// annotations etc.
+func NewGatewayApplicationMeta(appMeta metav1.ObjectMeta) *GatewayApplicationMeta {
 	// Default labels and annotations because these can be nil
 	annotations := map[string]string{}
 	labels := map[string]string{}
@@ -84,8 +79,6 @@ func NewGatewayApplicationMeta(appMeta metav1.ObjectMeta, appType metav1.TypeMet
 	}
 
 	return &GatewayApplicationMeta{
-		Kind:        appType.Kind,
-		APIVersion:  appType.APIVersion,
 		Name:        appMeta.Name,
 		Namespace:   appMeta.Namespace,
 		Annotations: annotations,
@@ -93,27 +86,45 @@ func NewGatewayApplicationMeta(appMeta metav1.ObjectMeta, appType metav1.TypeMet
 	}
 }
 
-type GatewayApplicationSummary struct {
-	GatewayApplicationMeta   `json:",inline"`
-	GatewayApplicationStatus `json:"status"`
-	GatewayId                string `json:"gatewayId"`
-	Cluster                  string `json:"cluster"`
+// SparkManagerApplicationSummary provides the fields necessary to represent a simple
+// view of a SparkApplication
+type SparkManagerSparkApplicationSummary struct {
+	metav1.TypeMeta        `json:",inline"`
+	GatewayApplicationMeta `json:"metadata"`
+	Status                 v1beta2.SparkApplicationStatus `json:"status"`
 }
 
-func NewGatewayApplicationSummary(sparkApp *v1beta2.SparkApplication, cluster string) *GatewayApplicationSummary {
+func NewSparkManagerSparkApplicationSummary(sparkApp *v1beta2.SparkApplication) *SparkManagerSparkApplicationSummary {
+	return &SparkManagerSparkApplicationSummary{
+		TypeMeta:               sparkApp.TypeMeta,
+		GatewayApplicationMeta: *NewGatewayApplicationMeta(sparkApp.ObjectMeta),
+		Status:                 sparkApp.Status,
+	}
+}
+
+// GatewayApplicationSummary is a SparkManagerApplicationSummary with additional Spark Gateway
+// specific fields for extra context
+type GatewayApplicationSummary struct {
+	SparkManagerSparkApplicationSummary `json:",inline"`
+	GatewayId                           string `json:"gatewayId"`
+	Cluster                             string `json:"cluster"`
+	User                                string `json:"user"`
+}
+
+func NewGatewayApplicationSummary(sparkManagerSummary SparkManagerSparkApplicationSummary) *GatewayApplicationSummary {
 	return &GatewayApplicationSummary{
-		// Name should always be GatewayId due to model mappings etc.
-		GatewayApplicationMeta:   *NewGatewayApplicationMeta(sparkApp.ObjectMeta, sparkApp.TypeMeta),
-		GatewayApplicationStatus: *NewGatewayApplicationStatus(sparkApp.Status),
-		GatewayId:                sparkApp.Name,
-		Cluster:                  cluster,
+		SparkManagerSparkApplicationSummary: sparkManagerSummary,
+		GatewayId:                           sparkManagerSummary.Name,
+		Cluster:                             sparkManagerSummary.Labels[GATEWAY_CLUSTER_LABEL],
+		User:                                sparkManagerSummary.Labels[GATEWAY_USER_LABEL],
 	}
 }
 
 type GatewaySparkApplication struct {
+	metav1.TypeMeta
 	GatewayApplicationMeta `json:"metadata"`
-	Spec                   GatewayApplicationSpec   `json:"spec"`
-	Status                 GatewayApplicationStatus `json:"status"`
+	Spec                   v1beta2.SparkApplicationSpec   `json:"spec"`
+	Status                 v1beta2.SparkApplicationStatus `json:"status"`
 }
 
 func (gsa *GatewaySparkApplication) ToV1Beta2SparkApplication() *v1beta2.SparkApplication {
@@ -128,16 +139,16 @@ func (gsa *GatewaySparkApplication) ToV1Beta2SparkApplication() *v1beta2.SparkAp
 			Annotations: gsa.Annotations,
 			Labels:      gsa.Labels,
 		},
-		Spec:   gsa.Spec.SparkApplicationSpec,
-		Status: gsa.Status.SparkApplicationStatus,
+		Spec:   gsa.Spec,
+		Status: gsa.Status,
 	}
 }
 
 func NewGatewaySparkApplication(sparkApp *v1beta2.SparkApplication, opts ...func(*GatewaySparkApplication)) *GatewaySparkApplication {
 
 	gaSparkApp := &GatewaySparkApplication{
-		GatewayApplicationMeta: *NewGatewayApplicationMeta(sparkApp.ObjectMeta, sparkApp.TypeMeta),
-		Spec:                   GatewayApplicationSpec{SparkApplicationSpec: sparkApp.Spec},
+		GatewayApplicationMeta: *NewGatewayApplicationMeta(sparkApp.ObjectMeta),
+		Spec:                   sparkApp.Spec,
 		Status:                 *NewGatewayApplicationStatus(sparkApp.Status),
 	}
 

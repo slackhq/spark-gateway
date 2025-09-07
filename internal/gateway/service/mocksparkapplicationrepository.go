@@ -29,7 +29,7 @@ var _ GatewayApplicationRepository = &GatewayApplicationRepositoryMock{}
 //			GetFunc: func(ctx context.Context, cluster domain.KubeCluster, namespace string, name string) (*v1beta2.SparkApplication, error) {
 //				panic("mock out the Get method")
 //			},
-//			ListFunc: func(ctx context.Context, cluster domain.KubeCluster, namespace string) ([]*domain.GatewayApplicationSummary, error) {
+//			ListFunc: func(ctx context.Context, cluster domain.KubeCluster, namespace string) ([]*domain.SparkManagerSparkApplicationSummary, error) {
 //				panic("mock out the List method")
 //			},
 //			LogsFunc: func(ctx context.Context, cluster domain.KubeCluster, namespace string, name string, tailLines int) (*string, error) {
@@ -55,7 +55,7 @@ type GatewayApplicationRepositoryMock struct {
 	GetFunc func(ctx context.Context, cluster domain.KubeCluster, namespace string, name string) (*v1beta2.SparkApplication, error)
 
 	// ListFunc mocks the List method.
-	ListFunc func(ctx context.Context, cluster domain.KubeCluster, namespace string) ([]*domain.GatewayApplicationSummary, error)
+	ListFunc func(ctx context.Context, cluster domain.KubeCluster, namespace string) ([]*domain.SparkManagerSparkApplicationSummary, error)
 
 	// LogsFunc mocks the Logs method.
 	LogsFunc func(ctx context.Context, cluster domain.KubeCluster, namespace string, name string, tailLines int) (*string, error)
@@ -267,7 +267,7 @@ func (mock *GatewayApplicationRepositoryMock) GetCalls() []struct {
 }
 
 // List calls ListFunc.
-func (mock *GatewayApplicationRepositoryMock) List(ctx context.Context, cluster domain.KubeCluster, namespace string) ([]*domain.GatewayApplicationSummary, error) {
+func (mock *GatewayApplicationRepositoryMock) List(ctx context.Context, cluster domain.KubeCluster, namespace string) ([]*domain.SparkManagerSparkApplicationSummary, error) {
 	if mock.ListFunc == nil {
 		panic("GatewayApplicationRepositoryMock.ListFunc: method is nil but GatewayApplicationRepository.List was just called")
 	}

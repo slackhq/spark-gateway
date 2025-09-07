@@ -38,7 +38,7 @@ type GatewayIdGenerator func(cluster domain.KubeCluster, namespace string) (stri
 
 type GatewayApplicationRepository interface {
 	Get(ctx context.Context, cluster domain.KubeCluster, namespace string, name string) (*v1beta2.SparkApplication, error)
-	List(ctx context.Context, cluster domain.KubeCluster, namespace string) ([]*domain.GatewayApplicationSummary, error)
+	List(ctx context.Context, cluster domain.KubeCluster, namespace string) ([]*domain.SparkManagerSparkApplicationSummary, error)
 	Status(ctx context.Context, cluster domain.KubeCluster, namespace string, name string) (*v1beta2.SparkApplicationStatus, error)
 	Logs(ctx context.Context, cluster domain.KubeCluster, namespace string, name string, tailLines int) (*string, error)
 	Create(ctx context.Context, cluster domain.KubeCluster, application *v1beta2.SparkApplication) (*v1beta2.SparkApplication, error)
@@ -51,7 +51,7 @@ type GatewayApplicationService interface {
 	Get(ctx context.Context, gatewayId string) (*domain.GatewayApplication, error)
 	List(ctx context.Context, cluster string, namespace string) ([]*domain.GatewayApplicationSummary, error)
 	Create(ctx context.Context, application *v1beta2.SparkApplication, user string) (*domain.GatewayApplication, error)
-	Status(ctx context.Context, gatewayId string) (*domain.GatewayApplicationStatus, error)
+	Status(ctx context.Context, gatewayId string) (*v1beta2.SparkApplicationStatus, error)
 	Logs(ctx context.Context, gatewayId string, tailLines int) (*string, error)
 	Delete(ctx context.Context, gatewayId string) error
 }
@@ -156,7 +156,11 @@ func (s *service) List(ctx context.Context, cluster string, namespace string) ([
 			return nil, fmt.Errorf("error getting applications: %w", err)
 		}
 
-		appSummaryList = append(appSummaryList, nsAppSummaries...)
+		for _, nsAppSummary := range nsAppSummaries {
+			gatewayAppSummary := domain.NewGatewayApplicationSummary(*nsAppSummary)
+			appSummaryList = append(appSummaryList, gatewayAppSummary)
+
+		}
 
 	}
 
@@ -205,7 +209,7 @@ func (s *service) Create(ctx context.Context, application *v1beta2.SparkApplicat
 	return gatewayApp, nil
 }
 
-func (s *service) Status(ctx context.Context, gatewayId string) (*domain.GatewayApplicationStatus, error) {
+func (s *service) Status(ctx context.Context, gatewayId string) (*v1beta2.SparkApplicationStatus, error) {
 	cluster, namespace, err := s.GetClusterNamespaceFromGatewayId(gatewayId)
 	if err != nil {
 		return nil, err

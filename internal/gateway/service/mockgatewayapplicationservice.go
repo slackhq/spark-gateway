@@ -35,7 +35,7 @@ var _ GatewayApplicationService = &GatewayApplicationServiceMock{}
 //			LogsFunc: func(ctx context.Context, gatewayId string, tailLines int) (*string, error) {
 //				panic("mock out the Logs method")
 //			},
-//			StatusFunc: func(ctx context.Context, gatewayId string) (*domain.GatewayApplicationStatus, error) {
+//			StatusFunc: func(ctx context.Context, gatewayId string) (*v1beta2.SparkApplicationStatus, error) {
 //				panic("mock out the Status method")
 //			},
 //		}
@@ -61,7 +61,7 @@ type GatewayApplicationServiceMock struct {
 	LogsFunc func(ctx context.Context, gatewayId string, tailLines int) (*string, error)
 
 	// StatusFunc mocks the Status method.
-	StatusFunc func(ctx context.Context, gatewayId string) (*domain.GatewayApplicationStatus, error)
+	StatusFunc func(ctx context.Context, gatewayId string) (*v1beta2.SparkApplicationStatus, error)
 
 	// calls tracks calls to the methods.
 	calls struct {
@@ -315,7 +315,7 @@ func (mock *GatewayApplicationServiceMock) LogsCalls() []struct {
 }
 
 // Status calls StatusFunc.
-func (mock *GatewayApplicationServiceMock) Status(ctx context.Context, gatewayId string) (*domain.GatewayApplicationStatus, error) {
+func (mock *GatewayApplicationServiceMock) Status(ctx context.Context, gatewayId string) (*v1beta2.SparkApplicationStatus, error) {
 	if mock.StatusFunc == nil {
 		panic("GatewayApplicationServiceMock.StatusFunc: method is nil but GatewayApplicationService.Status was just called")
 	}

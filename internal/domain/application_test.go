@@ -10,10 +10,7 @@ import (
 
 func TestNewGatewaySparkApplication(t *testing.T) {
 	inApp := v1beta2.SparkApplication{
-		TypeMeta: v1.TypeMeta{
-			Kind:       "SparkApplication",
-			APIVersion: "apiVersion",
-		},
+		TypeMeta: v1.TypeMeta{},
 		ObjectMeta: v1.ObjectMeta{
 			Namespace: "test",
 		},
@@ -21,8 +18,6 @@ func TestNewGatewaySparkApplication(t *testing.T) {
 
 	expected := GatewaySparkApplication{
 		GatewayApplicationMeta: GatewayApplicationMeta{
-			Kind:        "SparkApplication",
-			APIVersion:  "apiVersion",
 			Namespace:   "test",
 			Labels:      map[string]string{},
 			Annotations: map[string]string{},
@@ -36,10 +31,7 @@ func TestNewGatewaySparkApplication(t *testing.T) {
 
 func TestNewGatewaySparkApplicationWithLabelsAnnotations(t *testing.T) {
 	inApp := v1beta2.SparkApplication{
-		TypeMeta: v1.TypeMeta{
-			Kind:       "SparkApplication",
-			APIVersion: "apiVersion",
-		},
+		TypeMeta: v1.TypeMeta{},
 		ObjectMeta: v1.ObjectMeta{
 			Namespace: "test",
 			Annotations: map[string]string{
@@ -53,9 +45,7 @@ func TestNewGatewaySparkApplicationWithLabelsAnnotations(t *testing.T) {
 
 	expected := GatewaySparkApplication{
 		GatewayApplicationMeta: GatewayApplicationMeta{
-			Kind:       "SparkApplication",
-			APIVersion: "apiVersion",
-			Namespace:  "test",
+			Namespace: "test",
 			Annotations: map[string]string{
 				"annotation": "1",
 			},
@@ -75,10 +65,7 @@ func TestNewGatewaySparkApplicationWithUser(t *testing.T) {
 	userStr := "user"
 
 	inApp := v1beta2.SparkApplication{
-		TypeMeta: v1.TypeMeta{
-			Kind:       "SparkApplication",
-			APIVersion: "apiVersion",
-		},
+		TypeMeta: v1.TypeMeta{},
 		ObjectMeta: v1.ObjectMeta{
 			Namespace: "test",
 		},
@@ -86,18 +73,14 @@ func TestNewGatewaySparkApplicationWithUser(t *testing.T) {
 
 	expected := GatewaySparkApplication{
 		GatewayApplicationMeta: GatewayApplicationMeta{
-			Kind:       "SparkApplication",
-			APIVersion: "apiVersion",
-			Namespace:  "test",
+			Namespace: "test",
 			Labels: map[string]string{
 				GATEWAY_USER_LABEL: "user",
 			},
 			Annotations: map[string]string{},
 		},
-		Spec: GatewayApplicationSpec{
-			SparkApplicationSpec: v1beta2.SparkApplicationSpec{
-				ProxyUser: &userStr,
-			},
+		Spec: v1beta2.SparkApplicationSpec{
+			ProxyUser: &userStr,
 		},
 	}
 
@@ -109,10 +92,7 @@ func TestNewGatewaySparkApplicationWithUser(t *testing.T) {
 func TestNewGatewaySparkApplicationWithSelector(t *testing.T) {
 
 	inApp := v1beta2.SparkApplication{
-		TypeMeta: v1.TypeMeta{
-			Kind:       "SparkApplication",
-			APIVersion: "apiVersion",
-		},
+		TypeMeta: v1.TypeMeta{},
 		ObjectMeta: v1.ObjectMeta{
 			Namespace: "test",
 		},
@@ -120,9 +100,7 @@ func TestNewGatewaySparkApplicationWithSelector(t *testing.T) {
 
 	expected := GatewaySparkApplication{
 		GatewayApplicationMeta: GatewayApplicationMeta{
-			Kind:       "SparkApplication",
-			APIVersion: "apiVersion",
-			Namespace:  "test",
+			Namespace: "test",
 			Labels: map[string]string{
 				"key": "value",
 			},
@@ -138,10 +116,7 @@ func TestNewGatewaySparkApplicationWithSelector(t *testing.T) {
 func TestNewGatewaySparkApplicationWithIdNoName(t *testing.T) {
 
 	inApp := v1beta2.SparkApplication{
-		TypeMeta: v1.TypeMeta{
-			Kind:       "SparkApplication",
-			APIVersion: "apiVersion",
-		},
+		TypeMeta: v1.TypeMeta{},
 		ObjectMeta: v1.ObjectMeta{
 			Namespace: "test",
 		},
@@ -149,8 +124,6 @@ func TestNewGatewaySparkApplicationWithIdNoName(t *testing.T) {
 
 	expected := GatewaySparkApplication{
 		GatewayApplicationMeta: GatewayApplicationMeta{
-			Kind:        "SparkApplication",
-			APIVersion:  "apiVersion",
 			Name:        "id",
 			Namespace:   "test",
 			Labels:      map[string]string{},
@@ -166,10 +139,7 @@ func TestNewGatewaySparkApplicationWithIdNoName(t *testing.T) {
 func TestNewGatewaySparkApplicationWithIdName(t *testing.T) {
 
 	inApp := v1beta2.SparkApplication{
-		TypeMeta: v1.TypeMeta{
-			Kind:       "SparkApplication",
-			APIVersion: "apiVersion",
-		},
+		TypeMeta: v1.TypeMeta{},
 		ObjectMeta: v1.ObjectMeta{
 			Name:      "appName",
 			Namespace: "test",
@@ -178,11 +148,9 @@ func TestNewGatewaySparkApplicationWithIdName(t *testing.T) {
 
 	expected := GatewaySparkApplication{
 		GatewayApplicationMeta: GatewayApplicationMeta{
-			Kind:       "SparkApplication",
-			APIVersion: "apiVersion",
-			Name:       "id",
-			Namespace:  "test",
-			Labels:     map[string]string{},
+			Name:      "id",
+			Namespace: "test",
+			Labels:    map[string]string{},
 			Annotations: map[string]string{
 				"applicationName": "appName",
 			},
@@ -197,10 +165,7 @@ func TestNewGatewaySparkApplicationWithIdName(t *testing.T) {
 func TestNewGatewaySparkApplicationWithCluster(t *testing.T) {
 
 	inApp := v1beta2.SparkApplication{
-		TypeMeta: v1.TypeMeta{
-			Kind:       "SparkApplication",
-			APIVersion: "apiVersion",
-		},
+		TypeMeta: v1.TypeMeta{},
 		ObjectMeta: v1.ObjectMeta{
 			Namespace: "test",
 		},
@@ -208,9 +173,7 @@ func TestNewGatewaySparkApplicationWithCluster(t *testing.T) {
 
 	expected := GatewaySparkApplication{
 		GatewayApplicationMeta: GatewayApplicationMeta{
-			Kind:       "SparkApplication",
-			APIVersion: "apiVersion",
-			Namespace:  "test",
+			Namespace: "test",
 			Labels: map[string]string{
 				GATEWAY_CLUSTER_LABEL: "cluster",
 			},
@@ -228,10 +191,7 @@ func TestNewGatewaySparkApplicationWithAll(t *testing.T) {
 	user := "user"
 
 	inApp := v1beta2.SparkApplication{
-		TypeMeta: v1.TypeMeta{
-			Kind:       "SparkApplication",
-			APIVersion: "apiVersion",
-		},
+		TypeMeta: v1.TypeMeta{},
 		ObjectMeta: v1.ObjectMeta{
 			Namespace: "test",
 		},
@@ -239,10 +199,8 @@ func TestNewGatewaySparkApplicationWithAll(t *testing.T) {
 
 	expected := GatewaySparkApplication{
 		GatewayApplicationMeta: GatewayApplicationMeta{
-			Kind:       "SparkApplication",
-			APIVersion: "apiVersion",
-			Name:       "id",
-			Namespace:  "test",
+			Name:      "id",
+			Namespace: "test",
 			Labels: map[string]string{
 				GATEWAY_USER_LABEL:    "user",
 				GATEWAY_CLUSTER_LABEL: "cluster",
@@ -250,10 +208,8 @@ func TestNewGatewaySparkApplicationWithAll(t *testing.T) {
 			},
 			Annotations: map[string]string{},
 		},
-		Spec: GatewayApplicationSpec{
-			SparkApplicationSpec: v1beta2.SparkApplicationSpec{
-				ProxyUser: &user,
-			},
+		Spec: v1beta2.SparkApplicationSpec{
+			ProxyUser: &user,
 		},
 	}
 

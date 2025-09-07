@@ -157,14 +157,12 @@ func TestApplicationHandlerGetError(t *testing.T) {
 }
 func TestApplicationHandlerStatus(t *testing.T) {
 
-	retResp := &domain.GatewayApplicationStatus{
-		SparkApplicationStatus: v1beta2.SparkApplicationStatus{
-			SubmissionID: "submissionId",
-		},
+	retResp := &v1beta2.SparkApplicationStatus{
+		SubmissionID: "submissionId",
 	}
 
 	service := &service.GatewayApplicationServiceMock{
-		StatusFunc: func(ctx context.Context, gatewayId string) (*domain.GatewayApplicationStatus, error) {
+		StatusFunc: func(ctx context.Context, gatewayId string) (*v1beta2.SparkApplicationStatus, error) {
 			return retResp, nil
 		},
 	}
@@ -176,7 +174,7 @@ func TestApplicationHandlerStatus(t *testing.T) {
 	w := httptest.NewRecorder()
 	router.ServeHTTP(w, req)
 
-	var gotStatus domain.GatewayApplicationStatus
+	var gotStatus v1beta2.SparkApplicationStatus
 	json.Unmarshal(w.Body.Bytes(), &gotStatus)
 
 	assert.Equal(t, http.StatusOK, w.Code, "codes should match")
@@ -185,8 +183,8 @@ func TestApplicationHandlerStatus(t *testing.T) {
 func TestApplicationHandlerStatusError(t *testing.T) {
 
 	service := &service.GatewayApplicationServiceMock{
-		StatusFunc: func(ctx context.Context, gatewayId string) (*domain.GatewayApplicationStatus, error) {
-			return &domain.GatewayApplicationStatus{}, gatewayerrors.NewNotFound(errors.New("error getting SparkApplication 'clusterid-testid'"))
+		StatusFunc: func(ctx context.Context, gatewayId string) (*v1beta2.SparkApplicationStatus, error) {
+			return &v1beta2.SparkApplicationStatus{}, gatewayerrors.NewNotFound(errors.New("error getting SparkApplication 'clusterid-testid'"))
 		},
 	}
 
