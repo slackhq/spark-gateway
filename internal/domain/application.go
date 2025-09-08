@@ -144,6 +144,18 @@ func (gsa *GatewaySparkApplication) ToV1Beta2SparkApplication() *v1beta2.SparkAp
 	}
 }
 
+func (gsa *GatewayApplication) ToLivyBatch(batchId int32) *Batch {
+
+	return Batch{
+		Id:      batchId,
+		AppId:   "",
+		AppInfo: map[string]string{},
+		TTL:     "",
+		Log:     []string{},
+		State:   "",
+	}
+}
+
 func NewGatewaySparkApplication(sparkApp *v1beta2.SparkApplication, opts ...func(*GatewaySparkApplication)) *GatewaySparkApplication {
 
 	gaSparkApp := &GatewaySparkApplication{
