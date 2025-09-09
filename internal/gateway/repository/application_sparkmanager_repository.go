@@ -30,9 +30,27 @@ import (
 	"github.com/slackhq/spark-gateway/internal/shared/gatewayerrors"
 	sgHttp "github.com/slackhq/spark-gateway/internal/shared/http"
 	"github.com/slackhq/spark-gateway/internal/shared/util"
-	"github.com/slackhq/spark-gateway/internal/sparkManager/kube"
 )
 
+// DoHTTP runs a request, checks for errors from making the request or the request body, and returns the Response body bytes
+// if the request succeeds
+func DoHTTP(ctx context.Context, request *http.Request) (*[]byte, error) {
+	resp, respBody, err := sgHttp.HttpRequest(ctx, &http.Client{}, request)
+	if err != nil {
+		return nil, gatewayerrors.NewFrom(err)
+	}
+
+	err = sgHttp.CheckJsonResponse(resp, respBody)
+	if err != nil {
+		return nil, gatewayerrors.NewFrom(err)
+	}
+
+	return respBody, nil
+
+}
+
+// SparkManagerRepository is responsible for handling submission and monitoring of GatewayApplications through the SparkManager REST API.
+// The API contract for this implementation is based on Kubeflow Spark Operator v1beta2.SparkApplication types
 type SparkManagerRepository struct {
 	ClusterEndpoints map[string]string
 }
@@ -81,25 +99,20 @@ func (r *SparkManagerRepository) Get(ctx context.Context, cluster domain.KubeClu
 		return nil, gatewayerrors.NewFrom(fmt.Errorf("error creating %s request: %w", http.MethodGet, err))
 	}
 
-	resp, respBody, err := sgHttp.HttpRequest(ctx, &http.Client{}, request)
+	respBody, err := DoHTTP(ctx, request)
 	if err != nil {
 		return nil, gatewayerrors.NewFrom(err)
 	}
 
-	err = sgHttp.CheckJsonResponse(resp, respBody)
-	if err != nil {
-		return nil, gatewayerrors.NewFrom(err)
-	}
-
-	var app v1beta2.SparkApplication
-	if err := json.Unmarshal(*respBody, &app); err != nil {
+	var sparkApp v1beta2.SparkApplication
+	if err := json.Unmarshal(*respBody, &sparkApp); err != nil {
 		return nil, fmt.Errorf("failed to Unmarshal JSON response: %w", err)
 	}
 
-	return kube.Sanitize(&app), nil
+	return &sparkApp, nil
 }
 
-func (r *SparkManagerRepository) List(ctx context.Context, cluster domain.KubeCluster, namespace string) ([]*domain.SparkManagerApplicationMeta, error) {
+func (r *SparkManagerRepository) List(ctx context.Context, cluster domain.KubeCluster, namespace string) ([]*domain.SparkManagerSparkApplicationSummary, error) {
 
 	clusterEndpoint := r.ClusterEndpoints[cluster.Name]
 	// Url: http://host:port/api/v1/namespace
@@ -110,22 +123,17 @@ func (r *SparkManagerRepository) List(ctx context.Context, cluster domain.KubeCl
 		return nil, gatewayerrors.NewFrom(fmt.Errorf("error creating %s request: %w", http.MethodGet, err))
 	}
 
-	resp, respBody, err := sgHttp.HttpRequest(ctx, &http.Client{}, request)
+	respBody, err := DoHTTP(ctx, request)
 	if err != nil {
 		return nil, gatewayerrors.NewFrom(err)
 	}
 
-	err = sgHttp.CheckJsonResponse(resp, respBody)
-	if err != nil {
-		return nil, gatewayerrors.NewFrom(err)
-	}
-
-	var appMetaList []*domain.SparkManagerApplicationMeta
-	if err := json.Unmarshal(*respBody, &appMetaList); err != nil {
+	var summaryList []*domain.SparkManagerSparkApplicationSummary
+	if err := json.Unmarshal(*respBody, &summaryList); err != nil {
 		return nil, fmt.Errorf("failed to Unmarshal JSON response: %w", err)
 	}
 
-	return appMetaList, nil
+	return summaryList, nil
 }
 
 func (r *SparkManagerRepository) Status(ctx context.Context, cluster domain.KubeCluster, namespace string, name string) (*v1beta2.SparkApplicationStatus, error) {
@@ -139,12 +147,7 @@ func (r *SparkManagerRepository) Status(ctx context.Context, cluster domain.Kube
 		return nil, gatewayerrors.NewFrom(fmt.Errorf("error creating %s request: %w", http.MethodGet, err))
 	}
 
-	resp, respBody, err := sgHttp.HttpRequest(ctx, &http.Client{}, request)
-	if err != nil {
-		return nil, gatewayerrors.NewFrom(err)
-	}
-
-	err = sgHttp.CheckJsonResponse(resp, respBody)
+	respBody, err := DoHTTP(ctx, request)
 	if err != nil {
 		return nil, gatewayerrors.NewFrom(err)
 	}
@@ -168,12 +171,7 @@ func (r *SparkManagerRepository) Logs(ctx context.Context, cluster domain.KubeCl
 		return nil, gatewayerrors.NewFrom(fmt.Errorf("error creating %s request: %w", http.MethodGet, err))
 	}
 
-	resp, respBody, err := sgHttp.HttpRequest(ctx, &http.Client{}, request)
-	if err != nil {
-		return nil, gatewayerrors.NewFrom(err)
-	}
-
-	err = sgHttp.CheckJsonResponse(resp, respBody)
+	respBody, err := DoHTTP(ctx, request)
 	if err != nil {
 		return nil, gatewayerrors.NewFrom(err)
 	}
@@ -186,39 +184,33 @@ func (r *SparkManagerRepository) Logs(ctx context.Context, cluster domain.KubeCl
 	return &logString, nil
 }
 
-func (r *SparkManagerRepository) Create(ctx context.Context, cluster domain.KubeCluster, sparkApplication *v1beta2.SparkApplication) (*v1beta2.SparkApplication, error) {
+func (r *SparkManagerRepository) Create(ctx context.Context, cluster domain.KubeCluster, sparkApp *v1beta2.SparkApplication) (*v1beta2.SparkApplication, error) {
 
 	clusterEndpoint := r.ClusterEndpoints[cluster.Name]
 	// Url: http://host:port/api/v1/namespace/name
-	url := fmt.Sprintf("%s/%s/%s", clusterEndpoint, sparkApplication.Namespace, sparkApplication.Name)
+	url := fmt.Sprintf("%s/%s/%s", clusterEndpoint, sparkApp.Namespace, sparkApp.Name)
 
-	body, err := json.Marshal(sparkApplication)
+	body, err := json.Marshal(sparkApp)
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal SparkApplication: %w", err)
 	}
-
 	request, err := http.NewRequest(http.MethodPost, url, bytes.NewBuffer(body))
 	if err != nil {
 		return nil, gatewayerrors.NewFrom(fmt.Errorf("error creating %s request: %w", http.MethodPost, err))
 	}
 	request.Header.Set("Content-Type", "application/json")
 
-	resp, respBody, err := sgHttp.HttpRequest(ctx, &http.Client{}, request)
+	respBody, err := DoHTTP(ctx, request)
 	if err != nil {
 		return nil, gatewayerrors.NewFrom(err)
 	}
 
-	err = sgHttp.CheckJsonResponse(resp, respBody)
-	if err != nil {
-		return nil, gatewayerrors.NewFrom(err)
-	}
-
-	var sparkApp v1beta2.SparkApplication
-	if err := json.Unmarshal(*respBody, &sparkApp); err != nil {
+	var respApp v1beta2.SparkApplication
+	if err := json.Unmarshal(*respBody, &respApp); err != nil {
 		return nil, fmt.Errorf("failed to Unmarshal JSON response: %w", err)
 	}
 
-	return kube.Sanitize(&sparkApp), nil
+	return &respApp, nil
 }
 
 func (r *SparkManagerRepository) Delete(ctx context.Context, cluster domain.KubeCluster, namespace string, name string) error {
@@ -232,12 +224,7 @@ func (r *SparkManagerRepository) Delete(ctx context.Context, cluster domain.Kube
 		return gatewayerrors.NewFrom(fmt.Errorf("error creating %s request: %w", http.MethodDelete, err))
 	}
 
-	resp, respBody, err := sgHttp.HttpRequest(ctx, &http.Client{}, request)
-	if err != nil {
-		return gatewayerrors.NewFrom(err)
-	}
-
-	err = sgHttp.CheckJsonResponse(resp, respBody)
+	_, err = DoHTTP(ctx, request)
 	if err != nil {
 		return gatewayerrors.NewFrom(err)
 	}

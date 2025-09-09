@@ -6,7 +6,7 @@ definitions:
       gatewayId:
         type: string
       sparkApplication:
-        $ref: '#/definitions/v1beta2.SparkApplication'
+        $ref: '#/definitions/domain.GatewaySparkApplication'
       sparkLogURLs:
         $ref: '#/definitions/domain.SparkLogURLs'
       user:
@@ -14,10 +14,74 @@ definitions:
     type: object
   domain.GatewayApplicationMeta:
     properties:
+      annotations:
+        additionalProperties:
+          type: string
+        type: object
+      labels:
+        additionalProperties:
+          type: string
+        type: object
+      name:
+        type: string
+      namespace:
+        type: string
+    type: object
+  domain.GatewayApplicationSummary:
+    properties:
+      apiVersion:
+        description: |-
+          APIVersion defines the versioned schema of this representation of an object.
+          Servers should convert recognized schemas to the latest internal value, and
+          may reject unrecognized values.
+          More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
+          +optional
+        type: string
       cluster:
         type: string
-      sparkAppMetadata:
-        $ref: '#/definitions/domain.SparkManagerApplicationMeta'
+      gatewayId:
+        type: string
+      kind:
+        description: |-
+          Kind is a string value representing the REST resource this object represents.
+          Servers may infer this from the endpoint the client submits requests to.
+          Cannot be updated.
+          In CamelCase.
+          More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+          +optional
+        type: string
+      metadata:
+        $ref: '#/definitions/domain.GatewayApplicationMeta'
+      status:
+        $ref: '#/definitions/v1beta2.SparkApplicationStatus'
+      user:
+        type: string
+    type: object
+  domain.GatewaySparkApplication:
+    properties:
+      apiVersion:
+        description: |-
+          APIVersion defines the versioned schema of this representation of an object.
+          Servers should convert recognized schemas to the latest internal value, and
+          may reject unrecognized values.
+          More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
+          +optional
+        type: string
+      kind:
+        description: |-
+          Kind is a string value representing the REST resource this object represents.
+          Servers may infer this from the endpoint the client submits requests to.
+          Cannot be updated.
+          In CamelCase.
+          More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+          +optional
+        type: string
+      metadata:
+        $ref: '#/definitions/domain.GatewayApplicationMeta'
+      spec:
+        $ref: '#/definitions/v1beta2.SparkApplicationSpec'
+      status:
+        $ref: '#/definitions/v1beta2.SparkApplicationStatus'
     type: object
   domain.SparkLogURLs:
     properties:
@@ -26,30 +90,6 @@ definitions:
       sparkHistoryUI:
         type: string
       sparkUI:
-        type: string
-    type: object
-  domain.SparkManagerApplicationMeta:
-    properties:
-      applicationState:
-        $ref: '#/definitions/v1beta2.ApplicationState'
-      driverInfo:
-        $ref: '#/definitions/v1beta2.DriverInfo'
-      executionAttempts:
-        type: integer
-      lastSubmissionAttemptTime:
-        type: string
-      metadata:
-        $ref: '#/definitions/v1.ObjectMeta'
-      sparkApplicationId:
-        description: |-
-          All fields below come from v1beta2.SparkApplicationStatus
-          Currently it's all fields except for ExecutorState because it can get pretty large
-        type: string
-      submissionAttempts:
-        type: integer
-      submissionID:
-        type: string
-      terminationTime:
         type: string
     type: object
   intstr.IntOrString:
@@ -6354,18 +6394,19 @@ definitions:
     type: object
 info:
   contact: {}
-  description: REST API for managing SparkApplication resources across multiple clusters
+  description: REST API for managing GatewayApplication resources across multiple
+    clusters
   license:
     name: Apache 2.0
     url: http://www.apache.org/licenses/LICENSE-2.0.html
   title: Spark Gateway
   version: "1.0"
 paths:
-  /v1/applications/:
+  /v1/applications:
     get:
       consumes:
       - application/json
-      description: Lists SparkApplications metadata in the specified cluster. Optionally
+      description: Lists summaries of applications in specified cluster. Optionally
         filter by namespace.
       parameters:
       - description: Cluster name
@@ -6381,20 +6422,21 @@ paths:
       - application/json
       responses:
         "200":
-          description: List of SparkApplication metadata
+          description: List of GatewayApplicationSummary objects
           schema:
             items:
-              $ref: '#/definitions/domain.GatewayApplicationMeta'
+              $ref: '#/definitions/domain.GatewayApplicationSummary'
             type: array
       security:
       - BasicAuth: []
-      summary: List SparkApplications
+      summary: List GatewayApplicationSummary
       tags:
       - Applications
+  /v1/applications/:
     post:
       consumes:
       - application/json
-      description: Submits the provided SparkApplication to the given namespace.
+      description: Submits the provided GatewayApplication to the given namespace.
       parameters:
       - description: v1beta2.SparkApplication resource
         in: body
@@ -6406,21 +6448,21 @@ paths:
       - application/json
       responses:
         "201":
-          description: SparkApplication Created
+          description: GatewayApplication Created
           schema:
             $ref: '#/definitions/domain.GatewayApplication'
       security:
       - BasicAuth: []
-      summary: Submit a new SparkApplication
+      summary: Submit a new GatewayApplication
       tags:
       - Applications
   /v1/applications/{gatewayId}:
     delete:
       consumes:
       - application/json
-      description: Deletes the specified SparkApplication
+      description: Deletes the specified GatewayApplication
       parameters:
-      - description: SparkApplication Name
+      - description: GatewayApplication Name
         in: path
         name: gatewayId
         required: true
@@ -6436,15 +6478,15 @@ paths:
             type: object
       security:
       - BasicAuth: []
-      summary: Delete a SparkApplication
+      summary: Delete a GatewayApplication
       tags:
       - Applications
     get:
       consumes:
       - application/json
-      description: Retrieves the full SparkApplication resource by ID.
+      description: Retrieves the full GatewayApplication resource by ID.
       parameters:
-      - description: SparkApplication Name
+      - description: GatewayApplication Name
         in: path
         name: gatewayId
         required: true
@@ -6453,22 +6495,22 @@ paths:
       - application/json
       responses:
         "200":
-          description: SparkApplication resource
+          description: GatewayApplication resource
           schema:
             $ref: '#/definitions/domain.GatewayApplication'
       security:
       - BasicAuth: []
-      summary: Get a SparkApplication
+      summary: Get a GatewayApplication
       tags:
       - Applications
   /v1/applications/{gatewayId}/logs:
     get:
       consumes:
       - application/json
-      description: Retrieves the last N lines of driver logs for the specified SparkApplication.
+      description: Retrieves the last N lines of driver logs for the specified GatewayApplication.
         Defaults to the last 100 lines.
       parameters:
-      - description: SparkApplication Name
+      - description: GatewayApplication Name
         in: path
         name: gatewayId
         required: true
@@ -6486,16 +6528,16 @@ paths:
             type: string
       security:
       - BasicAuth: []
-      summary: Get driver logs of a SparkApplication
+      summary: Get driver logs of a GatewayApplication
       tags:
       - Applications
   /v1/applications/{gatewayId}/status:
     get:
       consumes:
       - application/json
-      description: Retrieves only the status field of a SparkApplication.
+      description: Retrieves only the status field of a GatewayApplication.
       parameters:
-      - description: SparkApplication Name
+      - description: GatewayApplication Name
         in: path
         name: gatewayId
         required: true
@@ -6504,12 +6546,12 @@ paths:
       - application/json
       responses:
         "200":
-          description: SparkApplication status
+          description: GatewayApplication status
           schema:
             $ref: '#/definitions/v1beta2.SparkApplicationStatus'
       security:
       - BasicAuth: []
-      summary: Get SparkApplication status
+      summary: Get GatewayApplication status
       tags:
       - Applications
 securityDefinitions:

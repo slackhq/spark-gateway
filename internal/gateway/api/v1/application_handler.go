@@ -13,7 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package v1kubeflow
+package v1
 
 import (
 	"errors"
@@ -29,33 +29,33 @@ import (
 //  Swagger General	API Info
 //	@title			Spark Gateway
 //	@version		1.0
-//	@description	REST API for managing SparkApplication resources across multiple clusters
+//	@description	REST API for managing GatewayApplication resources across multiple clusters
 //	@securityDefinitions.basic	BasicAuth
 
 //  @license.name	Apache 2.0
 //  @license.url	http://www.apache.org/licenses/LICENSE-2.0.html
 
-type ApplicationHandler struct {
-	service         service.SparkApplicationService
+type GatewayApplicationHandler struct {
+	service         service.GatewayApplicationService
 	defaultLogLines int
 }
 
-func NewKubeflowApplicationHandler(service service.SparkApplicationService, defaultLogLines int) *ApplicationHandler {
-	return &ApplicationHandler{service: service, defaultLogLines: defaultLogLines}
+func NewGatewayApplicationHandler(service service.GatewayApplicationService, defaultLogLines int) *GatewayApplicationHandler {
+	return &GatewayApplicationHandler{service: service, defaultLogLines: defaultLogLines}
 }
 
-// ListSparkApplications godoc
-// @Summary List SparkApplications
-// @Description Lists SparkApplications metadata in the specified cluster. Optionally filter by namespace.
+// ListGatewayApplicationSummaries godoc
+// @Summary List GatewayApplicationSummary
+// @Description Lists summaries of applications in specified cluster. Optionally filter by namespace.
 // @Tags Applications
 // @Accept json
 // @Produce json
 // @Security BasicAuth
 // @Param cluster query string true "Cluster name"
 // @Param namespace query string false "Namespace (optional)"
-// @Success 200 {array} domain.GatewayApplicationMeta "List of SparkApplication metadata"
-// @Router /v1/applications/ [get]
-func (h *ApplicationHandler) List(c *gin.Context) {
+// @Success 200 {array} domain.GatewayApplicationSummary "List of GatewayApplicationSummary objects"
+// @Router /v1/applications [get]
+func (h *GatewayApplicationHandler) List(c *gin.Context) {
 
 	cluster := c.Query("cluster")
 	if cluster == "" {
@@ -75,17 +75,17 @@ func (h *ApplicationHandler) List(c *gin.Context) {
 	c.JSON(http.StatusOK, appMetaList)
 }
 
-// GetSparkApplication godoc
-// @Summary Get a SparkApplication
-// @Description Retrieves the full SparkApplication resource by ID.
+// GetGatewayApplication godoc
+// @Summary Get a GatewayApplication
+// @Description Retrieves the full GatewayApplication resource by ID.
 // @Tags Applications
 // @Accept json
 // @Produce json
 // @Security BasicAuth
-// @Param gatewayId path string true "SparkApplication Name"
-// @Success 200 {object} domain.GatewayApplication "SparkApplication resource"
+// @Param gatewayId path string true "GatewayApplication Name"
+// @Success 200 {object} domain.GatewayApplication "GatewayApplication resource"
 // @Router /v1/applications/{gatewayId} [get]
-func (h *ApplicationHandler) Get(c *gin.Context) {
+func (h *GatewayApplicationHandler) Get(c *gin.Context) {
 
 	application, err := h.service.Get(c, c.Param("gatewayId"))
 
@@ -97,17 +97,17 @@ func (h *ApplicationHandler) Get(c *gin.Context) {
 	c.JSON(http.StatusOK, application)
 }
 
-// GetSparkApplicationStatus godoc
-// @Summary Get SparkApplication status
-// @Description Retrieves only the status field of a SparkApplication.
+// GetGatewayApplicationStatus godoc
+// @Summary Get GatewayApplication status
+// @Description Retrieves only the status field of a GatewayApplication.
 // @Tags Applications
 // @Accept json
 // @Produce json
 // @Security BasicAuth
-// @Param gatewayId path string true "SparkApplication Name"
-// @Success 200 {object} v1beta2.SparkApplicationStatus "SparkApplication status"
+// @Param gatewayId path string true "GatewayApplication Name"
+// @Success 200 {object} v1beta2.SparkApplicationStatus "GatewayApplication status"
 // @Router /v1/applications/{gatewayId}/status [get]
-func (h *ApplicationHandler) Status(c *gin.Context) {
+func (h *GatewayApplicationHandler) Status(c *gin.Context) {
 
 	appStatus, err := h.service.Status(c, c.Param("gatewayId"))
 
@@ -119,18 +119,18 @@ func (h *ApplicationHandler) Status(c *gin.Context) {
 	c.JSON(http.StatusOK, appStatus)
 }
 
-// GetSparkApplicationLogs godoc
-// @Summary Get driver logs of a SparkApplication
-// @Description Retrieves the last N lines of driver logs for the specified SparkApplication. Defaults to the last 100 lines.
+// GetGatewayApplicationLogs godoc
+// @Summary Get driver logs of a GatewayApplication
+// @Description Retrieves the last N lines of driver logs for the specified GatewayApplication. Defaults to the last 100 lines.
 // @Tags Applications
 // @Accept json
 // @Produce plain
 // @Security BasicAuth
-// @Param gatewayId path string true "SparkApplication Name"
+// @Param gatewayId path string true "GatewayApplication Name"
 // @Param lines query int false "Number of log lines to retrieve (default: 100)"
 // @Success 200 {string} string "Driver logs"
 // @Router /v1/applications/{gatewayId}/logs [get]
-func (h *ApplicationHandler) Logs(c *gin.Context) {
+func (h *GatewayApplicationHandler) Logs(c *gin.Context) {
 
 	tailLines := h.defaultLogLines
 	var err error
@@ -152,17 +152,17 @@ func (h *ApplicationHandler) Logs(c *gin.Context) {
 	c.JSON(http.StatusOK, logString)
 }
 
-// CreateSparkApplication godoc
-// @Summary Submit a new SparkApplication
-// @Description Submits the provided SparkApplication to the given namespace.
+// CreateGatewayApplication godoc
+// @Summary Submit a new GatewayApplication
+// @Description Submits the provided GatewayApplication to the given namespace.
 // @Tags Applications
 // @Accept json
 // @Produce json
 // @Security BasicAuth
 // @Param SparkApplication body v1beta2.SparkApplication true "v1beta2.SparkApplication resource"
-// @Success 201 {object} domain.GatewayApplication "SparkApplication Created"
+// @Success 201 {object} domain.GatewayApplication "GatewayApplication Created"
 // @Router /v1/applications/ [post]
-func (h *ApplicationHandler) Create(c *gin.Context) {
+func (h *GatewayApplicationHandler) Create(c *gin.Context) {
 
 	var app v1beta2.SparkApplication
 
@@ -171,8 +171,11 @@ func (h *ApplicationHandler) Create(c *gin.Context) {
 		return
 	}
 
-	// Set user
-	// This should always exist because of prior auth middlewares
+	if app.Namespace == "" {
+		c.Error(gatewayerrors.NewBadRequest(errors.New("submitted SparkApplication must have a Namespace")))
+		return
+	}
+
 	gotUser, exists := c.Get("user")
 	if !exists {
 		c.Error(errors.New("no user set, congratulations you've encountered a bug that should never happen"))
@@ -180,27 +183,27 @@ func (h *ApplicationHandler) Create(c *gin.Context) {
 	}
 	user := gotUser.(string)
 
-	application, err := h.service.Create(c, &app, user)
+	createdApp, err := h.service.Create(c, &app, user)
 
 	if err != nil {
 		c.Error(err)
 		return
 	}
 
-	c.JSON(http.StatusCreated, application)
+	c.JSON(http.StatusCreated, createdApp)
 }
 
-// DeleteSparkApplication godoc
-// @Summary Delete a SparkApplication
-// @Description Deletes the specified SparkApplication
+// DeleteGatewayApplication godoc
+// @Summary Delete a GatewayApplication
+// @Description Deletes the specified GatewayApplication
 // @Tags Applications
 // @Accept json
 // @Produce json
 // @Security BasicAuth
-// @Param gatewayId path string true "SparkApplication Name"
+// @Param gatewayId path string true "GatewayApplication Name"
 // @Success 200 {object} map[string]string "Application deleted: {'status': 'success'}"
 // @Router /v1/applications/{gatewayId} [delete]
-func (h *ApplicationHandler) Delete(c *gin.Context) {
+func (h *GatewayApplicationHandler) Delete(c *gin.Context) {
 
 	err := h.service.Delete(c, c.Param("gatewayId"))
 

@@ -19,14 +19,14 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/v1/applications/": {
+        "/v1/applications": {
             "get": {
                 "security": [
                     {
                         "BasicAuth": []
                     }
                 ],
-                "description": "Lists SparkApplications metadata in the specified cluster. Optionally filter by namespace.",
+                "description": "Lists summaries of applications in specified cluster. Optionally filter by namespace.",
                 "consumes": [
                     "application/json"
                 ],
@@ -36,7 +36,7 @@ const docTemplate = `{
                 "tags": [
                     "Applications"
                 ],
-                "summary": "List SparkApplications",
+                "summary": "List GatewayApplicationSummary",
                 "parameters": [
                     {
                         "type": "string",
@@ -54,23 +54,25 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "List of SparkApplication metadata",
+                        "description": "List of GatewayApplicationSummary objects",
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/domain.GatewayApplicationMeta"
+                                "$ref": "#/definitions/domain.GatewayApplicationSummary"
                             }
                         }
                     }
                 }
-            },
+            }
+        },
+        "/v1/applications/": {
             "post": {
                 "security": [
                     {
                         "BasicAuth": []
                     }
                 ],
-                "description": "Submits the provided SparkApplication to the given namespace.",
+                "description": "Submits the provided GatewayApplication to the given namespace.",
                 "consumes": [
                     "application/json"
                 ],
@@ -80,7 +82,7 @@ const docTemplate = `{
                 "tags": [
                     "Applications"
                 ],
-                "summary": "Submit a new SparkApplication",
+                "summary": "Submit a new GatewayApplication",
                 "parameters": [
                     {
                         "description": "v1beta2.SparkApplication resource",
@@ -94,7 +96,7 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "201": {
-                        "description": "SparkApplication Created",
+                        "description": "GatewayApplication Created",
                         "schema": {
                             "$ref": "#/definitions/domain.GatewayApplication"
                         }
@@ -109,7 +111,7 @@ const docTemplate = `{
                         "BasicAuth": []
                     }
                 ],
-                "description": "Retrieves the full SparkApplication resource by ID.",
+                "description": "Retrieves the full GatewayApplication resource by ID.",
                 "consumes": [
                     "application/json"
                 ],
@@ -119,11 +121,11 @@ const docTemplate = `{
                 "tags": [
                     "Applications"
                 ],
-                "summary": "Get a SparkApplication",
+                "summary": "Get a GatewayApplication",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "SparkApplication Name",
+                        "description": "GatewayApplication Name",
                         "name": "gatewayId",
                         "in": "path",
                         "required": true
@@ -131,7 +133,7 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "SparkApplication resource",
+                        "description": "GatewayApplication resource",
                         "schema": {
                             "$ref": "#/definitions/domain.GatewayApplication"
                         }
@@ -144,7 +146,7 @@ const docTemplate = `{
                         "BasicAuth": []
                     }
                 ],
-                "description": "Deletes the specified SparkApplication",
+                "description": "Deletes the specified GatewayApplication",
                 "consumes": [
                     "application/json"
                 ],
@@ -154,11 +156,11 @@ const docTemplate = `{
                 "tags": [
                     "Applications"
                 ],
-                "summary": "Delete a SparkApplication",
+                "summary": "Delete a GatewayApplication",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "SparkApplication Name",
+                        "description": "GatewayApplication Name",
                         "name": "gatewayId",
                         "in": "path",
                         "required": true
@@ -184,7 +186,7 @@ const docTemplate = `{
                         "BasicAuth": []
                     }
                 ],
-                "description": "Retrieves the last N lines of driver logs for the specified SparkApplication. Defaults to the last 100 lines.",
+                "description": "Retrieves the last N lines of driver logs for the specified GatewayApplication. Defaults to the last 100 lines.",
                 "consumes": [
                     "application/json"
                 ],
@@ -194,11 +196,11 @@ const docTemplate = `{
                 "tags": [
                     "Applications"
                 ],
-                "summary": "Get driver logs of a SparkApplication",
+                "summary": "Get driver logs of a GatewayApplication",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "SparkApplication Name",
+                        "description": "GatewayApplication Name",
                         "name": "gatewayId",
                         "in": "path",
                         "required": true
@@ -227,7 +229,7 @@ const docTemplate = `{
                         "BasicAuth": []
                     }
                 ],
-                "description": "Retrieves only the status field of a SparkApplication.",
+                "description": "Retrieves only the status field of a GatewayApplication.",
                 "consumes": [
                     "application/json"
                 ],
@@ -237,11 +239,11 @@ const docTemplate = `{
                 "tags": [
                     "Applications"
                 ],
-                "summary": "Get SparkApplication status",
+                "summary": "Get GatewayApplication status",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "SparkApplication Name",
+                        "description": "GatewayApplication Name",
                         "name": "gatewayId",
                         "in": "path",
                         "required": true
@@ -249,7 +251,7 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "SparkApplication status",
+                        "description": "GatewayApplication status",
                         "schema": {
                             "$ref": "#/definitions/v1beta2.SparkApplicationStatus"
                         }
@@ -269,7 +271,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "sparkApplication": {
-                    "$ref": "#/definitions/v1beta2.SparkApplication"
+                    "$ref": "#/definitions/domain.GatewaySparkApplication"
                 },
                 "sparkLogURLs": {
                     "$ref": "#/definitions/domain.SparkLogURLs"
@@ -282,11 +284,73 @@ const docTemplate = `{
         "domain.GatewayApplicationMeta": {
             "type": "object",
             "properties": {
+                "annotations": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "labels": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "name": {
+                    "type": "string"
+                },
+                "namespace": {
+                    "type": "string"
+                }
+            }
+        },
+        "domain.GatewayApplicationSummary": {
+            "type": "object",
+            "properties": {
+                "apiVersion": {
+                    "description": "APIVersion defines the versioned schema of this representation of an object.\nServers should convert recognized schemas to the latest internal value, and\nmay reject unrecognized values.\nMore info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources\n+optional",
+                    "type": "string"
+                },
                 "cluster": {
                     "type": "string"
                 },
-                "sparkAppMetadata": {
-                    "$ref": "#/definitions/domain.SparkManagerApplicationMeta"
+                "gatewayId": {
+                    "type": "string"
+                },
+                "kind": {
+                    "description": "Kind is a string value representing the REST resource this object represents.\nServers may infer this from the endpoint the client submits requests to.\nCannot be updated.\nIn CamelCase.\nMore info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds\n+optional",
+                    "type": "string"
+                },
+                "metadata": {
+                    "$ref": "#/definitions/domain.GatewayApplicationMeta"
+                },
+                "status": {
+                    "$ref": "#/definitions/v1beta2.SparkApplicationStatus"
+                },
+                "user": {
+                    "type": "string"
+                }
+            }
+        },
+        "domain.GatewaySparkApplication": {
+            "type": "object",
+            "properties": {
+                "apiVersion": {
+                    "description": "APIVersion defines the versioned schema of this representation of an object.\nServers should convert recognized schemas to the latest internal value, and\nmay reject unrecognized values.\nMore info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources\n+optional",
+                    "type": "string"
+                },
+                "kind": {
+                    "description": "Kind is a string value representing the REST resource this object represents.\nServers may infer this from the endpoint the client submits requests to.\nCannot be updated.\nIn CamelCase.\nMore info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds\n+optional",
+                    "type": "string"
+                },
+                "metadata": {
+                    "$ref": "#/definitions/domain.GatewayApplicationMeta"
+                },
+                "spec": {
+                    "$ref": "#/definitions/v1beta2.SparkApplicationSpec"
+                },
+                "status": {
+                    "$ref": "#/definitions/v1beta2.SparkApplicationStatus"
                 }
             }
         },
@@ -300,39 +364,6 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "sparkUI": {
-                    "type": "string"
-                }
-            }
-        },
-        "domain.SparkManagerApplicationMeta": {
-            "type": "object",
-            "properties": {
-                "applicationState": {
-                    "$ref": "#/definitions/v1beta2.ApplicationState"
-                },
-                "driverInfo": {
-                    "$ref": "#/definitions/v1beta2.DriverInfo"
-                },
-                "executionAttempts": {
-                    "type": "integer"
-                },
-                "lastSubmissionAttemptTime": {
-                    "type": "string"
-                },
-                "metadata": {
-                    "$ref": "#/definitions/v1.ObjectMeta"
-                },
-                "sparkApplicationId": {
-                    "description": "All fields below come from v1beta2.SparkApplicationStatus\nCurrently it's all fields except for ExecutorState because it can get pretty large",
-                    "type": "string"
-                },
-                "submissionAttempts": {
-                    "type": "integer"
-                },
-                "submissionID": {
-                    "type": "string"
-                },
-                "terminationTime": {
                     "type": "string"
                 }
             }
@@ -5640,7 +5671,7 @@ var SwaggerInfo = &swag.Spec{
 	BasePath:         "",
 	Schemes:          []string{},
 	Title:            "Spark Gateway",
-	Description:      "REST API for managing SparkApplication resources across multiple clusters",
+	Description:      "REST API for managing GatewayApplication resources across multiple clusters",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",

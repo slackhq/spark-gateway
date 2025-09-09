@@ -18,10 +18,10 @@ var _ ClusterRepository = &ClusterRepositoryMock{}
 //
 //		// make and configure a mocked ClusterRepository
 //		mockedClusterRepository := &ClusterRepositoryMock{
-//			GetAllFunc: func() ([]domain.KubeCluster, error) {
+//			GetAllFunc: func() []domain.KubeCluster {
 //				panic("mock out the GetAll method")
 //			},
-//			GetAllWithNamespaceFunc: func(namespace string) ([]domain.KubeCluster, error) {
+//			GetAllWithNamespaceFunc: func(namespace string) []domain.KubeCluster {
 //				panic("mock out the GetAllWithNamespace method")
 //			},
 //			GetByIdFunc: func(clusterId string) (*domain.KubeCluster, error) {
@@ -38,10 +38,10 @@ var _ ClusterRepository = &ClusterRepositoryMock{}
 //	}
 type ClusterRepositoryMock struct {
 	// GetAllFunc mocks the GetAll method.
-	GetAllFunc func() ([]domain.KubeCluster, error)
+	GetAllFunc func() []domain.KubeCluster
 
 	// GetAllWithNamespaceFunc mocks the GetAllWithNamespace method.
-	GetAllWithNamespaceFunc func(namespace string) ([]domain.KubeCluster, error)
+	GetAllWithNamespaceFunc func(namespace string) []domain.KubeCluster
 
 	// GetByIdFunc mocks the GetById method.
 	GetByIdFunc func(clusterId string) (*domain.KubeCluster, error)
@@ -77,7 +77,7 @@ type ClusterRepositoryMock struct {
 }
 
 // GetAll calls GetAllFunc.
-func (mock *ClusterRepositoryMock) GetAll() ([]domain.KubeCluster, error) {
+func (mock *ClusterRepositoryMock) GetAll() []domain.KubeCluster {
 	if mock.GetAllFunc == nil {
 		panic("ClusterRepositoryMock.GetAllFunc: method is nil but ClusterRepository.GetAll was just called")
 	}
@@ -104,7 +104,7 @@ func (mock *ClusterRepositoryMock) GetAllCalls() []struct {
 }
 
 // GetAllWithNamespace calls GetAllWithNamespaceFunc.
-func (mock *ClusterRepositoryMock) GetAllWithNamespace(namespace string) ([]domain.KubeCluster, error) {
+func (mock *ClusterRepositoryMock) GetAllWithNamespace(namespace string) []domain.KubeCluster {
 	if mock.GetAllWithNamespaceFunc == nil {
 		panic("ClusterRepositoryMock.GetAllWithNamespaceFunc: method is nil but ClusterRepository.GetAllWithNamespace was just called")
 	}

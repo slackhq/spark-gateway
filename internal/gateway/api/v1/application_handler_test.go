@@ -13,7 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package v1kubeflow
+package v1
 
 import (
 	"bytes"
@@ -33,7 +33,6 @@ import (
 	"github.com/slackhq/spark-gateway/internal/shared/gatewayerrors"
 	sgMiddleware "github.com/slackhq/spark-gateway/internal/shared/middleware"
 	"github.com/stretchr/testify/assert"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 var testConfig = &config.SparkGatewayConfig{DefaultLogLines: 100}
@@ -102,9 +101,9 @@ func TestApplicationHandlerErrorHandler(t *testing.T) {
 func TestApplicationHandlerGet(t *testing.T) {
 
 	retApp := &domain.GatewayApplication{
-		SparkApplication: &v1beta2.SparkApplication{
-			ObjectMeta: v1.ObjectMeta{
-				Name:      "clusterid-testid",
+		SparkApplication: domain.GatewaySparkApplication{
+			GatewayApplicationMeta: domain.GatewayApplicationMeta{
+				Name:      "clusterid-nsid-uuid",
 				Namespace: "test",
 			},
 		},
@@ -112,14 +111,14 @@ func TestApplicationHandlerGet(t *testing.T) {
 		User:    "user",
 	}
 
-	service := &service.SparkApplicationServiceMock{
+	service := &service.GatewayApplicationServiceMock{
 		GetFunc: func(ctx context.Context, gatewayId string) (*domain.GatewayApplication, error) {
 			return retApp, nil
 		},
 	}
 
 	router, v1Group := NewV1Router()
-	RegisterKubeflowApplicationRoutes(v1Group, testConfig, service)
+	RegisterGatewayApplicationRoutes(v1Group, testConfig, service)
 
 	req, _ := http.NewRequest("GET", "/api/v1/applications/clusterid-testid", nil)
 	w := httptest.NewRecorder()
@@ -134,14 +133,14 @@ func TestApplicationHandlerGet(t *testing.T) {
 
 func TestApplicationHandlerGetError(t *testing.T) {
 
-	service := &service.SparkApplicationServiceMock{
+	service := &service.GatewayApplicationServiceMock{
 		GetFunc: func(ctx context.Context, gatewayId string) (*domain.GatewayApplication, error) {
 			return &domain.GatewayApplication{}, gatewayerrors.NewNotFound(errors.New("error getting SparkApplication 'clusterid-testid'"))
 		},
 	}
 
 	router, v1Group := NewV1Router()
-	RegisterKubeflowApplicationRoutes(v1Group, testConfig, service)
+	RegisterGatewayApplicationRoutes(v1Group, testConfig, service)
 
 	req, _ := http.NewRequest("GET", "/api/v1/applications/clusterid-testid", nil)
 	w := httptest.NewRecorder()
@@ -162,14 +161,14 @@ func TestApplicationHandlerStatus(t *testing.T) {
 		SubmissionID: "submissionId",
 	}
 
-	service := &service.SparkApplicationServiceMock{
+	service := &service.GatewayApplicationServiceMock{
 		StatusFunc: func(ctx context.Context, gatewayId string) (*v1beta2.SparkApplicationStatus, error) {
 			return retResp, nil
 		},
 	}
 
 	router, v1Group := NewV1Router()
-	RegisterKubeflowApplicationRoutes(v1Group, testConfig, service)
+	RegisterGatewayApplicationRoutes(v1Group, testConfig, service)
 
 	req, _ := http.NewRequest("GET", "/api/v1/applications/clusterid-testid/status", nil)
 	w := httptest.NewRecorder()
@@ -183,14 +182,14 @@ func TestApplicationHandlerStatus(t *testing.T) {
 }
 func TestApplicationHandlerStatusError(t *testing.T) {
 
-	service := &service.SparkApplicationServiceMock{
+	service := &service.GatewayApplicationServiceMock{
 		StatusFunc: func(ctx context.Context, gatewayId string) (*v1beta2.SparkApplicationStatus, error) {
 			return &v1beta2.SparkApplicationStatus{}, gatewayerrors.NewNotFound(errors.New("error getting SparkApplication 'clusterid-testid'"))
 		},
 	}
 
 	router, v1Group := NewV1Router()
-	RegisterKubeflowApplicationRoutes(v1Group, testConfig, service)
+	RegisterGatewayApplicationRoutes(v1Group, testConfig, service)
 
 	req, _ := http.NewRequest("GET", "/api/v1/applications/clusterid-testid/status", nil)
 	w := httptest.NewRecorder()
@@ -212,9 +211,9 @@ func TestApplicationHandlerCreate(t *testing.T) {
 	})
 
 	retApp := &domain.GatewayApplication{
-		SparkApplication: &v1beta2.SparkApplication{
-			ObjectMeta: v1.ObjectMeta{
-				Name:      "clusterid-testid",
+		SparkApplication: domain.GatewaySparkApplication{
+			GatewayApplicationMeta: domain.GatewayApplicationMeta{
+				Name:      "clusterid-nsid-uuid",
 				Namespace: "test",
 			},
 		},
@@ -222,22 +221,22 @@ func TestApplicationHandlerCreate(t *testing.T) {
 		User:    "user",
 	}
 
-	service := &service.SparkApplicationServiceMock{
+	service := &service.GatewayApplicationServiceMock{
 		CreateFunc: func(ctx context.Context, application *v1beta2.SparkApplication, user string) (*domain.GatewayApplication, error) {
 			return retApp, nil
 		},
 	}
 
-	RegisterKubeflowApplicationRoutes(v1Group, testConfig, service)
+	RegisterGatewayApplicationRoutes(v1Group, testConfig, service)
 
-	createApp := &v1beta2.SparkApplication{
-		ObjectMeta: v1.ObjectMeta{
+	createReq := domain.GatewaySparkApplication{
+		GatewayApplicationMeta: domain.GatewayApplicationMeta{
 			Name:      "clusterid-testid",
 			Namespace: "test",
 		},
 	}
 
-	jsonReq, _ := json.Marshal(createApp)
+	jsonReq, _ := json.Marshal(createReq)
 	req, _ := http.NewRequest("POST", "/api/v1/applications", bytes.NewBuffer(jsonReq))
 	w := httptest.NewRecorder()
 	router.ServeHTTP(w, req)
@@ -250,14 +249,14 @@ func TestApplicationHandlerCreate(t *testing.T) {
 }
 func TestApplicationHandlerCreateBadRequest(t *testing.T) {
 
-	service := &service.SparkApplicationServiceMock{
+	service := &service.GatewayApplicationServiceMock{
 		CreateFunc: func(ctx context.Context, application *v1beta2.SparkApplication, user string) (*domain.GatewayApplication, error) {
 			return nil, nil
 		},
 	}
 
 	router, v1Group := NewV1Router()
-	RegisterKubeflowApplicationRoutes(v1Group, testConfig, service)
+	RegisterGatewayApplicationRoutes(v1Group, testConfig, service)
 
 	req, _ := http.NewRequest("POST", "/api/v1/applications", nil)
 	w := httptest.NewRecorder()
@@ -278,16 +277,16 @@ func TestApplicationHandlerCreateAlreadyExists(t *testing.T) {
 		ctx.Next()
 	})
 
-	service := &service.SparkApplicationServiceMock{
+	service := &service.GatewayApplicationServiceMock{
 		CreateFunc: func(ctx context.Context, application *v1beta2.SparkApplication, user string) (*domain.GatewayApplication, error) {
 			return nil, gatewayerrors.NewAlreadyExists(errors.New("resource.group \"test\" already exists"))
 		},
 	}
 
-	RegisterKubeflowApplicationRoutes(v1Group, testConfig, service)
+	RegisterGatewayApplicationRoutes(v1Group, testConfig, service)
 
-	createReq := &v1beta2.SparkApplication{
-		ObjectMeta: v1.ObjectMeta{
+	createReq := domain.GatewaySparkApplication{
+		GatewayApplicationMeta: domain.GatewayApplicationMeta{
 			Name:      "clusterid-testid",
 			Namespace: "test",
 		},
@@ -307,14 +306,14 @@ func TestApplicationHandlerCreateAlreadyExists(t *testing.T) {
 
 func TestApplicationHandlerDelete(t *testing.T) {
 
-	service := &service.SparkApplicationServiceMock{
+	service := &service.GatewayApplicationServiceMock{
 		DeleteFunc: func(ctx context.Context, gatewayId string) error {
 			return nil
 		},
 	}
 
 	router, v1Group := NewV1Router()
-	RegisterKubeflowApplicationRoutes(v1Group, testConfig, service)
+	RegisterGatewayApplicationRoutes(v1Group, testConfig, service)
 
 	req, _ := http.NewRequest("DELETE", "/api/v1/applications/clusterid-testid", nil)
 	w := httptest.NewRecorder()
@@ -331,14 +330,14 @@ func TestApplicationHandlerDelete(t *testing.T) {
 }
 func TestApplicationHandlerDeleteError(t *testing.T) {
 
-	service := &service.SparkApplicationServiceMock{
+	service := &service.GatewayApplicationServiceMock{
 		DeleteFunc: func(ctx context.Context, gatewayId string) error {
 			return gatewayerrors.NewNotFound(errors.New("error getting SparkApplication 'clusterid-testid'"))
 		},
 	}
 
 	router, v1Group := NewV1Router()
-	RegisterKubeflowApplicationRoutes(v1Group, testConfig, service)
+	RegisterGatewayApplicationRoutes(v1Group, testConfig, service)
 
 	req, _ := http.NewRequest("DELETE", "/api/v1/applications/clusterid-testid", nil)
 	w := httptest.NewRecorder()

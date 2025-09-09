@@ -17,41 +17,208 @@ package domain
 
 import (
 	"fmt"
+	"strings"
+
 	"github.com/google/uuid"
 	"github.com/kubeflow/spark-operator/v2/api/v1beta2"
+	"github.com/slackhq/spark-gateway/internal/shared/util"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"strings"
 )
 
 const GATEWAY_USER_LABEL = "spark-gateway/user"
+const GATEWAY_CLUSTER_LABEL = "spark-gateway/cluster"
+const GATEWAY_APPLICATION_NAME_ANNOTATION = "applicationName"
+
+// Most models here are simply wrappers for corresponding v1beta2 types with some fields removed or defaulted. These will most likely need
+// to be expanded into individual models like what Batch Processing Gateway did to fully decouple everything, but since we're
+// focusing on Kubeflow Spark Operator for now, we will target their models
+
+type StatusUrlTemplates struct {
+	SparkUITemplate        string `koanf:"sparkUI"`
+	SparkHistoryUITemplate string `koanf:"sparkHistoryUI"`
+	LogsUITemplate         string `koanf:"logsUI"`
+}
 
 type SparkLogURLs struct {
 	SparkUI        string `json:"sparkUI"`
-	LogsUI         string `json:"logsUI"`
 	SparkHistoryUI string `json:"sparkHistoryUI"`
+	LogsUI         string `json:"logsUI"`
 }
 
-type StatusUrlTemplates struct {
-	SparkUI        string `koanf:"sparkUI"`
-	SparkHistoryUI string `koanf:"sparkHistoryUI"`
-	LogsUI         string `koanf:"logsUI"`
+// NewGatewayApplicationStatus takes in a v1beta2.SparkApplicationStatus and returns a copy with some fields we deem
+// unnecessary nil'd out
+func NewGatewayApplicationStatus(status v1beta2.SparkApplicationStatus) *v1beta2.SparkApplicationStatus {
+	gatewayStatus := status
+
+	gatewayStatus.ExecutorState = nil
+
+	return &gatewayStatus
+}
+
+// GatewayApplicationMeta is essentially a metav1.ObjectMeta with only fields we deem necessary for GatewayApplications
+type GatewayApplicationMeta struct {
+	Name        string            `json:"name"`
+	Namespace   string            `json:"namespace"`
+	Labels      map[string]string `json:"labels"`
+	Annotations map[string]string `json:"annotations"`
+}
+
+// NewGatewayApplicationMeta takes metav1.ObjectMeta and returns a GatewayApplicationMeta with
+// some defaults to ensure no nil values as SparkApplication meta's can often have nil labels,
+// annotations etc.
+func NewGatewayApplicationMeta(appMeta metav1.ObjectMeta) *GatewayApplicationMeta {
+	// Default labels and annotations because these can be nil
+	annotations := map[string]string{}
+	labels := map[string]string{}
+	if appMeta.Annotations != nil {
+		annotations = appMeta.Annotations
+	}
+
+	if appMeta.Labels != nil {
+		labels = appMeta.Labels
+	}
+
+	return &GatewayApplicationMeta{
+		Name:        appMeta.Name,
+		Namespace:   appMeta.Namespace,
+		Annotations: annotations,
+		Labels:      labels,
+	}
+}
+
+// SparkManagerApplicationSummary provides the fields necessary to represent a simple
+// view of a SparkApplication
+type SparkManagerSparkApplicationSummary struct {
+	metav1.TypeMeta        `json:",inline"`
+	GatewayApplicationMeta `json:"metadata"`
+	Status                 v1beta2.SparkApplicationStatus `json:"status"`
+}
+
+func NewSparkManagerSparkApplicationSummary(sparkApp *v1beta2.SparkApplication) *SparkManagerSparkApplicationSummary {
+	return &SparkManagerSparkApplicationSummary{
+		TypeMeta:               sparkApp.TypeMeta,
+		GatewayApplicationMeta: *NewGatewayApplicationMeta(sparkApp.ObjectMeta),
+		Status:                 sparkApp.Status,
+	}
+}
+
+// GatewayApplicationSummary is a SparkManagerApplicationSummary with additional Spark Gateway
+// specific fields for extra context
+type GatewayApplicationSummary struct {
+	SparkManagerSparkApplicationSummary `json:",inline"`
+	GatewayId                           string `json:"gatewayId"`
+	Cluster                             string `json:"cluster"`
+	User                                string `json:"user"`
+}
+
+func NewGatewayApplicationSummary(sparkManagerSummary SparkManagerSparkApplicationSummary) *GatewayApplicationSummary {
+	return &GatewayApplicationSummary{
+		SparkManagerSparkApplicationSummary: sparkManagerSummary,
+		GatewayId:                           sparkManagerSummary.Name,
+		Cluster:                             sparkManagerSummary.Labels[GATEWAY_CLUSTER_LABEL],
+		User:                                sparkManagerSummary.Labels[GATEWAY_USER_LABEL],
+	}
+}
+
+type GatewaySparkApplication struct {
+	metav1.TypeMeta
+	GatewayApplicationMeta `json:"metadata"`
+	Spec                   v1beta2.SparkApplicationSpec   `json:"spec"`
+	Status                 v1beta2.SparkApplicationStatus `json:"status"`
+}
+
+func (gsa *GatewaySparkApplication) ToV1Beta2SparkApplication() *v1beta2.SparkApplication {
+	return &v1beta2.SparkApplication{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "SparkApplication",
+			APIVersion: "sparkoperator.k8s.io/v1beta2",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:        gsa.Name,
+			Namespace:   gsa.Namespace,
+			Annotations: gsa.Annotations,
+			Labels:      gsa.Labels,
+		},
+		Spec:   gsa.Spec,
+		Status: gsa.Status,
+	}
+}
+
+func NewGatewaySparkApplication(sparkApp *v1beta2.SparkApplication, opts ...func(*GatewaySparkApplication)) *GatewaySparkApplication {
+
+	gaSparkApp := &GatewaySparkApplication{
+		GatewayApplicationMeta: *NewGatewayApplicationMeta(sparkApp.ObjectMeta),
+		Spec:                   sparkApp.Spec,
+		Status:                 *NewGatewayApplicationStatus(sparkApp.Status),
+	}
+
+	// Apply opts
+	for _, o := range opts {
+		o(gaSparkApp)
+	}
+
+	return gaSparkApp
+
+}
+
+func WithUser(user string) func(*GatewaySparkApplication) {
+	return func(gsa *GatewaySparkApplication) {
+		gsa.Labels[GATEWAY_USER_LABEL] = user
+		gsa.Spec.ProxyUser = &user
+	}
+}
+
+func WithCluster(cluster string) func(*GatewaySparkApplication) {
+	return func(gsa *GatewaySparkApplication) {
+		gsa.Labels[GATEWAY_CLUSTER_LABEL] = cluster
+	}
+}
+
+func WithSelector(selectorMap map[string]string) func(*GatewaySparkApplication) {
+	return func(gsa *GatewaySparkApplication) {
+		// Add selector values if they exist
+		if len(selectorMap) != 0 {
+			gsa.Labels = util.MergeMaps(gsa.Labels, selectorMap)
+		}
+	}
+}
+
+func WithId(gatewayId string) func(*GatewaySparkApplication) {
+	return func(gsa *GatewaySparkApplication) {
+		// If the application already has a name, we set it as an annotation because
+		// all GatewayApplication names are GatewayIds
+		if gsa.Name != "" {
+			gsa.Annotations[GATEWAY_APPLICATION_NAME_ANNOTATION] = gsa.Name
+		}
+
+		gsa.Name = gatewayId
+	}
 }
 
 type GatewayApplication struct {
-	*v1beta2.SparkApplication `json:"sparkApplication"`
-	GatewayId                 string       `json:"gatewayId"`
-	Cluster                   string       `json:"cluster"`
-	User                      string       `json:"user"`
-	SparkLogURLs              SparkLogURLs `json:"sparkLogURLs"`
+	SparkApplication GatewaySparkApplication `json:"sparkApplication"`
+	GatewayId        string                  `json:"gatewayId"`
+	Cluster          string                  `json:"cluster"`
+	User             string                  `json:"user"`
+	SparkLogURLs     SparkLogURLs            `json:"sparkLogURLs"`
 }
 
-type GatewayIdGenerator struct {
-	UuidGenerator func() (string, error)
+func GatewayApplicationFromV1Beta2SparkApplication(sparkApp *v1beta2.SparkApplication) *GatewayApplication {
+	gatewayId := sparkApp.Name
+	appUser := sparkApp.Labels[GATEWAY_USER_LABEL]
+	cluster := sparkApp.Labels[GATEWAY_CLUSTER_LABEL]
+
+	return &GatewayApplication{
+		SparkApplication: *NewGatewaySparkApplication(sparkApp),
+		GatewayId:        gatewayId,
+		Cluster:          cluster,
+		User:             appUser,
+	}
 }
 
-func (g *GatewayIdGenerator) NewId(cluster KubeCluster, namespace string) (string, error) {
-	// Generate name from clusterId and UUID and set
-	genUUID, err := g.UuidGenerator()
+func NewId(cluster KubeCluster, namespace string) (string, error) {
+	// Generate name from clusterId, namespaceId, and UUID
+	uuid, err := uuid.NewV7()
 	if err != nil {
 		return "", fmt.Errorf("error generating application UUID: %w", err)
 	}
@@ -61,7 +228,7 @@ func (g *GatewayIdGenerator) NewId(cluster KubeCluster, namespace string) (strin
 		return "", fmt.Errorf("error generating GatewayId: %w", err)
 	}
 
-	appName := fmt.Sprintf("%s-%s-%s", cluster.ClusterId, kubeNamespace.NamespaceId, genUUID)
+	appName := fmt.Sprintf("%s-%s-%s", cluster.ClusterId, kubeNamespace.NamespaceId, uuid)
 
 	return appName, nil
 }
@@ -76,54 +243,4 @@ func ParseGatewayIdUUID(gatewayId string) (*uuid.UUID, error) {
 		return &uid, nil
 	}
 	return nil, fmt.Errorf("error parsing gatewayId (%s). Format must be 'cluster-namespace-uuid'", gatewayId)
-}
-
-type SparkManagerApplicationMeta struct {
-	ObjectMeta metav1.ObjectMeta `json:"metadata"`
-	// All fields below come from v1beta2.SparkApplicationStatus
-	// Currently it's all fields except for ExecutorState because it can get pretty large
-	SparkApplicationID        string                   `json:"sparkApplicationId"`
-	SubmissionID              string                   `json:"submissionID"`
-	LastSubmissionAttemptTime metav1.Time              `json:"lastSubmissionAttemptTime"`
-	TerminationTime           metav1.Time              `json:"terminationTime"`
-	DriverInfo                v1beta2.DriverInfo       `json:"driverInfo"`
-	AppState                  v1beta2.ApplicationState `json:"applicationState"`
-	ExecutionAttempts         int32                    `json:"executionAttempts"`
-	SubmissionAttempts        int32                    `json:"submissionAttempts"`
-}
-
-type GatewayApplicationMeta struct {
-	SparkAppMeta SparkManagerApplicationMeta `json:"sparkAppMetadata"`
-	Cluster      string                      `json:"cluster"`
-}
-
-func NewSparkManagerApplicationMeta(sparkApp *v1beta2.SparkApplication) *SparkManagerApplicationMeta {
-
-	if sparkApp == nil {
-		return nil
-	}
-
-	// managedFields can be large and is not a required field
-	sparkApp.ManagedFields = nil
-	return &SparkManagerApplicationMeta{
-		ObjectMeta: sparkApp.ObjectMeta,
-		// All fields below come from v1beta2.SparkApplicationStatus
-		// Currently it's all fields except for ExecutorState because it can get pretty large
-		SparkApplicationID:        sparkApp.Status.SparkApplicationID,
-		SubmissionID:              sparkApp.Status.SubmissionID,
-		LastSubmissionAttemptTime: sparkApp.Status.LastSubmissionAttemptTime,
-		TerminationTime:           sparkApp.Status.TerminationTime,
-		DriverInfo:                sparkApp.Status.DriverInfo,
-		AppState:                  sparkApp.Status.AppState,
-		ExecutionAttempts:         sparkApp.Status.ExecutionAttempts,
-		SubmissionAttempts:        sparkApp.Status.SubmissionAttempts,
-	}
-
-}
-
-func NewGatewayApplicationMeta(smAppMeta *SparkManagerApplicationMeta, cluster string) *GatewayApplicationMeta {
-	return &GatewayApplicationMeta{
-		SparkAppMeta: *smAppMeta,
-		Cluster:      cluster,
-	}
 }
