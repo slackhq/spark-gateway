@@ -13,17 +13,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package repository
+package database
 
 import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strconv"
 
 	"k8s.io/klog/v2"
 
 	"time"
 
+	"github.com/slackhq/spark-gateway/internal/domain"
 	"github.com/slackhq/spark-gateway/internal/shared/config"
 	"github.com/slackhq/spark-gateway/internal/shared/util"
 
@@ -36,10 +38,15 @@ import (
 
 //go:generate moq -rm -out mockdatabaserepository.go . DatabaseRepository
 
-type DatabaseRepository interface {
+type SparkApplicationDatabaseRepository interface {
 	GetById(ctx context.Context, gatewayIdUid uuid.UUID) (*SparkApplication, error)
 	UpdateSparkApplication(ctx context.Context, gatewayIdUid uuid.UUID, updateSparkApp v1beta2.SparkApplication) error
 	InsertSparkApplication(ctx context.Context, gatewayIdUid uuid.UUID, creationTime time.Time, userSubmittedSparkApp *v1beta2.SparkApplication, clusterName string) error
+}
+
+type LivyApplicationDatabaseRepository interface {
+	GetByBatchId(ctx context.Context, batchId int) (*SparkApplication, error)
+	ListFrom(ctx context.Context, fromId int, size int) ([]*SparkApplication, error)
 }
 
 type Database struct {
@@ -143,8 +150,21 @@ func (db *Database) InsertSparkApplication(ctx context.Context, gatewayIdUid uui
 		return gatewayerrors.NewFrom(fmt.Errorf("error marshaling SparkApplication '%s/%s': %w", userSubmittedSparkApp.Namespace, userSubmittedSparkApp.Name, err))
 	}
 
+	// If livy is enabled, this will be set otherwise keep null
+	var batchId *int64
+	if batchIdLabel, ok := userSubmittedSparkApp.Labels[domain.LIVY_BATCH_ID_LABEL]; ok {
+		batchIdInt, err := strconv.Atoi(batchIdLabel)
+		if err != nil {
+			return gatewayerrors.NewFrom(fmt.Errorf("error converting batch id to insert to database: %w", err))
+		}
+
+		batch64 := int64(batchIdInt)
+		batchId = &batch64
+	}
+
 	queryParams := InsertSparkApplicationParams{
 		Uid:          gatewayIdUid,
+		BatchID:      batchId,
 		Name:         &userSubmittedSparkApp.ObjectMeta.Name,
 		CreationTime: &creationTime,
 		Username:     userSubmittedSparkApp.Spec.ProxyUser,
@@ -175,4 +195,38 @@ func SparkAppAuditLog(gatewayIdUid uuid.UUID, sparkApp SparkApplication) {
 		util.SafeTime(sparkApp.CreationTime),
 		util.SafeString(sparkApp.Username),
 	)
+}
+
+// Livy
+func (db *Database) GetByBatchId(ctx context.Context, batchId int) (*SparkApplication, error) {
+	queries := New(db.connectionPool)
+
+	dbId := int64(batchId)
+	sparkApp, err := queries.GetByBatchId(ctx, &dbId)
+	if err != nil {
+		return nil, gatewayerrors.NewFrom(fmt.Errorf("error getting SparkApplication with Livy BatchId '%d' from database: %w", batchId, err))
+	}
+
+	return &sparkApp, nil
+}
+
+func (db *Database) ListFrom(ctx context.Context, from int, size int) ([]*SparkApplication, error) {
+	queries := New(db.connectionPool)
+
+	from64 := int64(from)
+	sparkApps, err := queries.ListFrom(ctx, ListFromParams{
+		Fromid: &from64,
+		Size:   int32(size),
+	})
+
+	if err != nil {
+		return nil, gatewayerrors.NewFrom(fmt.Errorf("error listing SparkApplications: %w", err))
+	}
+
+	var retApps []*SparkApplication
+	for _, app := range sparkApps {
+		retApps = append(retApps, &app)
+	}
+
+	return retApps, nil
 }

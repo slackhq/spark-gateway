@@ -7,6 +7,7 @@ uid = @uid;
 -- name: InsertSparkApplication :one
 INSERT INTO spark_applications (
     uid,
+    batch_id,
     name,
     creation_time,
     username,
@@ -15,7 +16,7 @@ INSERT INTO spark_applications (
     submitted
 )
 VALUES (
-    @uid, @name, @creation_time, @username, @namespace, @cluster, @submitted::jsonb
+    @uid, @batch_id, @name, @creation_time, @username, @namespace, @cluster, @submitted::jsonb
 )
 ON CONFLICT (uid)
 DO UPDATE SET
@@ -45,3 +46,12 @@ DO UPDATE SET
     state = EXCLUDED.state,
     status = EXCLUDED.status
 RETURNING *;
+
+-- name: GetByBatchId :one
+SELECT * FROM spark_applications WHERE batch_id = @batch_id;
+
+-- name: ListFrom :many
+SELECT * FROM spark_applications
+WHERE batch_id >= @fromId
+ORDER BY batch_id ASC
+LIMIT @size;
