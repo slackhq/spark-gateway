@@ -10,18 +10,22 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const getByBatchId = `-- name: GetByBatchId :one
-SELECT uid, batch_id, name, creation_time, termination_time, username, namespace, cluster, submitted, updated, state, status FROM spark_applications WHERE batch_id = $1
+SELECT uid, name, creation_time, termination_time, username, namespace, cluster, submitted, updated, state, status FROM spark_applications
+WHERE uid = (
+    SELECT uid FROM livy_applications
+    WHERE "batch_id" = $1
+)
 `
 
-func (q *Queries) GetByBatchId(ctx context.Context, batchID *int64) (SparkApplication, error) {
+func (q *Queries) GetByBatchId(ctx context.Context, batchID int64) (SparkApplication, error) {
 	row := q.db.QueryRow(ctx, getByBatchId, batchID)
 	var i SparkApplication
 	err := row.Scan(
 		&i.Uid,
-		&i.BatchID,
 		&i.Name,
 		&i.CreationTime,
 		&i.TerminationTime,
@@ -38,7 +42,7 @@ func (q *Queries) GetByBatchId(ctx context.Context, batchID *int64) (SparkApplic
 
 const getById = `-- name: GetById :one
 
-SELECT uid, batch_id, name, creation_time, termination_time, username, namespace, cluster, submitted, updated, state, status FROM spark_applications WHERE
+SELECT uid, name, creation_time, termination_time, username, namespace, cluster, submitted, updated, state, status FROM spark_applications WHERE
 uid = $1
 `
 
@@ -48,7 +52,6 @@ func (q *Queries) GetById(ctx context.Context, uid uuid.UUID) (SparkApplication,
 	var i SparkApplication
 	err := row.Scan(
 		&i.Uid,
-		&i.BatchID,
 		&i.Name,
 		&i.CreationTime,
 		&i.TerminationTime,
@@ -63,10 +66,25 @@ func (q *Queries) GetById(ctx context.Context, uid uuid.UUID) (SparkApplication,
 	return i, err
 }
 
+const insertLivyApplication = `-- name: InsertLivyApplication :one
+INSERT INTO livy_applications (
+    uid
+) VALUES (
+    $1
+)
+RETURNING batch_id, uid
+`
+
+func (q *Queries) InsertLivyApplication(ctx context.Context, uid pgtype.UUID) (LivyApplication, error) {
+	row := q.db.QueryRow(ctx, insertLivyApplication, uid)
+	var i LivyApplication
+	err := row.Scan(&i.BatchID, &i.Uid)
+	return i, err
+}
+
 const insertSparkApplication = `-- name: InsertSparkApplication :one
 INSERT INTO spark_applications (
     uid,
-    batch_id,
     name,
     creation_time,
     username,
@@ -75,7 +93,7 @@ INSERT INTO spark_applications (
     submitted
 )
 VALUES (
-    $1, $2, $3, $4, $5, $6, $7, $8::jsonb
+    $1, $2, $3, $4, $5, $6, $7::jsonb
 )
 ON CONFLICT (uid)
 DO UPDATE SET
@@ -85,12 +103,11 @@ DO UPDATE SET
     namespace = EXCLUDED.namespace,
     cluster = EXCLUDED.cluster,
     submitted = EXCLUDED.submitted
-RETURNING uid, batch_id, name, creation_time, termination_time, username, namespace, cluster, submitted, updated, state, status
+RETURNING uid, name, creation_time, termination_time, username, namespace, cluster, submitted, updated, state, status
 `
 
 type InsertSparkApplicationParams struct {
 	Uid          uuid.UUID  `json:"uid"`
-	BatchID      *int64     `json:"batch_id"`
 	Name         *string    `json:"name"`
 	CreationTime *time.Time `json:"creation_time"`
 	Username     *string    `json:"username"`
@@ -102,7 +119,6 @@ type InsertSparkApplicationParams struct {
 func (q *Queries) InsertSparkApplication(ctx context.Context, arg InsertSparkApplicationParams) (SparkApplication, error) {
 	row := q.db.QueryRow(ctx, insertSparkApplication,
 		arg.Uid,
-		arg.BatchID,
 		arg.Name,
 		arg.CreationTime,
 		arg.Username,
@@ -113,7 +129,6 @@ func (q *Queries) InsertSparkApplication(ctx context.Context, arg InsertSparkApp
 	var i SparkApplication
 	err := row.Scan(
 		&i.Uid,
-		&i.BatchID,
 		&i.Name,
 		&i.CreationTime,
 		&i.TerminationTime,
@@ -129,19 +144,22 @@ func (q *Queries) InsertSparkApplication(ctx context.Context, arg InsertSparkApp
 }
 
 const listFrom = `-- name: ListFrom :many
-SELECT uid, batch_id, name, creation_time, termination_time, username, namespace, cluster, submitted, updated, state, status FROM spark_applications
-WHERE batch_id >= $1
-ORDER BY batch_id ASC
-LIMIT $2
+SELECT uid, name, creation_time, termination_time, username, namespace, cluster, submitted, updated, state, status FROM spark_applications
+WHERE uid in (
+    SELECT uid FROM livy_applications
+    WHERE "batch_id" >= $1
+    ORDER BY batch_id ASC
+    LIMIT $2
+)
 `
 
 type ListFromParams struct {
-	Fromid *int64 `json:"fromid"`
-	Size   int32  `json:"size"`
+	BatchID int64 `json:"batch_id"`
+	Size    int32 `json:"size"`
 }
 
 func (q *Queries) ListFrom(ctx context.Context, arg ListFromParams) ([]SparkApplication, error) {
-	rows, err := q.db.Query(ctx, listFrom, arg.Fromid, arg.Size)
+	rows, err := q.db.Query(ctx, listFrom, arg.BatchID, arg.Size)
 	if err != nil {
 		return nil, err
 	}
@@ -151,7 +169,6 @@ func (q *Queries) ListFrom(ctx context.Context, arg ListFromParams) ([]SparkAppl
 		var i SparkApplication
 		if err := rows.Scan(
 			&i.Uid,
-			&i.BatchID,
 			&i.Name,
 			&i.CreationTime,
 			&i.TerminationTime,
@@ -190,7 +207,7 @@ DO UPDATE SET
     updated = EXCLUDED.updated,
     state = EXCLUDED.state,
     status = EXCLUDED.status
-RETURNING uid, batch_id, name, creation_time, termination_time, username, namespace, cluster, submitted, updated, state, status
+RETURNING uid, name, creation_time, termination_time, username, namespace, cluster, submitted, updated, state, status
 `
 
 type UpdateSparkApplicationParams struct {
@@ -212,7 +229,6 @@ func (q *Queries) UpdateSparkApplication(ctx context.Context, arg UpdateSparkApp
 	var i SparkApplication
 	err := row.Scan(
 		&i.Uid,
-		&i.BatchID,
 		&i.Name,
 		&i.CreationTime,
 		&i.TerminationTime,

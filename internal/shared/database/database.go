@@ -19,13 +19,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"strconv"
 
 	"k8s.io/klog/v2"
 
 	"time"
 
-	"github.com/slackhq/spark-gateway/internal/domain"
 	"github.com/slackhq/spark-gateway/internal/shared/config"
 	"github.com/slackhq/spark-gateway/internal/shared/util"
 
@@ -150,21 +148,8 @@ func (db *Database) InsertSparkApplication(ctx context.Context, gatewayIdUid uui
 		return gatewayerrors.NewFrom(fmt.Errorf("error marshaling SparkApplication '%s/%s': %w", userSubmittedSparkApp.Namespace, userSubmittedSparkApp.Name, err))
 	}
 
-	// If livy is enabled, this will be set otherwise keep null
-	var batchId *int64
-	if batchIdLabel, ok := userSubmittedSparkApp.Labels[domain.LIVY_BATCH_ID_LABEL]; ok {
-		batchIdInt, err := strconv.Atoi(batchIdLabel)
-		if err != nil {
-			return gatewayerrors.NewFrom(fmt.Errorf("error converting batch id to insert to database: %w", err))
-		}
-
-		batch64 := int64(batchIdInt)
-		batchId = &batch64
-	}
-
 	queryParams := InsertSparkApplicationParams{
 		Uid:          gatewayIdUid,
-		BatchID:      batchId,
 		Name:         &userSubmittedSparkApp.ObjectMeta.Name,
 		CreationTime: &creationTime,
 		Username:     userSubmittedSparkApp.Spec.ProxyUser,
@@ -201,8 +186,7 @@ func SparkAppAuditLog(gatewayIdUid uuid.UUID, sparkApp SparkApplication) {
 func (db *Database) GetByBatchId(ctx context.Context, batchId int) (*SparkApplication, error) {
 	queries := New(db.connectionPool)
 
-	dbId := int64(batchId)
-	sparkApp, err := queries.GetByBatchId(ctx, &dbId)
+	sparkApp, err := queries.GetByBatchId(ctx, int64(batchId))
 	if err != nil {
 		return nil, gatewayerrors.NewFrom(fmt.Errorf("error getting SparkApplication with Livy BatchId '%d' from database: %w", batchId, err))
 	}
@@ -213,10 +197,9 @@ func (db *Database) GetByBatchId(ctx context.Context, batchId int) (*SparkApplic
 func (db *Database) ListFrom(ctx context.Context, from int, size int) ([]*SparkApplication, error) {
 	queries := New(db.connectionPool)
 
-	from64 := int64(from)
 	sparkApps, err := queries.ListFrom(ctx, ListFromParams{
-		Fromid: &from64,
-		Size:   int32(size),
+		BatchID: int64(from),
+		Size:    int32(size),
 	})
 
 	if err != nil {

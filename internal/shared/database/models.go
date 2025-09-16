@@ -8,12 +8,17 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 	v1beta2 "github.com/kubeflow/spark-operator/v2/api/v1beta2"
 )
 
+type LivyApplication struct {
+	BatchID int64       `json:"batch_id"`
+	Uid     pgtype.UUID `json:"uid"`
+}
+
 type SparkApplication struct {
 	Uid             uuid.UUID                       `json:"uid"`
-	BatchID         *int64                          `json:"batch_id"`
 	Name            *string                         `json:"name"`
 	CreationTime    *time.Time                      `json:"creation_time"`
 	TerminationTime *time.Time                      `json:"termination_time"`
