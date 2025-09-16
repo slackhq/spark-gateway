@@ -14,19 +14,19 @@ import (
 	sgMiddleware "github.com/slackhq/spark-gateway/internal/shared/middleware"
 )
 
-func NewRouter(sgConf *config.SparkGatewayConfig, appService service.GatewayApplicationService) (*gin.Engine, error) {
+func NewRouter(sgConf *config.SparkGatewayConfig, appService service.GatewayApplicationService, livyService service.LivyApplicationService) (*gin.Engine, error) {
 
 	router := gin.Default()
-	
+
 	// Root group for unversioned routes
 	rootGroup := router.Group("")
-	
+
 	health.RegisterHealthRoutes(rootGroup)
-	
+
 	if sgConf.GatewayConfig.EnableSwaggerUI {
 		swagger.RegisterSwaggerRoutes(rootGroup)
 	}
-	
+
 	// Versioned routes
 	v1Group := router.Group("/api/v1")
 	v1Group.Use(sgMiddleware.ApplicationErrorHandler)
@@ -35,10 +35,12 @@ func NewRouter(sgConf *config.SparkGatewayConfig, appService service.GatewayAppl
 	}
 
 	v1.RegisterGatewayApplicationRoutes(v1Group, sgConf, appService)
-	
-	livyGroup := router.Group("/api/livy")
-	livyGroup.Use(livy.LivyErrorHandler)
-	livy.RegisterLivyBatchRoutes(livyGroup, appService)
+
+	if sgConf.LivyConfig.Enable {
+		livyGroup := router.Group("/api/livy")
+		livyGroup.Use(livy.LivyErrorHandler)
+		livy.RegisterLivyBatchRoutes(livyGroup, livyService)
+	}
 
 	return router, nil
 

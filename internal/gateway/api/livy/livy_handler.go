@@ -5,43 +5,87 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
-	"sync"
-	"sync/atomic"
 
 	"github.com/gin-gonic/gin"
+	"github.com/slackhq/spark-gateway/internal/domain"
 	"github.com/slackhq/spark-gateway/internal/gateway/service"
 	"github.com/slackhq/spark-gateway/internal/shared/gatewayerrors"
-	"github.com/slackhq/spark-gateway/internal/types/livy"
 )
 
-var livyBatchId atomic.Int32
-
 type LivyHandler struct {
-	appService service.GatewayApplicationService
-	namespace  string
-	appCache   sync.Map
+	livyService service.LivyApplicationService
 }
 
-func NewLivyBatchApplicationHandler(appService service.GatewayApplicationService) *LivyHandler {
+func NewLivyBatchApplicationHandler(livyService service.LivyApplicationService) *LivyHandler {
 	return &LivyHandler{
-		appService: appService,
+		livyService: livyService,
 	}
 }
 
-func (l *LivyHandler) List(c *gin.Context) {}
+func (l *LivyHandler) Get(c *gin.Context) {
+
+	getId, err := strconv.Atoi(c.Param("batchId"))
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"msg": "batchId must be an int"})
+		return
+	}
+
+	gotBatch, err := l.livyService.Get(c, getId)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	c.JSON(http.StatusOK, gotBatch)
+
+}
+
+func (l *LivyHandler) List(c *gin.Context) {
+
+	var err error
+
+	var from int
+	fromParam := c.Query("from")
+	if fromParam != "" {
+		from, err = strconv.Atoi(fromParam)
+		if err != nil {
+			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"msg": "from must be an int"})
+		}
+	}
+
+	var size int
+	sizeParam := c.Query("size")
+	if sizeParam != "" {
+		size, err = strconv.Atoi(sizeParam)
+		if err != nil {
+			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"msg": "size must be an int"})
+		}
+	}
+
+	listBatches, err := l.livyService.List(c, from, size)
+	if err != nil {
+		c.Error(fmt.Errorf("error listing Livy SparkApplications: %w", err))
+	}
+
+	c.JSON(http.StatusCreated, domain.LivyListBatchesResponse{
+		From:     from,
+		Total:    len(listBatches),
+		Sessions: listBatches,
+	})
+
+}
+
 func (l *LivyHandler) Create(c *gin.Context) {
 
-	var createReq CreateBatchRequest
+	var createReq domain.LivyCreateBatchRequest
 	if err := c.ShouldBindJSON(&createReq); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"msg": err.Error()})
 	}
 
-	var user string
-
 	// Check for doAs as that takes priority over all
 	doAs := c.Query("doAs")
 	if doAs != "" {
-		user = doAs
+		createReq.ProxyUser = doAs
 	}
 
 	// If no doAs, check proxyUser from request, or finally set
@@ -52,13 +96,8 @@ func (l *LivyHandler) Create(c *gin.Context) {
 			c.Error(errors.New("no user set, congratulations you've encountered a bug that should never happen"))
 			return
 		}
-		user = gotUser.(string)
-	} else {
-		user = createReq.ProxyUser
+		createReq.ProxyUser = gotUser.(string)
 	}
-
-	// Get next increment of Batch Id
-	batchId := livyBatchId.Add(1)
 
 	// Get namespace from headers
 	namespace := c.GetHeader("X-Spark-Gateway-Livy-Namespace")
@@ -66,43 +105,71 @@ func (l *LivyHandler) Create(c *gin.Context) {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"msg": "spark gateway livy API requires X-Spark-Gateway-Livy-Namespace' header"})
 	}
 
-	createdApp, err := l.appService.Create(c, createReq.ToV1Beta2SparkApplication(batchId, namespace), user)
-
+	createdBatch, err := l.livyService.Create(c, createReq, namespace)
 	if err != nil {
 		c.Error(err)
 		return
 	}
 
-	// Store id -> gatewayid for lookups in other
-	l.appCache.Store(batchId, createdApp.GatewayId)
-
-	c.JSON(http.StatusCreated, createdApp.SparkApplication.ToLivyBatch(batchId))
+	c.JSON(http.StatusCreated, createdBatch)
 
 }
-func (l *LivyHandler) Get(c *gin.Context) {
-
-	getId, err := strconv.Atoi(c.Param("batchId"))
+func (l *LivyHandler) Delete(c *gin.Context) {
+	deleteId, err := strconv.Atoi(c.Param("batchId"))
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"msg": "batchId must be an int"})
 		return
 	}
 
-	// Get GatewayId from batch id
-	livyGatewayId, ok := l.appCache.Load(int32(getId))
-	if !ok {
-		c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"msg": fmt.Sprintf("livy batch '%s' not found", getId)})
-		return
-	}
-
-	app, err := l.appService.Get(c, livyGatewayId.(string))
+	err = l.livyService.Delete(c, deleteId)
 	if err != nil {
 		c.Error(err)
 		return
 	}
 
-	c.JSON(http.StatusOK, app.ToLivyBatch(getId))
-
+	c.JSON(http.StatusOK, gin.H{"msg": "deleted"})
 }
+
+func (l *LivyHandler) Logs(c *gin.Context) {
+	logsId, err := strconv.Atoi(c.Param("batchId"))
+
+	var from int
+	fromParam := c.Query("from")
+	if fromParam != "" {
+		from, err = strconv.Atoi(fromParam)
+		if err != nil {
+			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"msg": "from must be an int"})
+		}
+	}
+
+	var size int
+	sizeParam := c.Query("size")
+	if sizeParam != "" {
+		size, err = strconv.Atoi(sizeParam)
+		if err != nil {
+			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"msg": "size must be an int"})
+		}
+	}
+
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"msg": "batchId must be an int"})
+		return
+	}
+
+	logs, err := l.livyService.Logs(c, logsId, from, size)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	c.JSON(http.StatusOK, domain.LivyLogBatchResponse{
+		Id:   logsId,
+		From: from,
+		Size: size,
+		Log:  logs,
+	})
+}
+
 func (l *LivyHandler) State(c *gin.Context) {
 
 	getId, err := strconv.Atoi(c.Param("batchId"))
@@ -111,45 +178,18 @@ func (l *LivyHandler) State(c *gin.Context) {
 		return
 	}
 
-	// Get GatewayId from batch id
-	livyGatewayId, ok := l.appCache.Load(int32(getId))
-	if !ok {
-		c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"msg": fmt.Sprintf("livy batch '%s' not found", getId)})
-		return
-	}
-
-	appStatus, err := l.appService.Status(c, livyGatewayId.(string))
+	gotBatch, err := l.livyService.Get(c, getId)
 	if err != nil {
 		c.Error(err)
 		return
 	}
 
-	c.JSON(http.StatusOK, appStatus.ToLivyBatchState(getId))
+	c.JSON(http.StatusOK, domain.LivyGetBatchStateResponse{
+		Id:    getId,
+		State: gotBatch.State,
+	})
 
 }
-func (l *LivyHandler) Delete(c *gin.Context) {
-	getId, err := strconv.Atoi(c.Param("batchId"))
-	if err != nil {
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"msg": "batchId must be an int"})
-		return
-	}
-
-	// Get GatewayId from batch id
-	livyGatewayId, ok := l.appCache.Load(int32(getId))
-	if !ok {
-		c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"msg": fmt.Sprintf("livy batch '%s' not found", getId)})
-		return
-	}
-
-	err = l.appService.Delete(c, livyGatewayId.(string))
-	if err != nil {
-		c.Error(err)
-		return
-	}
-
-	c.JSON(http.StatusOK, gin.H{"msg": "deleted"})
-}
-func (l *LivyHandler) Logs(c *gin.Context) {}
 
 // LivyErrorHandler attempts to coerce the last error within gin.Context.Errors.Last to a
 // GatewayError for proper HttpStatus attribution. If the error casting fails, it aborts the connection

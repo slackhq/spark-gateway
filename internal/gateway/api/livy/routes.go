@@ -6,9 +6,9 @@ import (
 )
 
 // RegisterLivyBatchRoutes registers routes handling GatewayApplication submissions
-func RegisterLivyBatchRoutes(rg *gin.RouterGroup, appService service.GatewayApplicationService) {
+func RegisterLivyBatchRoutes(rg *gin.RouterGroup, livyService service.LivyApplicationService) {
 
-	h := NewLivyBatchApplicationHandler(appService)
+	h := NewLivyBatchApplicationHandler(livyService)
 
 	rg.GET("/batches", h.List)
 	rg.POST("/batches", h.Create)
