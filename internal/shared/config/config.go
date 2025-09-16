@@ -127,7 +127,6 @@ type MetricsServer struct {
 
 type SparkManagerConfig struct {
 	ClusterAuthType string        `koanf:"clusterAuthType"`
-	Database        Database      `koanf:"database"`
 	MetricsServer   MetricsServer `koanf:"metricsServer"`
 }
 
@@ -141,32 +140,16 @@ func (c *SparkManagerConfig) Validate() (errorMessages []string) {
 		errorMessages = append(errorMessages, fmt.Sprintf("config error: invalid 'sparkManager.clusterAuthType' '%s', valid clusterAuthType values: %s", c.ClusterAuthType, strings.Join(validClusterAuthTypes, ", ")))
 	}
 
-	if c.Database.Enable {
-		if c.Database.Password == "" {
-			c.Database.Password = os.Getenv("DB_PASSWORD")
-		}
-		// Database hostname and port should exist
-		if c.Database.Hostname == "" || c.Database.Port == "" {
-			errorMessages = append(errorMessages, "config error: 'sparkManager.database.hostname' and 'sparkManager.database.port' must be specified")
-		}
-
-		// Database Username or Password must be set
-		if c.Database.Username == "" {
-			errorMessages = append(errorMessages, "config error: 'sparkManager.database.username' config must be specified")
-		}
-
-		if c.Database.Password == "" {
-			errorMessages = append(errorMessages, "config error: 'sparkManager.database.password' config or DB_PASSWORD environment variable must be specified")
-		}
-
-	}
-
 	return errorMessages
 }
 
 type DebugPort struct {
 	SparkManagerPort string `koanf:"sparkManagerPort"`
 	MetricsPort      string `koanf:"metricsPort"`
+}
+
+type LivyConfig struct {
+	Enable bool `koanf:"enable"`
 }
 
 type SparkGatewayConfig struct {
@@ -179,6 +162,8 @@ type SparkGatewayConfig struct {
 	SparkManagerPort   string               `koanf:"sparkManagerPort"`
 	GatewayConfig      GatewayConfig        `koanf:"gateway"`
 	SparkManagerConfig SparkManagerConfig   `koanf:"sparkManager"`
+	LivyConfig         LivyConfig           `koanf:"livy"`
+	Database           Database             `koanf:"database"`
 	DebugPorts         map[string]DebugPort `koanf:"debugPorts"`
 }
 
@@ -229,6 +214,32 @@ func (c *SparkGatewayConfig) Validate() (errorMessages []string) {
 
 	if !util.ValueExists(c.ClusterRouter.Dimension, validClusterRouterDimensionTypes) {
 		errorMessages = append(errorMessages, fmt.Sprintf("config error: invalid 'clusterRouter.dimension' '%s', valid values: %v", c.ClusterRouter.Dimension, validClusterRouterDimensionTypes))
+	}
+
+	if c.LivyConfig.Enable {
+		if !c.Database.Enable {
+			errorMessages = append(errorMessages, "Database must be enabled and configured if Livy is enabled")
+		}
+	}
+
+	if c.Database.Enable {
+		if c.Database.Password == "" {
+			c.Database.Password = os.Getenv("DB_PASSWORD")
+		}
+		// Database hostname and port should exist
+		if c.Database.Hostname == "" || c.Database.Port == "" {
+			errorMessages = append(errorMessages, "config error: 'sparkManager.database.hostname' and 'sparkManager.database.port' must be specified")
+		}
+
+		// Database Username or Password must be set
+		if c.Database.Username == "" {
+			errorMessages = append(errorMessages, "config error: 'sparkManager.database.username' config must be specified")
+		}
+
+		if c.Database.Password == "" {
+			errorMessages = append(errorMessages, "config error: 'sparkManager.database.password' config or DB_PASSWORD environment variable must be specified")
+		}
+
 	}
 
 	return errorMessages
