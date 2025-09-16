@@ -55,17 +55,11 @@ INSERT INTO livy_applications (
 RETURNING *;
 
 -- name: GetByBatchId :one
-SELECT * FROM spark_applications
-WHERE uid = (
-    SELECT uid FROM livy_applications
-    WHERE "batch_id" = @batch_id
-);
+SELECT uid FROM livy_applications
+WHERE "batch_id" = @batch_id;
 
 -- name: ListFrom :many
-SELECT * FROM spark_applications
-WHERE uid in (
-    SELECT uid FROM livy_applications
-    WHERE "batch_id" >= @batch_id
-    ORDER BY batch_id ASC
-    LIMIT @size
-);
+SELECT uid FROM livy_applications
+WHERE "batch_id" >= @batch_id
+ORDER BY batch_id ASC
+LIMIT @size;

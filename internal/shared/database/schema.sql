@@ -16,5 +16,5 @@ CREATE TABLE spark_applications (
 
 CREATE TABLE livy_applications (
     batch_id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    uid UUID
+    uid TEXT NOT NULL
 )

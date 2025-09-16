@@ -10,34 +10,18 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const getByBatchId = `-- name: GetByBatchId :one
-SELECT uid, name, creation_time, termination_time, username, namespace, cluster, submitted, updated, state, status FROM spark_applications
-WHERE uid = (
-    SELECT uid FROM livy_applications
-    WHERE "batch_id" = $1
-)
+SELECT uid FROM livy_applications
+WHERE "batch_id" = $1
 `
 
-func (q *Queries) GetByBatchId(ctx context.Context, batchID int64) (SparkApplication, error) {
+func (q *Queries) GetByBatchId(ctx context.Context, batchID int64) (string, error) {
 	row := q.db.QueryRow(ctx, getByBatchId, batchID)
-	var i SparkApplication
-	err := row.Scan(
-		&i.Uid,
-		&i.Name,
-		&i.CreationTime,
-		&i.TerminationTime,
-		&i.Username,
-		&i.Namespace,
-		&i.Cluster,
-		&i.Submitted,
-		&i.Updated,
-		&i.State,
-		&i.Status,
-	)
-	return i, err
+	var uid string
+	err := row.Scan(&uid)
+	return uid, err
 }
 
 const getById = `-- name: GetById :one
@@ -75,7 +59,7 @@ INSERT INTO livy_applications (
 RETURNING batch_id, uid
 `
 
-func (q *Queries) InsertLivyApplication(ctx context.Context, uid pgtype.UUID) (LivyApplication, error) {
+func (q *Queries) InsertLivyApplication(ctx context.Context, uid string) (LivyApplication, error) {
 	row := q.db.QueryRow(ctx, insertLivyApplication, uid)
 	var i LivyApplication
 	err := row.Scan(&i.BatchID, &i.Uid)
@@ -144,13 +128,10 @@ func (q *Queries) InsertSparkApplication(ctx context.Context, arg InsertSparkApp
 }
 
 const listFrom = `-- name: ListFrom :many
-SELECT uid, name, creation_time, termination_time, username, namespace, cluster, submitted, updated, state, status FROM spark_applications
-WHERE uid in (
-    SELECT uid FROM livy_applications
-    WHERE "batch_id" >= $1
-    ORDER BY batch_id ASC
-    LIMIT $2
-)
+SELECT uid FROM livy_applications
+WHERE "batch_id" >= $1
+ORDER BY batch_id ASC
+LIMIT $2
 `
 
 type ListFromParams struct {
@@ -158,31 +139,19 @@ type ListFromParams struct {
 	Size    int32 `json:"size"`
 }
 
-func (q *Queries) ListFrom(ctx context.Context, arg ListFromParams) ([]SparkApplication, error) {
+func (q *Queries) ListFrom(ctx context.Context, arg ListFromParams) ([]string, error) {
 	rows, err := q.db.Query(ctx, listFrom, arg.BatchID, arg.Size)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []SparkApplication
+	var items []string
 	for rows.Next() {
-		var i SparkApplication
-		if err := rows.Scan(
-			&i.Uid,
-			&i.Name,
-			&i.CreationTime,
-			&i.TerminationTime,
-			&i.Username,
-			&i.Namespace,
-			&i.Cluster,
-			&i.Submitted,
-			&i.Updated,
-			&i.State,
-			&i.Status,
-		); err != nil {
+		var uid string
+		if err := rows.Scan(&uid); err != nil {
 			return nil, err
 		}
-		items = append(items, i)
+		items = append(items, uid)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err

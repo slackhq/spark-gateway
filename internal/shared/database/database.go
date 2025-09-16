@@ -43,8 +43,8 @@ type SparkApplicationDatabaseRepository interface {
 }
 
 type LivyApplicationDatabaseRepository interface {
-	GetByBatchId(ctx context.Context, batchId int) (*SparkApplication, error)
-	ListFrom(ctx context.Context, fromId int, size int) ([]*SparkApplication, error)
+	GetByBatchId(ctx context.Context, batchId int) (string, error)
+	ListFrom(ctx context.Context, fromId int, size int) ([]string, error)
 }
 
 type Database struct {
@@ -183,18 +183,22 @@ func SparkAppAuditLog(gatewayIdUid uuid.UUID, sparkApp SparkApplication) {
 }
 
 // Livy
-func (db *Database) GetByBatchId(ctx context.Context, batchId int) (*SparkApplication, error) {
+
+// GetByBatchId returns the GatewayId of the corresponding SparkApplication the batchId maps too
+func (db *Database) GetByBatchId(ctx context.Context, batchId int) (string, error) {
 	queries := New(db.connectionPool)
 
-	sparkApp, err := queries.GetByBatchId(ctx, int64(batchId))
+	gatewayId, err := queries.GetByBatchId(ctx, int64(batchId))
 	if err != nil {
-		return nil, gatewayerrors.NewFrom(fmt.Errorf("error getting SparkApplication with Livy BatchId '%d' from database: %w", batchId, err))
+		return "", gatewayerrors.NewFrom(fmt.Errorf("error getting SparkApplication with Livy BatchId '%d' from database: %w", batchId, err))
 	}
 
-	return &sparkApp, nil
+	return gatewayId, nil
 }
 
-func (db *Database) ListFrom(ctx context.Context, from int, size int) ([]*SparkApplication, error) {
+// ListFrom returns a list of GatewayIds of the corresponding SparkApplicaitions starting at "from" batchId
+// and including up to "size" applications from that id
+func (db *Database) ListFrom(ctx context.Context, from int, size int) ([]string, error) {
 	queries := New(db.connectionPool)
 
 	sparkApps, err := queries.ListFrom(ctx, ListFromParams{
@@ -206,10 +210,5 @@ func (db *Database) ListFrom(ctx context.Context, from int, size int) ([]*SparkA
 		return nil, gatewayerrors.NewFrom(fmt.Errorf("error listing SparkApplications: %w", err))
 	}
 
-	var retApps []*SparkApplication
-	for _, app := range sparkApps {
-		retApps = append(retApps, &app)
-	}
-
-	return retApps, nil
+	return sparkApps, nil
 }
