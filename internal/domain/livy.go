@@ -13,51 +13,68 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package livy
+package domain
 
 import (
 	"strconv"
 	"strings"
 
 	"github.com/kubeflow/spark-operator/v2/api/v1beta2"
-	"github.com/slackhq/spark-gateway/internal/domain"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 const LIVY_BATCH_ID_LABEL string = "spark-gateway/livy-batch-id"
 
-type SessionState int
+type LivySessionState int
 
 const (
-	NotStarted SessionState = iota
-	Starting
-	Idle
-	Busy
-	ShuttingDown
-	Error
-	Dead
-	Killed
-	Success
+	LivySessionStateNotStarted LivySessionState = iota
+	LivySessionStateStarting
+	LivySessionStateIdle
+	LivySessionStateBusy
+	LivySessionStateShuttingDown
+	LivySessionStateError
+	LivySessionStateDead
+	LivySessionStateKilled
+	LivySessionStateSuccess
 )
 
-var sessionStateName = map[SessionState]string{
-	NotStarted:   "not_started",
-	Starting:     "started",
-	Idle:         "idle",
-	Busy:         "busy",
-	ShuttingDown: "shutting_down",
-	Error:        "error",
-	Dead:         "dead",
-	Killed:       "killed",
-	Success:      "success",
+var sessionStateName = map[LivySessionState]string{
+	LivySessionStateNotStarted:   "not_started",
+	LivySessionStateStarting:     "started",
+	LivySessionStateIdle:         "idle",
+	LivySessionStateBusy:         "busy",
+	LivySessionStateShuttingDown: "shutting_down",
+	LivySessionStateError:        "error",
+	LivySessionStateDead:         "dead",
+	LivySessionStateKilled:       "killed",
+	LivySessionStateSuccess:      "success",
 }
 
-func (ss SessionState) String() string {
+var applicationTypeToSessionStateName = map[v1beta2.ApplicationStateType]LivySessionState{
+	v1beta2.ApplicationStateNew:              LivySessionStateNotStarted,
+	v1beta2.ApplicationStateSubmitted:        LivySessionStateStarting,
+	v1beta2.ApplicationStateRunning:          LivySessionStateBusy,
+	v1beta2.ApplicationStateCompleted:        LivySessionStateSuccess,
+	v1beta2.ApplicationStateFailed:           LivySessionStateError,
+	v1beta2.ApplicationStateFailedSubmission: LivySessionStateDead,
+	v1beta2.ApplicationStatePendingRerun:     LivySessionStateDead,
+	v1beta2.ApplicationStateInvalidating:     LivySessionStateShuttingDown,
+	v1beta2.ApplicationStateSucceeding:       LivySessionStateShuttingDown,
+	v1beta2.ApplicationStateFailing:          LivySessionStateShuttingDown,
+	v1beta2.ApplicationStateUnknown:          LivySessionStateDead,
+}
+
+func (ss LivySessionState) String() string {
 	return sessionStateName[ss]
 }
 
-type Batch struct {
-	Id      int               `json:"id"`
+func FromV1Beta2ApplicationState(state v1beta2.ApplicationStateType) LivySessionState {
+	return applicationTypeToSessionStateName[state]
+}
+
+type LivyBatch struct {
+	Id      int32             `json:"id"`
 	AppId   string            `json:"appId"`
 	AppInfo map[string]string `json:"appInfo"`
 	TTL     string            `json:"ttl"`
@@ -65,7 +82,7 @@ type Batch struct {
 	State   string            `json:"state"`
 }
 
-type CreateBatchRequest struct {
+type LivyCreateBatchRequest struct {
 	File           string            `json:"file"`
 	ProxyUser      string            `json:"proxyUser"`
 	ClassName      string            `json:"className"`
@@ -84,17 +101,7 @@ type CreateBatchRequest struct {
 	Conf           map[string]string `json:"conf"`
 }
 
-func (c *CreateBatchRequest) ToLivyBatch(id int, gsa domain.GatewaySparkApplication) *Batch {
-	return &Batch{
-		Id:      id,
-		AppId:   "",
-		AppInfo: map[string]string{},
-		Log:     []string{},
-		State:   "" ,
-	}
-}
-
-func (c *CreateBatchRequest) ToV1Beta2SparkApplication(id int32, namespace string) *v1beta2.SparkApplication {
+func (c *LivyCreateBatchRequest) ToV1Beta2SparkApplication(id int32, namespace string) *v1beta2.SparkApplication {
 
 	var appType v1beta2.SparkApplicationType
 	if strings.HasSuffix(c.File, ".py") {
@@ -155,24 +162,20 @@ func (c *CreateBatchRequest) ToV1Beta2SparkApplication(id int32, namespace strin
 	}
 }
 
-type ListBatchRequest struct {
-	From int `json:"from"`
-	Size int `json:"size"`
+type LivyListBatchesResponse struct {
+	From     int          `json:"from"`
+	Total    int          `json:"total"`
+	Sessions []*LivyBatch `json:"sessions"`
 }
 
-type LogBatchRequest struct {
-	From int `json:"from"`
-	Size int `json:"size"`
-}
-
-type LogBatchResponse struct {
+type LivyLogBatchResponse struct {
 	Id   int      `json:"id"`
 	From int      `json:"from"`
 	Size int      `json:"size"`
 	Log  []string `json:"log"`
 }
 
-type GetBatchStateResponse struct {
-	Id    string `json:"id"`
+type LivyGetBatchStateResponse struct {
+	Id    int    `json:"id"`
 	State string `json:"state"`
 }

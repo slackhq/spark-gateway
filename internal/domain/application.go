@@ -17,6 +17,7 @@ package domain
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/google/uuid"
@@ -144,18 +145,6 @@ func (gsa *GatewaySparkApplication) ToV1Beta2SparkApplication() *v1beta2.SparkAp
 	}
 }
 
-func (gsa *GatewayApplication) ToLivyBatch(batchId int32) *Batch {
-
-	return Batch{
-		Id:      batchId,
-		AppId:   "",
-		AppInfo: map[string]string{},
-		TTL:     "",
-		Log:     []string{},
-		State:   "",
-	}
-}
-
 func NewGatewaySparkApplication(sparkApp *v1beta2.SparkApplication, opts ...func(*GatewaySparkApplication)) *GatewaySparkApplication {
 
 	gaSparkApp := &GatewaySparkApplication{
@@ -213,6 +202,30 @@ type GatewayApplication struct {
 	Cluster          string                  `json:"cluster"`
 	User             string                  `json:"user"`
 	SparkLogURLs     SparkLogURLs            `json:"sparkLogURLs"`
+}
+
+func (gsa *GatewayApplication) ToLivyBatch() (*LivyBatch, error) {
+
+	batchId := gsa.SparkApplication.Labels[LIVY_BATCH_ID_LABEL]
+	batchIdInt, err := strconv.Atoi(batchId)
+	if err != nil {
+		return nil, err
+	}
+
+	ttl := gsa.SparkApplication.Spec.TimeToLiveSeconds
+	ttlStr := strconv.FormatInt(*ttl, 10)
+
+	return &LivyBatch{
+		Id:    int32(batchIdInt),
+		AppId: gsa.SparkApplication.Status.SparkApplicationID,
+		AppInfo: map[string]string{
+			"GatewayId": gsa.GatewayId,
+			"Cluster":   gsa.Cluster,
+		},
+		TTL:   ttlStr,
+		Log:   []string{},
+		State: FromV1Beta2ApplicationState(gsa.SparkApplication.Status.AppState.State).String(),
+	}, nil
 }
 
 func GatewayApplicationFromV1Beta2SparkApplication(sparkApp *v1beta2.SparkApplication) *GatewayApplication {
