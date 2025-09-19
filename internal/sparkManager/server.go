@@ -28,7 +28,7 @@ import (
 	"github.com/slackhq/spark-gateway/internal/shared/config"
 	"github.com/slackhq/spark-gateway/internal/shared/gatewayerrors"
 	"github.com/slackhq/spark-gateway/internal/sparkManager/api"
-	dbRepo "github.com/slackhq/spark-gateway/internal/sparkManager/database/repository"
+	"github.com/slackhq/spark-gateway/internal/shared/database"
 	"github.com/slackhq/spark-gateway/internal/sparkManager/kube"
 	"github.com/slackhq/spark-gateway/internal/sparkManager/metrics"
 	appRepo "github.com/slackhq/spark-gateway/internal/sparkManager/repository"
@@ -51,9 +51,9 @@ func NewSparkManager(ctx context.Context, sgConfig *config.SparkGatewayConfig, c
 	}
 
 	// Create DB Repo
-	var database dbRepo.DatabaseRepository = nil
-	if sgConfig.SparkManagerConfig.Database.Enable {
-		database = dbRepo.NewDatabase(ctx, sgConfig.SparkManagerConfig.Database)
+	var db database.SparkApplicationDatabaseRepository = nil
+	if sgConfig.Database.Enable {
+		db = database.NewDatabase(ctx, sgConfig.Database)
 	}
 
 	// Initialize Kube Clients
@@ -77,7 +77,7 @@ func NewSparkManager(ctx context.Context, sgConfig *config.SparkGatewayConfig, c
 		sgConfig.SelectorKey,
 		sgConfig.SelectorValue,
 		kubeCluster.Name,
-		database,
+		db,
 	)
 	if err != nil {
 		return nil, gatewayerrors.MapK8sErrorToGatewayError(fmt.Errorf("unable to initialize SparkApplication Controller: %w", err))
@@ -91,7 +91,7 @@ func NewSparkManager(ctx context.Context, sgConfig *config.SparkGatewayConfig, c
 	metricsRepo := metrics.NewRepository(controller)
 
 	// Initialize services
-	sparkApplicationService := service.NewSparkApplicationService(sparkAppRepo, database, *kubeCluster)
+	sparkApplicationService := service.NewSparkApplicationService(sparkAppRepo, db, *kubeCluster)
 	metricsService := metrics.NewService(metricsRepo, kubeCluster)
 
 	// Init metrics
