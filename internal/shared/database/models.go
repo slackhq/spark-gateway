@@ -12,8 +12,8 @@ import (
 )
 
 type LivyApplication struct {
-	BatchID int64  `json:"batch_id"`
-	Uid     string `json:"uid"`
+	BatchID   int64  `json:"batch_id"`
+	GatewayID string `json:"gateway_id"`
 }
 
 type SparkApplication struct {

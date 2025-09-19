@@ -13,15 +13,15 @@ import (
 )
 
 const getByBatchId = `-- name: GetByBatchId :one
-SELECT uid FROM livy_applications
+SELECT batch_id, gateway_id FROM livy_applications
 WHERE "batch_id" = $1
 `
 
-func (q *Queries) GetByBatchId(ctx context.Context, batchID int64) (string, error) {
+func (q *Queries) GetByBatchId(ctx context.Context, batchID int64) (LivyApplication, error) {
 	row := q.db.QueryRow(ctx, getByBatchId, batchID)
-	var uid string
-	err := row.Scan(&uid)
-	return uid, err
+	var i LivyApplication
+	err := row.Scan(&i.BatchID, &i.GatewayID)
+	return i, err
 }
 
 const getById = `-- name: GetById :one
@@ -52,17 +52,17 @@ func (q *Queries) GetById(ctx context.Context, uid uuid.UUID) (SparkApplication,
 
 const insertLivyApplication = `-- name: InsertLivyApplication :one
 INSERT INTO livy_applications (
-    uid
+    gateway_id
 ) VALUES (
     $1
 )
-RETURNING batch_id, uid
+RETURNING batch_id, gateway_id
 `
 
-func (q *Queries) InsertLivyApplication(ctx context.Context, uid string) (LivyApplication, error) {
-	row := q.db.QueryRow(ctx, insertLivyApplication, uid)
+func (q *Queries) InsertLivyApplication(ctx context.Context, gatewayID string) (LivyApplication, error) {
+	row := q.db.QueryRow(ctx, insertLivyApplication, gatewayID)
 	var i LivyApplication
-	err := row.Scan(&i.BatchID, &i.Uid)
+	err := row.Scan(&i.BatchID, &i.GatewayID)
 	return i, err
 }
 
@@ -128,7 +128,7 @@ func (q *Queries) InsertSparkApplication(ctx context.Context, arg InsertSparkApp
 }
 
 const listFrom = `-- name: ListFrom :many
-SELECT uid FROM livy_applications
+SELECT batch_id, gateway_id FROM livy_applications
 WHERE "batch_id" >= $1
 ORDER BY batch_id ASC
 LIMIT $2
@@ -139,19 +139,19 @@ type ListFromParams struct {
 	Size    int32 `json:"size"`
 }
 
-func (q *Queries) ListFrom(ctx context.Context, arg ListFromParams) ([]string, error) {
+func (q *Queries) ListFrom(ctx context.Context, arg ListFromParams) ([]LivyApplication, error) {
 	rows, err := q.db.Query(ctx, listFrom, arg.BatchID, arg.Size)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []string
+	var items []LivyApplication
 	for rows.Next() {
-		var uid string
-		if err := rows.Scan(&uid); err != nil {
+		var i LivyApplication
+		if err := rows.Scan(&i.BatchID, &i.GatewayID); err != nil {
 			return nil, err
 		}
-		items = append(items, uid)
+		items = append(items, i)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err

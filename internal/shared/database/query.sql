@@ -48,18 +48,18 @@ RETURNING *;
 
 -- name: InsertLivyApplication :one
 INSERT INTO livy_applications (
-    uid
+    gateway_id
 ) VALUES (
-    @uid
+    @gateway_id
 )
 RETURNING *;
 
 -- name: GetByBatchId :one
-SELECT uid FROM livy_applications
+SELECT * FROM livy_applications
 WHERE "batch_id" = @batch_id;
 
 -- name: ListFrom :many
-SELECT uid FROM livy_applications
+SELECT * FROM livy_applications
 WHERE "batch_id" >= @batch_id
 ORDER BY batch_id ASC
 LIMIT @size;
