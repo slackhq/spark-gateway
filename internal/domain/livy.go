@@ -101,7 +101,7 @@ type LivyCreateBatchRequest struct {
 	Conf           map[string]string `json:"conf"`
 }
 
-func (c *LivyCreateBatchRequest) ToV1Beta2SparkApplication(id int32, namespace string) *v1beta2.SparkApplication {
+func (c *LivyCreateBatchRequest) ToV1Beta2SparkApplication(namespace string) *v1beta2.SparkApplication {
 
 	var appType v1beta2.SparkApplicationType
 	if strings.HasSuffix(c.File, ".py") {
@@ -123,9 +123,6 @@ func (c *LivyCreateBatchRequest) ToV1Beta2SparkApplication(id int32, namespace s
 		ObjectMeta: v1.ObjectMeta{
 			Name:      c.Name,
 			Namespace: namespace,
-			Labels: map[string]string{
-				LIVY_BATCH_ID_LABEL: strconv.Itoa(int(id)),
-			},
 		},
 		Spec: v1beta2.SparkApplicationSpec{
 			Type:                appType,

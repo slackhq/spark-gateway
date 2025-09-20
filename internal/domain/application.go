@@ -204,28 +204,23 @@ type GatewayApplication struct {
 	SparkLogURLs     SparkLogURLs            `json:"sparkLogURLs"`
 }
 
-func (gsa *GatewayApplication) ToLivyBatch() (*LivyBatch, error) {
+// ToLivyBatch maps a GatewayApplication to a LivyBatch object.
+func (ga *GatewayApplication) ToLivyBatch(batchId int32) *LivyBatch {
 
-	batchId := gsa.SparkApplication.Labels[LIVY_BATCH_ID_LABEL]
-	batchIdInt, err := strconv.Atoi(batchId)
-	if err != nil {
-		return nil, err
-	}
-
-	ttl := gsa.SparkApplication.Spec.TimeToLiveSeconds
+	ttl := ga.SparkApplication.Spec.TimeToLiveSeconds
 	ttlStr := strconv.FormatInt(*ttl, 10)
 
 	return &LivyBatch{
-		Id:    int32(batchIdInt),
-		AppId: gsa.SparkApplication.Status.SparkApplicationID,
+		Id:    batchId,
+		AppId: ga.SparkApplication.Status.SparkApplicationID,
 		AppInfo: map[string]string{
-			"GatewayId": gsa.GatewayId,
-			"Cluster":   gsa.Cluster,
+			"GatewayId": ga.GatewayId,
+			"Cluster":   ga.Cluster,
 		},
 		TTL:   ttlStr,
 		Log:   []string{},
-		State: FromV1Beta2ApplicationState(gsa.SparkApplication.Status.AppState.State).String(),
-	}, nil
+		State: FromV1Beta2ApplicationState(ga.SparkApplication.Status.AppState.State).String(),
+	}
 }
 
 func GatewayApplicationFromV1Beta2SparkApplication(sparkApp *v1beta2.SparkApplication) *GatewayApplication {
