@@ -72,6 +72,7 @@ func AddMiddleware(mwDefs []config.MiddlewareDefinition, rg *gin.RouterGroup) er
 	// If no definitions are passed, we return the AnonymousUserMiddleware to ensure
 	// a user exists
 	if len(mwDefs) == 0 {
+		klog.Info("No middleware configured, setting AnonymousUserMiddleware")
 		rg.Use(AnonymousUserMiddleware)
 		return nil
 	}
