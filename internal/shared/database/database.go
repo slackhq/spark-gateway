@@ -186,15 +186,15 @@ func SparkAppAuditLog(gatewayIdUid uuid.UUID, sparkApp SparkApplication) {
 // Livy
 
 // GetByBatchId returns the GatewayId of the corresponding SparkApplication the batchId maps too
-func (db *Database) GetByBatchId(ctx context.Context, batchId int) (*LivyApplication, error) {
+func (db *Database) GetByBatchId(ctx context.Context, batchId int) (LivyApplication, error) {
 	queries := New(db.connectionPool)
 
 	gatewayId, err := queries.GetByBatchId(ctx, int64(batchId))
 	if err != nil {
-		return nil, gatewayerrors.NewFrom(fmt.Errorf("error getting SparkApplication with Livy BatchId '%d' from database: %w", batchId, err))
+		return LivyApplication{}, gatewayerrors.NewFrom(fmt.Errorf("error getting SparkApplication with Livy BatchId '%d' from database: %w", batchId, err))
 	}
 
-	return &gatewayId, nil
+	return gatewayId, nil
 }
 
 // ListFrom returns a list of GatewayIds of the corresponding SparkApplicaitions starting at "from" batchId
@@ -214,13 +214,13 @@ func (db *Database) ListFrom(ctx context.Context, from int, size int) ([]LivyApp
 	return livyApps, nil
 }
 
-func (db *Database) InsertLivyApplication(ctx context.Context, gatewayId string) (*LivyApplication, error) {
+func (db *Database) InsertLivyApplication(ctx context.Context, gatewayId string) (LivyApplication, error) {
 	queries := New(db.connectionPool)
 
 	livyBatch, err := queries.InsertLivyApplication(ctx, gatewayId)
 	if err != nil {
-		return nil, gatewayerrors.NewFrom(fmt.Errorf("erroring inserting Livy SparkApplication '%s' into database: %w", gatewayId, err))
+		return LivyApplication{}, gatewayerrors.NewFrom(fmt.Errorf("erroring inserting Livy SparkApplication '%s' into database: %w", gatewayId, err))
 	}
 
-	return &livyBatch, nil
+	return livyBatch, nil
 }
