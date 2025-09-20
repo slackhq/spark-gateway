@@ -30,8 +30,8 @@ import (
 	"k8s.io/klog/v2"
 
 	"github.com/slackhq/spark-gateway/internal/domain"
-	"github.com/slackhq/spark-gateway/internal/shared/gatewayerrors"
 	"github.com/slackhq/spark-gateway/internal/shared/database"
+	"github.com/slackhq/spark-gateway/internal/shared/gatewayerrors"
 )
 
 // SparkController is a type of Kubernetes controller. The difference between SparkController and a typical
@@ -46,7 +46,7 @@ type SparkController struct {
 	SparkLister   v1beta2Lister.SparkApplicationLister
 	ctx           context.Context
 	clusterName   string
-	database      database.SparkApplicationDatabaseRepository
+	database      database.SparkApplicationDatabase
 }
 
 func NewSparkController(
@@ -55,7 +55,7 @@ func NewSparkController(
 	selectorKey string,
 	selectorValue string,
 	clusterName string,
-	database database.SparkApplicationDatabaseRepository,
+	database database.SparkApplicationDatabase,
 ) (*SparkController, error) {
 
 	sparkClient, err := sparkClientSet.NewForConfig(kubeConfig)

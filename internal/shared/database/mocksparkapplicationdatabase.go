@@ -5,23 +5,22 @@ package database
 
 import (
 	"context"
-	"sync"
-	"time"
-
 	"github.com/google/uuid"
 	v1beta2 "github.com/kubeflow/spark-operator/v2/api/v1beta2"
+	"sync"
+	"time"
 )
 
-// Ensure, that DatabaseRepositoryMock does implement DatabaseRepository.
+// Ensure, that SparkApplicationDatabaseMock does implement SparkApplicationDatabase.
 // If this is not the case, regenerate this file with moq.
-var _ SparkApplicationDatabaseRepository = &DatabaseRepositoryMock{}
+var _ SparkApplicationDatabase = &SparkApplicationDatabaseMock{}
 
-// DatabaseRepositoryMock is a mock implementation of DatabaseRepository.
+// SparkApplicationDatabaseMock is a mock implementation of SparkApplicationDatabase.
 //
-//	func TestSomethingThatUsesDatabaseRepository(t *testing.T) {
+//	func TestSomethingThatUsesSparkApplicationDatabase(t *testing.T) {
 //
-//		// make and configure a mocked DatabaseRepository
-//		mockedDatabaseRepository := &DatabaseRepositoryMock{
+//		// make and configure a mocked SparkApplicationDatabase
+//		mockedSparkApplicationDatabase := &SparkApplicationDatabaseMock{
 //			GetByIdFunc: func(ctx context.Context, gatewayIdUid uuid.UUID) (*SparkApplication, error) {
 //				panic("mock out the GetById method")
 //			},
@@ -33,11 +32,11 @@ var _ SparkApplicationDatabaseRepository = &DatabaseRepositoryMock{}
 //			},
 //		}
 //
-//		// use mockedDatabaseRepository in code that requires DatabaseRepository
+//		// use mockedSparkApplicationDatabase in code that requires SparkApplicationDatabase
 //		// and then make assertions.
 //
 //	}
-type DatabaseRepositoryMock struct {
+type SparkApplicationDatabaseMock struct {
 	// GetByIdFunc mocks the GetById method.
 	GetByIdFunc func(ctx context.Context, gatewayIdUid uuid.UUID) (*SparkApplication, error)
 
@@ -85,9 +84,9 @@ type DatabaseRepositoryMock struct {
 }
 
 // GetById calls GetByIdFunc.
-func (mock *DatabaseRepositoryMock) GetById(ctx context.Context, gatewayIdUid uuid.UUID) (*SparkApplication, error) {
+func (mock *SparkApplicationDatabaseMock) GetById(ctx context.Context, gatewayIdUid uuid.UUID) (*SparkApplication, error) {
 	if mock.GetByIdFunc == nil {
-		panic("DatabaseRepositoryMock.GetByIdFunc: method is nil but DatabaseRepository.GetById was just called")
+		panic("SparkApplicationDatabaseMock.GetByIdFunc: method is nil but SparkApplicationDatabase.GetById was just called")
 	}
 	callInfo := struct {
 		Ctx          context.Context
@@ -105,8 +104,8 @@ func (mock *DatabaseRepositoryMock) GetById(ctx context.Context, gatewayIdUid uu
 // GetByIdCalls gets all the calls that were made to GetById.
 // Check the length with:
 //
-//	len(mockedDatabaseRepository.GetByIdCalls())
-func (mock *DatabaseRepositoryMock) GetByIdCalls() []struct {
+//	len(mockedSparkApplicationDatabase.GetByIdCalls())
+func (mock *SparkApplicationDatabaseMock) GetByIdCalls() []struct {
 	Ctx          context.Context
 	GatewayIdUid uuid.UUID
 } {
@@ -121,9 +120,9 @@ func (mock *DatabaseRepositoryMock) GetByIdCalls() []struct {
 }
 
 // InsertSparkApplication calls InsertSparkApplicationFunc.
-func (mock *DatabaseRepositoryMock) InsertSparkApplication(ctx context.Context, gatewayIdUid uuid.UUID, creationTime time.Time, userSubmittedSparkApp *v1beta2.SparkApplication, clusterName string) error {
+func (mock *SparkApplicationDatabaseMock) InsertSparkApplication(ctx context.Context, gatewayIdUid uuid.UUID, creationTime time.Time, userSubmittedSparkApp *v1beta2.SparkApplication, clusterName string) error {
 	if mock.InsertSparkApplicationFunc == nil {
-		panic("DatabaseRepositoryMock.InsertSparkApplicationFunc: method is nil but DatabaseRepository.InsertSparkApplication was just called")
+		panic("SparkApplicationDatabaseMock.InsertSparkApplicationFunc: method is nil but SparkApplicationDatabase.InsertSparkApplication was just called")
 	}
 	callInfo := struct {
 		Ctx                   context.Context
@@ -147,8 +146,8 @@ func (mock *DatabaseRepositoryMock) InsertSparkApplication(ctx context.Context, 
 // InsertSparkApplicationCalls gets all the calls that were made to InsertSparkApplication.
 // Check the length with:
 //
-//	len(mockedDatabaseRepository.InsertSparkApplicationCalls())
-func (mock *DatabaseRepositoryMock) InsertSparkApplicationCalls() []struct {
+//	len(mockedSparkApplicationDatabase.InsertSparkApplicationCalls())
+func (mock *SparkApplicationDatabaseMock) InsertSparkApplicationCalls() []struct {
 	Ctx                   context.Context
 	GatewayIdUid          uuid.UUID
 	CreationTime          time.Time
@@ -169,9 +168,9 @@ func (mock *DatabaseRepositoryMock) InsertSparkApplicationCalls() []struct {
 }
 
 // UpdateSparkApplication calls UpdateSparkApplicationFunc.
-func (mock *DatabaseRepositoryMock) UpdateSparkApplication(ctx context.Context, gatewayIdUid uuid.UUID, updateSparkApp v1beta2.SparkApplication) error {
+func (mock *SparkApplicationDatabaseMock) UpdateSparkApplication(ctx context.Context, gatewayIdUid uuid.UUID, updateSparkApp v1beta2.SparkApplication) error {
 	if mock.UpdateSparkApplicationFunc == nil {
-		panic("DatabaseRepositoryMock.UpdateSparkApplicationFunc: method is nil but DatabaseRepository.UpdateSparkApplication was just called")
+		panic("SparkApplicationDatabaseMock.UpdateSparkApplicationFunc: method is nil but SparkApplicationDatabase.UpdateSparkApplication was just called")
 	}
 	callInfo := struct {
 		Ctx            context.Context
@@ -191,8 +190,8 @@ func (mock *DatabaseRepositoryMock) UpdateSparkApplication(ctx context.Context, 
 // UpdateSparkApplicationCalls gets all the calls that were made to UpdateSparkApplication.
 // Check the length with:
 //
-//	len(mockedDatabaseRepository.UpdateSparkApplicationCalls())
-func (mock *DatabaseRepositoryMock) UpdateSparkApplicationCalls() []struct {
+//	len(mockedSparkApplicationDatabase.UpdateSparkApplicationCalls())
+func (mock *SparkApplicationDatabaseMock) UpdateSparkApplicationCalls() []struct {
 	Ctx            context.Context
 	GatewayIdUid   uuid.UUID
 	UpdateSparkApp v1beta2.SparkApplication

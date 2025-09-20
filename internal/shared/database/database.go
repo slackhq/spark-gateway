@@ -34,15 +34,18 @@ import (
 	"github.com/slackhq/spark-gateway/internal/shared/gatewayerrors"
 )
 
-//go:generate moq -rm -out mockdatabaserepository.go . DatabaseRepository
+//go:generate moq -rm -out mocksparkapplicationdatabase.go . SparkApplicationDatabase
 
-type SparkApplicationDatabaseRepository interface {
+type SparkApplicationDatabase interface {
 	GetById(ctx context.Context, gatewayIdUid uuid.UUID) (*SparkApplication, error)
 	UpdateSparkApplication(ctx context.Context, gatewayIdUid uuid.UUID, updateSparkApp v1beta2.SparkApplication) error
 	InsertSparkApplication(ctx context.Context, gatewayIdUid uuid.UUID, creationTime time.Time, userSubmittedSparkApp *v1beta2.SparkApplication, clusterName string) error
 }
 
-type LivyApplicationDatabaseRepository interface {
+//go:generate moq -rm -out mocklivyapplicationdatabase.go . LivyApplicationDatabase
+
+
+type LivyApplicationDatabase interface {
 	GetByBatchId(ctx context.Context, batchId int) (LivyApplication, error)
 	ListFrom(ctx context.Context, fromId int, size int) ([]LivyApplication, error)
 	InsertLivyApplication(ctx context.Context, gatewayId string) (LivyApplication, error)

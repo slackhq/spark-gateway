@@ -26,9 +26,9 @@ import (
 	"k8s.io/klog/v2"
 
 	"github.com/slackhq/spark-gateway/internal/shared/config"
+	"github.com/slackhq/spark-gateway/internal/shared/database"
 	"github.com/slackhq/spark-gateway/internal/shared/gatewayerrors"
 	"github.com/slackhq/spark-gateway/internal/sparkManager/api"
-	"github.com/slackhq/spark-gateway/internal/shared/database"
 	"github.com/slackhq/spark-gateway/internal/sparkManager/kube"
 	"github.com/slackhq/spark-gateway/internal/sparkManager/metrics"
 	appRepo "github.com/slackhq/spark-gateway/internal/sparkManager/repository"
@@ -51,7 +51,7 @@ func NewSparkManager(ctx context.Context, sgConfig *config.SparkGatewayConfig, c
 	}
 
 	// Create DB Repo
-	var db database.SparkApplicationDatabaseRepository = nil
+	var db database.SparkApplicationDatabase = nil
 	if sgConfig.Database.Enable {
 		db = database.NewDatabase(ctx, sgConfig.Database)
 	}

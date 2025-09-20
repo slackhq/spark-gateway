@@ -50,11 +50,11 @@ type SparkApplicationService interface {
 
 type ApplicationService struct {
 	sparkApplicationRepository SparkApplicationRepository
-	database                   database.SparkApplicationDatabaseRepository
+	database                   database.SparkApplicationDatabase
 	cluster                    domain.KubeCluster
 }
 
-func NewSparkApplicationService(sparkAppRepo SparkApplicationRepository, database database.SparkApplicationDatabaseRepository, cluster domain.KubeCluster) SparkApplicationService {
+func NewSparkApplicationService(sparkAppRepo SparkApplicationRepository, database database.SparkApplicationDatabase, cluster domain.KubeCluster) SparkApplicationService {
 	return &ApplicationService{sparkApplicationRepository: sparkAppRepo, database: database, cluster: cluster}
 }
 
