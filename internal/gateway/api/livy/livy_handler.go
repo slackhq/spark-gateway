@@ -51,6 +51,10 @@ func (l *LivyHandler) List(c *gin.Context) {
 		if err != nil {
 			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"msg": "from must be an int"})
 		}
+
+		if from < 0 {
+			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"msg": "from must be greater than or equal 0"})
+		}
 	}
 
 	var size int
@@ -59,6 +63,10 @@ func (l *LivyHandler) List(c *gin.Context) {
 		size, err = strconv.Atoi(sizeParam)
 		if err != nil {
 			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"msg": "size must be an int"})
+		}
+
+		if size < 0 {
+			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"msg": "size must be greater than or equal 0"})
 		}
 	}
 
@@ -105,7 +113,7 @@ func (l *LivyHandler) Create(c *gin.Context) {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"msg": "spark gateway livy API requires X-Spark-Gateway-Livy-Namespace' header"})
 	}
 
-	createdBatch, err := l.livyService.Create(c, createReq, namespace)
+	createdBatch, err := l.livyService.Create(c, *createReq.ToV1Beta2SparkApplication(namespace))
 	if err != nil {
 		c.Error(err)
 		return
@@ -131,32 +139,26 @@ func (l *LivyHandler) Delete(c *gin.Context) {
 }
 
 func (l *LivyHandler) Logs(c *gin.Context) {
-	logsId, err := strconv.Atoi(c.Param("batchId"))
-
-	var from int
-	fromParam := c.Query("from")
-	if fromParam != "" {
-		from, err = strconv.Atoi(fromParam)
-		if err != nil {
-			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"msg": "from must be an int"})
-		}
-	}
-
 	var size int
 	sizeParam := c.Query("size")
 	if sizeParam != "" {
-		size, err = strconv.Atoi(sizeParam)
+		size, err := strconv.Atoi(sizeParam)
 		if err != nil {
-			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"msg": "size must be an int"})
+			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"msg": "size param must be an int"})
+		}
+
+		if size < 0 {
+			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"msg": "size param must be >= 0"})
 		}
 	}
 
+	logsId, err := strconv.Atoi(c.Param("batchId"))
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"msg": "batchId must be an int"})
 		return
 	}
 
-	logs, err := l.livyService.Logs(c, logsId, from, size)
+	logs, err := l.livyService.Logs(c, logsId, size)
 	if err != nil {
 		c.Error(err)
 		return
@@ -164,7 +166,7 @@ func (l *LivyHandler) Logs(c *gin.Context) {
 
 	c.JSON(http.StatusOK, domain.LivyLogBatchResponse{
 		Id:   logsId,
-		From: from,
+		From: -1,
 		Size: size,
 		Log:  logs,
 	})
