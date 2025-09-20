@@ -14,7 +14,7 @@ import (
 type LivyApplicationService interface {
 	Get(ctx context.Context, batchId int) (*domain.LivyBatch, error)
 	List(ctx context.Context, from int, size int) ([]*domain.LivyBatch, error)
-	Create(ctx context.Context, application v1beta2.SparkApplication) (*domain.LivyBatch, error)
+	Create(ctx context.Context, createReq domain.LivyCreateBatchRequest, namespace string) (*domain.LivyBatch, error)
 	Delete(ctx context.Context, batchId int) error
 	Logs(ctx context.Context, batchId int, size int) ([]string, error)
 }
@@ -22,6 +22,7 @@ type LivyApplicationService interface {
 type livyService struct {
 	appService GatewayApplicationService
 	database   database.LivyApplicationDatabaseRepository
+	namespace  string
 }
 
 func NewLivyService(appService GatewayApplicationService, database database.LivyApplicationDatabaseRepository) *livyService {
@@ -71,9 +72,16 @@ func (l *livyService) List(ctx context.Context, from int, size int) ([]*domain.L
 
 }
 
-func (l *livyService) Create(ctx context.Context, application v1beta2.SparkApplication) (*domain.LivyBatch, error) {
+func (l *livyService) Create(ctx context.Context, createReq domain.LivyCreateBatchRequest, namespace string) (*domain.LivyBatch, error) {
 
-	gatewayApp, err := l.appService.Create(ctx, &application, *application.Spec.ProxyUser)
+	var application *v1beta2.SparkApplication
+	if namespace == "" {
+		application = createReq.ToV1Beta2SparkApplication(l.namespace)
+	} else {
+		application = createReq.ToV1Beta2SparkApplication(namespace)
+	}
+
+	gatewayApp, err := l.appService.Create(ctx, application, *application.Spec.ProxyUser)
 	if err != nil {
 		return nil, gatewayerrors.NewFrom(fmt.Errorf("error creating Livy GatewayApplication: %w", err))
 	}

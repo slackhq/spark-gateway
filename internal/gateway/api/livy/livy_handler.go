@@ -107,13 +107,10 @@ func (l *LivyHandler) Create(c *gin.Context) {
 		createReq.ProxyUser = gotUser.(string)
 	}
 
-	// Get namespace from headers
+	// Get namespace from headers if supplied
 	namespace := c.GetHeader("X-Spark-Gateway-Livy-Namespace")
-	if namespace == "" {
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"msg": "spark gateway livy API requires X-Spark-Gateway-Livy-Namespace' header"})
-	}
 
-	createdBatch, err := l.livyService.Create(c, *createReq.ToV1Beta2SparkApplication(namespace))
+	createdBatch, err := l.livyService.Create(c, createReq, namespace)
 	if err != nil {
 		c.Error(err)
 		return
