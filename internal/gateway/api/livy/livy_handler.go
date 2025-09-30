@@ -36,6 +36,30 @@ func validateIntParam(c *gin.Context, paramName string, isPathParam bool, requir
 	return value, true
 }
 
+// resolveProxyUser determines the proxy user for a Livy batch request
+// Priority order: doAs query parameter > request proxyUser field > authenticated user
+func resolveProxyUser(c *gin.Context, req *domain.LivyCreateBatchRequest) error {
+	// Check for doAs query parameter - this takes highest priority
+	if doAs := c.Query("doAs"); doAs != "" {
+		req.ProxyUser = doAs
+		return nil
+	}
+
+	// If proxyUser is already set in the request, use it
+	if req.ProxyUser != "" {
+		return nil
+	}
+
+	// Fall back to the authenticated user from the context
+	gotUser, exists := c.Get("user")
+	if !exists {
+		return errors.New("no user set, congratulations you've encountered a bug that should never happen")
+	}
+
+	req.ProxyUser = gotUser.(string)
+	return nil
+}
+
 type LivyHandler struct {
 	livyService service.LivyApplicationService
 }
@@ -87,28 +111,16 @@ func (l *LivyHandler) List(c *gin.Context) {
 }
 
 func (l *LivyHandler) Create(c *gin.Context) {
-
 	var createReq domain.LivyCreateBatchRequest
 	if err := c.ShouldBindJSON(&createReq); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"msg": err.Error()})
 		return
 	}
 
-	// Check for doAs as that takes priority over all
-	doAs := c.Query("doAs")
-	if doAs != "" {
-		createReq.ProxyUser = doAs
-	}
-
-	// If no doAs, check proxyUser from request, or finally set
-	// batch to submitting user
-	if createReq.ProxyUser == "" {
-		gotUser, exists := c.Get("user")
-		if !exists {
-			c.Error(errors.New("no user set, congratulations you've encountered a bug that should never happen"))
-			return
-		}
-		createReq.ProxyUser = gotUser.(string)
+	// Resolve the proxy user for this request
+	if err := resolveProxyUser(c, &createReq); err != nil {
+		c.Error(err)
+		return
 	}
 
 	// Get namespace from headers if supplied
@@ -121,7 +133,6 @@ func (l *LivyHandler) Create(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusCreated, createdBatch)
-
 }
 func (l *LivyHandler) Delete(c *gin.Context) {
 	deleteId, ok := validateIntParam(c, "batchId", true, true)
