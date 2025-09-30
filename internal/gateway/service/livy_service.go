@@ -32,6 +32,15 @@ type livyService struct {
 	namespace  string
 }
 
+// getLivyAppByBatchId retrieves a LivyApplication from the database by batchId
+func (l *livyService) getLivyAppByBatchId(ctx context.Context, batchId int) (*database.LivyApplication, error) {
+	livyApp, err := l.database.GetByBatchId(ctx, batchId)
+	if err != nil {
+		return nil, wrapLivyError(err, "error getting GatewayApplication from Livy BatchId")
+	}
+	return &livyApp, nil
+}
+
 func NewLivyService(appService GatewayApplicationService, database database.LivyApplicationDatabase, namespace string) *livyService {
 	return &livyService{
 		appService: appService,
@@ -42,9 +51,9 @@ func NewLivyService(appService GatewayApplicationService, database database.Livy
 
 func (l *livyService) Get(ctx context.Context, batchId int) (*domain.LivyBatch, error) {
 
-	livyApp, err := l.database.GetByBatchId(ctx, batchId)
+	livyApp, err := l.getLivyAppByBatchId(ctx, batchId)
 	if err != nil {
-		return nil, wrapLivyError(err, "error getting GatewayApplication from Livy BatchId")
+		return nil, err
 	}
 
 	gotApp, err := l.appService.Get(ctx, livyApp.GatewayID)
@@ -107,9 +116,9 @@ func (l *livyService) Create(ctx context.Context, createReq domain.LivyCreateBat
 
 func (l *livyService) Delete(ctx context.Context, batchId int) error {
 
-	livyApp, err := l.database.GetByBatchId(ctx, batchId)
+	livyApp, err := l.getLivyAppByBatchId(ctx, batchId)
 	if err != nil {
-		return wrapLivyError(err, "error getting GatewayApplication from Livy BatchId")
+		return err
 	}
 
 	if err := l.appService.Delete(ctx, livyApp.GatewayID); err != nil {
@@ -120,9 +129,9 @@ func (l *livyService) Delete(ctx context.Context, batchId int) error {
 }
 
 func (l *livyService) Logs(ctx context.Context, batchId int, size int) ([]string, error) {
-	livyApp, err := l.database.GetByBatchId(ctx, batchId)
+	livyApp, err := l.getLivyAppByBatchId(ctx, batchId)
 	if err != nil {
-		return nil, wrapLivyError(err, "error getting GatewayApplication from Livy BatchId")
+		return nil, err
 	}
 
 	logs, err := l.appService.Logs(ctx, livyApp.GatewayID, size)
