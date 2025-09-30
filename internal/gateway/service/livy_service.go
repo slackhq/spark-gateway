@@ -87,31 +87,32 @@ func (l *livyService) List(ctx context.Context, from int, size int) ([]*domain.L
 }
 
 func (l *livyService) Create(ctx context.Context, createReq domain.LivyCreateBatchRequest, namespace string) (*domain.LivyBatch, error) {
-
-	var application *v1beta2.SparkApplication
+	// Determine the target namespace
 	ns := namespace
 	if ns == "" {
 		ns = l.namespace
 	}
-	application = createReq.ToV1Beta2SparkApplication(ns)
 
+	// Convert Livy request to SparkApplication
+	application := createReq.ToV1Beta2SparkApplication(ns)
+
+	// Create the SparkApplication in Kubernetes
 	gatewayApp, err := l.appService.Create(ctx, application, *application.Spec.ProxyUser)
 	if err != nil {
 		return nil, wrapLivyError(err, "error creating Livy GatewayApplication")
 	}
 
+	// Track the application in the database
 	livyApp, err := l.database.InsertLivyApplication(ctx, gatewayApp.GatewayId)
-	// If there is an erro saving to db, we need to delete the app from running
 	if err != nil {
+		// Cleanup the K8s resource on database failure
 		if deleteErr := l.appService.Delete(ctx, gatewayApp.GatewayId); deleteErr != nil {
-			return nil, wrapLivyError(err, fmt.Sprintf("error while cleaning up errored Livy GatewayApplication '%s'", gatewayApp.GatewayId))
-		} else {
-			return nil, wrapLivyError(err, fmt.Sprintf("error inserting Livy GatewayApplication '%s' into database", gatewayApp.GatewayId))
+			return nil, wrapLivyError(err, fmt.Sprintf("error tracking Livy application '%s' and failed cleanup", gatewayApp.GatewayId))
 		}
+		return nil, wrapLivyError(err, fmt.Sprintf("error tracking Livy application '%s' in database", gatewayApp.GatewayId))
 	}
 
 	return gatewayApp.ToLivyBatch(int32(livyApp.BatchID)), nil
-
 }
 
 func (l *livyService) Delete(ctx context.Context, batchId int) error {
