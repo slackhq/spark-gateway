@@ -23,7 +23,11 @@ import (
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-const LIVY_BATCH_ID_LABEL string = "spark-gateway/livy-batch-id"
+const (
+	LIVY_BATCH_ID_LABEL   string = "spark-gateway/livy-batch-id"
+	DEFAULT_SPARK_VERSION string = "3"
+	DEFAULT_SPARK_MODE    string = "cluster"
+)
 
 type LivySessionState int
 
@@ -127,7 +131,7 @@ func (c *LivyCreateBatchRequest) ToV1Beta2SparkApplication(namespace string) *v1
 		},
 		Spec: v1beta2.SparkApplicationSpec{
 			Type:                appType,
-			Mode:                "cluster",
+			Mode:                DEFAULT_SPARK_MODE,
 			MainClass:           &c.ClassName,
 			MainApplicationFile: &c.File,
 			Arguments:           c.Args,
@@ -156,7 +160,7 @@ func (c *LivyCreateBatchRequest) ToV1Beta2SparkApplication(namespace string) *v1
 				Archives: c.Archives,
 			},
 			ProxyUser:    &c.ProxyUser,
-			SparkVersion: "3",
+			SparkVersion: DEFAULT_SPARK_VERSION,
 		},
 	}
 }
