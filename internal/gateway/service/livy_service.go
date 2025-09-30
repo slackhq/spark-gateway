@@ -89,11 +89,11 @@ func (l *livyService) List(ctx context.Context, from int, size int) ([]*domain.L
 func (l *livyService) Create(ctx context.Context, createReq domain.LivyCreateBatchRequest, namespace string) (*domain.LivyBatch, error) {
 
 	var application *v1beta2.SparkApplication
-	if namespace == "" {
-		application = createReq.ToV1Beta2SparkApplication(l.namespace)
-	} else {
-		application = createReq.ToV1Beta2SparkApplication(namespace)
+	ns := namespace
+	if ns == "" {
+		ns = l.namespace
 	}
+	application = createReq.ToV1Beta2SparkApplication(ns)
 
 	gatewayApp, err := l.appService.Create(ctx, application, *application.Spec.ProxyUser)
 	if err != nil {
