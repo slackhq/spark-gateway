@@ -113,7 +113,8 @@ func (c *LivyCreateBatchRequest) ToV1Beta2SparkApplication(namespace string) *v1
 	driverCores := int32(c.DriverCores)
 	driverCoresLimit := strconv.Itoa(c.DriverCores)
 	executorCores := int32(c.ExecutorCores)
-	executorCoresLimit := strconv.Itoa(c.DriverCores)
+	executorCoresLimit := strconv.Itoa(c.ExecutorCores)
+	instances := int32(c.NumExecutors)
 
 	return &v1beta2.SparkApplication{
 		TypeMeta: v1.TypeMeta{
@@ -146,6 +147,7 @@ func (c *LivyCreateBatchRequest) ToV1Beta2SparkApplication(namespace string) *v1
 					Memory:      &c.ExecutorMemory,
 					MemoryLimit: &c.ExecutorMemory,
 				},
+				Instances: &instances,
 			},
 			Deps: v1beta2.Dependencies{
 				Jars:     c.Jars,
@@ -153,9 +155,9 @@ func (c *LivyCreateBatchRequest) ToV1Beta2SparkApplication(namespace string) *v1
 				PyFiles:  c.PyFiles,
 				Archives: c.Archives,
 			},
+			ProxyUser:    &c.ProxyUser,
 			SparkVersion: "3",
 		},
-		Status: v1beta2.SparkApplicationStatus{},
 	}
 }
 
