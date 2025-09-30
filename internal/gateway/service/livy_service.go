@@ -11,6 +11,8 @@ import (
 	"github.com/slackhq/spark-gateway/internal/shared/gatewayerrors"
 )
 
+//go:generate moq -rm  -out mocklivyapplicationservice.go . LivyApplicationService
+
 type LivyApplicationService interface {
 	Get(ctx context.Context, batchId int) (*domain.LivyBatch, error)
 	List(ctx context.Context, from int, size int) ([]*domain.LivyBatch, error)
@@ -21,14 +23,15 @@ type LivyApplicationService interface {
 
 type livyService struct {
 	appService GatewayApplicationService
-	database   database.LivyApplicationDatabaseRepository
+	database   database.LivyApplicationDatabase
 	namespace  string
 }
 
-func NewLivyService(appService GatewayApplicationService, database database.LivyApplicationDatabaseRepository) *livyService {
+func NewLivyService(appService GatewayApplicationService, database database.LivyApplicationDatabase, namespace string) *livyService {
 	return &livyService{
 		appService: appService,
 		database:   database,
+		namespace:  namespace,
 	}
 }
 
@@ -62,9 +65,6 @@ func (l *livyService) List(ctx context.Context, from int, size int) ([]*domain.L
 		}
 
 		livyBatch := gotApp.ToLivyBatch(int32(livyApp.BatchID))
-		if err != nil {
-			return nil, gatewayerrors.NewFrom(fmt.Errorf("error converting GatewayAppication to Livy Batch: %w", err))
-		}
 		retApps = append(retApps, livyBatch)
 	}
 

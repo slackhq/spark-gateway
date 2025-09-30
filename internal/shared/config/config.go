@@ -150,6 +150,7 @@ type DebugPort struct {
 
 type LivyConfig struct {
 	Enable bool `koanf:"enable"`
+	DefaultNamespace string `koanf:"defaultNamespace"`
 }
 
 type SparkGatewayConfig struct {

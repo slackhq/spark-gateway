@@ -39,6 +39,9 @@ func NewRouter(sgConf *config.SparkGatewayConfig, appService service.GatewayAppl
 	if sgConf.LivyConfig.Enable {
 		livyGroup := router.Group("/api/livy")
 		livyGroup.Use(livy.LivyErrorHandler)
+		if err := middleware.AddMiddleware(sgConf.GatewayConfig.Middleware, livyGroup); err != nil {
+			return nil, fmt.Errorf("error adding middlewares to routes: %w", err)
+		}
 		livy.RegisterLivyBatchRoutes(livyGroup, livyService)
 	}
 
