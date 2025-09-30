@@ -91,6 +91,7 @@ func (l *LivyHandler) Create(c *gin.Context) {
 	var createReq domain.LivyCreateBatchRequest
 	if err := c.ShouldBindJSON(&createReq); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"msg": err.Error()})
+		return
 	}
 
 	// Check for doAs as that takes priority over all
