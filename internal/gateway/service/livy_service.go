@@ -11,6 +11,11 @@ import (
 	"github.com/slackhq/spark-gateway/internal/shared/gatewayerrors"
 )
 
+// wrapLivyError wraps an error with a Livy-specific message and returns a GatewayError
+func wrapLivyError(err error, message string) error {
+	return gatewayerrors.NewFrom(fmt.Errorf("%s: %w", message, err))
+}
+
 //go:generate moq -rm  -out mocklivyapplicationservice.go . LivyApplicationService
 
 type LivyApplicationService interface {
@@ -39,12 +44,12 @@ func (l *livyService) Get(ctx context.Context, batchId int) (*domain.LivyBatch, 
 
 	livyApp, err := l.database.GetByBatchId(ctx, batchId)
 	if err != nil {
-		return nil, gatewayerrors.NewFrom(fmt.Errorf("error getting GatewayApplication from Livy BatchId: %w", err))
+		return nil, wrapLivyError(err, "error getting GatewayApplication from Livy BatchId")
 	}
 
 	gotApp, err := l.appService.Get(ctx, livyApp.GatewayID)
 	if err != nil {
-		return nil, gatewayerrors.NewFrom(fmt.Errorf("error getting GatewayApplication: %w", err))
+		return nil, wrapLivyError(err, "error getting GatewayApplication")
 	}
 
 	return gotApp.ToLivyBatch(int32(livyApp.BatchID)), nil
@@ -54,14 +59,14 @@ func (l *livyService) List(ctx context.Context, from int, size int) ([]*domain.L
 
 	livyApps, err := l.database.ListFrom(ctx, from, size)
 	if err != nil {
-		return nil, gatewayerrors.NewFrom(fmt.Errorf("error listing Livy GatewayApplications: %w", err))
+		return nil, wrapLivyError(err, "error listing Livy GatewayApplications")
 	}
 
 	var retApps []*domain.LivyBatch
 	for _, livyApp := range livyApps {
 		gotApp, err := l.appService.Get(ctx, livyApp.GatewayID)
 		if err != nil {
-			return nil, gatewayerrors.NewFrom(fmt.Errorf("error listing Livy GatewayAppications: %w", err))
+			return nil, wrapLivyError(err, "error listing Livy GatewayApplications")
 		}
 
 		livyBatch := gotApp.ToLivyBatch(int32(livyApp.BatchID))
@@ -83,16 +88,16 @@ func (l *livyService) Create(ctx context.Context, createReq domain.LivyCreateBat
 
 	gatewayApp, err := l.appService.Create(ctx, application, *application.Spec.ProxyUser)
 	if err != nil {
-		return nil, gatewayerrors.NewFrom(fmt.Errorf("error creating Livy GatewayApplication: %w", err))
+		return nil, wrapLivyError(err, "error creating Livy GatewayApplication")
 	}
 
 	livyApp, err := l.database.InsertLivyApplication(ctx, gatewayApp.GatewayId)
 	// If there is an erro saving to db, we need to delete the app from running
 	if err != nil {
 		if deleteErr := l.appService.Delete(ctx, gatewayApp.GatewayId); deleteErr != nil {
-			return nil, gatewayerrors.NewFrom(fmt.Errorf("error while cleaning up errored Livy GatewayApplication '%s': %w", gatewayApp.GatewayId, err))
+			return nil, wrapLivyError(err, fmt.Sprintf("error while cleaning up errored Livy GatewayApplication '%s'", gatewayApp.GatewayId))
 		} else {
-			return nil, gatewayerrors.NewFrom(fmt.Errorf("error inserting Livy GatewayApplication '%s' into database: %w", gatewayApp.GatewayId, err))
+			return nil, wrapLivyError(err, fmt.Sprintf("error inserting Livy GatewayApplication '%s' into database", gatewayApp.GatewayId))
 		}
 	}
 
@@ -104,11 +109,11 @@ func (l *livyService) Delete(ctx context.Context, batchId int) error {
 
 	livyApp, err := l.database.GetByBatchId(ctx, batchId)
 	if err != nil {
-		return gatewayerrors.NewFrom(fmt.Errorf("error getting GatewayApplication from Livy BatchId: %w", err))
+		return wrapLivyError(err, "error getting GatewayApplication from Livy BatchId")
 	}
 
 	if err := l.appService.Delete(ctx, livyApp.GatewayID); err != nil {
-		return gatewayerrors.NewFrom(fmt.Errorf("error deleting Livy GatewayApplication: %w", err))
+		return wrapLivyError(err, "error deleting Livy GatewayApplication")
 	}
 
 	return nil
@@ -117,12 +122,12 @@ func (l *livyService) Delete(ctx context.Context, batchId int) error {
 func (l *livyService) Logs(ctx context.Context, batchId int, size int) ([]string, error) {
 	livyApp, err := l.database.GetByBatchId(ctx, batchId)
 	if err != nil {
-		return nil, gatewayerrors.NewFrom(fmt.Errorf("error getting GatewayApplication from Livy BatchId: %w", err))
+		return nil, wrapLivyError(err, "error getting GatewayApplication from Livy BatchId")
 	}
 
 	logs, err := l.appService.Logs(ctx, livyApp.GatewayID, size)
 	if err != nil {
-		return nil, gatewayerrors.NewFrom(fmt.Errorf("error getting logs for Livy GatewayApplication: %w", err))
+		return nil, wrapLivyError(err, "error getting logs for Livy GatewayApplication")
 	}
 
 	logSplice := strings.Split(*logs, "\n")
