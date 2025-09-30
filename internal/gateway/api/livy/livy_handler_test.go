@@ -218,3 +218,133 @@ func TestLivyApplicationHandlerCreate(t *testing.T) {
 	assert.Equal(t, http.StatusCreated, w.Code, "codes should match")
 	assert.Equal(t, gotApp, *retApp, "returned JSON should match")
 }
+
+func TestResolveProxyUser_DoAsQueryParam(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	// Setup
+	w := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(w)
+	req := httptest.NewRequest("POST", "/test?doAs=admin", nil)
+	c.Request = req
+
+	createReq := &domain.LivyCreateBatchRequest{
+		ProxyUser: "originalUser",
+	}
+
+	// Test
+	err := resolveProxyUser(c, createReq)
+
+	// Assertions
+	assert.NoError(t, err)
+	assert.Equal(t, "admin", createReq.ProxyUser, "doAs query param should take priority")
+}
+
+func TestResolveProxyUser_ExistingProxyUser(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	// Setup
+	w := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(w)
+	req := httptest.NewRequest("POST", "/test", nil)
+	c.Request = req
+
+	createReq := &domain.LivyCreateBatchRequest{
+		ProxyUser: "requestUser",
+	}
+
+	// Test
+	err := resolveProxyUser(c, createReq)
+
+	// Assertions
+	assert.NoError(t, err)
+	assert.Equal(t, "requestUser", createReq.ProxyUser, "existing proxyUser should be preserved")
+}
+
+func TestResolveProxyUser_AuthenticatedUser(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	// Setup
+	w := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(w)
+	req := httptest.NewRequest("POST", "/test", nil)
+	c.Request = req
+	c.Set("user", "authenticatedUser")
+
+	createReq := &domain.LivyCreateBatchRequest{
+		ProxyUser: "", // Empty proxy user
+	}
+
+	// Test
+	err := resolveProxyUser(c, createReq)
+
+	// Assertions
+	assert.NoError(t, err)
+	assert.Equal(t, "authenticatedUser", createReq.ProxyUser, "should fall back to authenticated user")
+}
+
+func TestResolveProxyUser_NoUserContext(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	// Setup
+	w := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(w)
+	req := httptest.NewRequest("POST", "/test", nil)
+	c.Request = req
+	// Don't set user context
+
+	createReq := &domain.LivyCreateBatchRequest{
+		ProxyUser: "", // Empty proxy user
+	}
+
+	// Test
+	err := resolveProxyUser(c, createReq)
+
+	// Assertions
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "no user set")
+}
+
+func TestResolveProxyUser_DoAsOverridesExisting(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	// Setup
+	w := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(w)
+	req := httptest.NewRequest("POST", "/test?doAs=adminUser", nil)
+	c.Request = req
+	c.Set("user", "authenticatedUser")
+
+	createReq := &domain.LivyCreateBatchRequest{
+		ProxyUser: "requestUser",
+	}
+
+	// Test
+	err := resolveProxyUser(c, createReq)
+
+	// Assertions
+	assert.NoError(t, err)
+	assert.Equal(t, "adminUser", createReq.ProxyUser, "doAs should override everything")
+}
+
+func TestResolveProxyUser_EmptyDoAsParam(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	// Setup
+	w := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(w)
+	req := httptest.NewRequest("POST", "/test?doAs=", nil)
+	c.Request = req
+	c.Set("user", "authenticatedUser")
+
+	createReq := &domain.LivyCreateBatchRequest{
+		ProxyUser: "requestUser",
+	}
+
+	// Test
+	err := resolveProxyUser(c, createReq)
+
+	// Assertions
+	assert.NoError(t, err)
+	assert.Equal(t, "requestUser", createReq.ProxyUser, "empty doAs should not override existing proxyUser")
+}

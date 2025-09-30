@@ -24,9 +24,9 @@ import (
 )
 
 const (
-	LIVY_BATCH_ID_LABEL   string = "spark-gateway/livy-batch-id"
-	DEFAULT_SPARK_VERSION string = "3"
-	DEFAULT_SPARK_MODE    string = "cluster"
+	LIVY_BATCH_ID_LABEL   string             = "spark-gateway/livy-batch-id"
+	DEFAULT_SPARK_VERSION string             = "3"
+	DEFAULT_SPARK_MODE    v1beta2.DeployMode = v1beta2.DeployModeCluster
 )
 
 type LivySessionState int
