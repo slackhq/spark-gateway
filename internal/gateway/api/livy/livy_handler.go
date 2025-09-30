@@ -12,6 +12,30 @@ import (
 	"github.com/slackhq/spark-gateway/internal/shared/gatewayerrors"
 )
 
+// validateIntParam extracts and validates an integer parameter from URL path or query string
+func validateIntParam(c *gin.Context, paramName string, isPathParam bool, required bool) (int, bool) {
+	var paramValue string
+	if isPathParam {
+		paramValue = c.Param(paramName)
+	} else {
+		paramValue = c.Query(paramName)
+		if paramValue == "" && !required {
+			return 0, true // Optional query parameter, return success with 0 value
+		}
+	}
+
+	value, err := strconv.Atoi(paramValue)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"msg": paramName + " must be an int"})
+		return 0, false
+	}
+	if value < 0 {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"msg": paramName + " must be greater than or equal to 0"})
+		return 0, false
+	}
+	return value, true
+}
+
 type LivyHandler struct {
 	livyService service.LivyApplicationService
 }
@@ -23,10 +47,8 @@ func NewLivyBatchApplicationHandler(livyService service.LivyApplicationService) 
 }
 
 func (l *LivyHandler) Get(c *gin.Context) {
-
-	getId, err := strconv.Atoi(c.Param("batchId"))
-	if err != nil {
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"msg": "batchId must be an int"})
+	getId, ok := validateIntParam(c, "batchId", true, true)
+	if !ok {
 		return
 	}
 
@@ -41,33 +63,14 @@ func (l *LivyHandler) Get(c *gin.Context) {
 }
 
 func (l *LivyHandler) List(c *gin.Context) {
-
-	var err error
-
-	var from int
-	fromParam := c.Query("from")
-	if fromParam != "" {
-		from, err = strconv.Atoi(fromParam)
-		if err != nil {
-			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"msg": "from must be an int"})
-		}
-
-		if from < 0 {
-			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"msg": "from must be greater than or equal 0"})
-		}
+	from, ok := validateIntParam(c, "from", false, false)
+	if !ok {
+		return
 	}
 
-	var size int
-	sizeParam := c.Query("size")
-	if sizeParam != "" {
-		size, err = strconv.Atoi(sizeParam)
-		if err != nil {
-			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"msg": "size must be an int"})
-		}
-
-		if size < 0 {
-			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"msg": "size must be greater than or equal 0"})
-		}
+	size, ok := validateIntParam(c, "size", false, false)
+	if !ok {
+		return
 	}
 
 	listBatches, err := l.livyService.List(c, from, size)
@@ -120,13 +123,12 @@ func (l *LivyHandler) Create(c *gin.Context) {
 
 }
 func (l *LivyHandler) Delete(c *gin.Context) {
-	deleteId, err := strconv.Atoi(c.Param("batchId"))
-	if err != nil {
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"msg": "batchId must be an int"})
+	deleteId, ok := validateIntParam(c, "batchId", true, true)
+	if !ok {
 		return
 	}
 
-	err = l.livyService.Delete(c, deleteId)
+	err := l.livyService.Delete(c, deleteId)
 	if err != nil {
 		c.Error(err)
 		return
@@ -136,22 +138,13 @@ func (l *LivyHandler) Delete(c *gin.Context) {
 }
 
 func (l *LivyHandler) Logs(c *gin.Context) {
-	var size int
-	sizeParam := c.Query("size")
-	if sizeParam != "" {
-		size, err := strconv.Atoi(sizeParam)
-		if err != nil {
-			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"msg": "size param must be an int"})
-		}
-
-		if size < 0 {
-			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"msg": "size param must be >= 0"})
-		}
+	size, ok := validateIntParam(c, "size", false, false)
+	if !ok {
+		return
 	}
 
-	logsId, err := strconv.Atoi(c.Param("batchId"))
-	if err != nil {
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"msg": "batchId must be an int"})
+	logsId, ok := validateIntParam(c, "batchId", true, true)
+	if !ok {
 		return
 	}
 
@@ -170,10 +163,8 @@ func (l *LivyHandler) Logs(c *gin.Context) {
 }
 
 func (l *LivyHandler) State(c *gin.Context) {
-
-	getId, err := strconv.Atoi(c.Param("batchId"))
-	if err != nil {
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"msg": "batchId must be an int"})
+	getId, ok := validateIntParam(c, "batchId", true, true)
+	if !ok {
 		return
 	}
 
