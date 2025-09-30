@@ -140,8 +140,11 @@ func (l *livyService) Logs(ctx context.Context, batchId int, size int) ([]string
 		return nil, wrapLivyError(err, "error getting logs for Livy GatewayApplication")
 	}
 
-	logSplice := strings.Split(*logs, "\n")
+	if logs == nil {
+		return []string{}, nil
+	}
 
+	logSplice := strings.Split(*logs, "\n")
 	return logSplice, nil
 
 }

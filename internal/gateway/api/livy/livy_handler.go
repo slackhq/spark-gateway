@@ -100,9 +100,10 @@ func (l *LivyHandler) List(c *gin.Context) {
 	listBatches, err := l.livyService.List(c, from, size)
 	if err != nil {
 		c.Error(fmt.Errorf("error listing Livy SparkApplications: %w", err))
+		return
 	}
 
-	c.JSON(http.StatusCreated, domain.LivyListBatchesResponse{
+	c.JSON(http.StatusOK, domain.LivyListBatchesResponse{
 		From:     from,
 		Total:    len(listBatches),
 		Sessions: listBatches,
