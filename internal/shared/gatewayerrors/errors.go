@@ -87,6 +87,13 @@ func NewAlreadyExists(err error) GatewayError {
 	}
 }
 
+func NewInvalid(err error) GatewayError {
+	return GatewayError{
+		Status: http.StatusUnprocessableEntity,
+		Err:    err,
+	}
+}
+
 func MapK8sErrorToGatewayError(err error) GatewayError {
 	switch {
 	case errors2.IsAlreadyExists(err):
@@ -95,6 +102,8 @@ func MapK8sErrorToGatewayError(err error) GatewayError {
 		return NewNotFound(err)
 	case errors2.IsBadRequest(err):
 		return NewBadRequest(err)
+	case errors2.IsInvalid(err):
+		return NewInvalid(err)
 	default:
 		return NewInternal(err)
 	}
