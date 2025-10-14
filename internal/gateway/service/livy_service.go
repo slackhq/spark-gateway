@@ -26,9 +26,10 @@ type LivyApplicationService interface {
 }
 
 type livyService struct {
-	appService GatewayApplicationService
-	database   database.LivyApplicationDatabase
-	namespace  string
+	appService   GatewayApplicationService
+	database     database.LivyApplicationDatabase
+	namespace    string
+	urlTemplates domain.StatusUrlTemplates
 }
 
 // getLivyAppByBatchId retrieves a LivyApplication from the database by batchId
@@ -40,11 +41,12 @@ func (l *livyService) getLivyAppByBatchId(ctx context.Context, batchId int) (*da
 	return &livyApp, nil
 }
 
-func NewLivyService(appService GatewayApplicationService, database database.LivyApplicationDatabase, namespace string) *livyService {
+func NewLivyService(appService GatewayApplicationService, database database.LivyApplicationDatabase, namespace string, urlTemplates domain.StatusUrlTemplates) *livyService {
 	return &livyService{
 		appService: appService,
 		database:   database,
 		namespace:  namespace,
+		urlTemplates: urlTemplates,
 	}
 }
 
@@ -59,8 +61,9 @@ func (l *livyService) Get(ctx context.Context, batchId int) (*domain.LivyBatch, 
 	if err != nil {
 		return nil, wrapLivyError(err, "error getting GatewayApplication")
 	}
-
-	return gotApp.ToLivyBatch(int32(livyApp.BatchID)), nil
+	// Set log URLs
+	urls := GetRenderedURLs(l.urlTemplates, &gotApp.SparkApplication)
+	return gotApp.ToLivyBatch(int32(livyApp.BatchID), urls), nil
 }
 
 func (l *livyService) List(ctx context.Context, from int, size int) ([]*domain.LivyBatch, error) {
@@ -77,7 +80,9 @@ func (l *livyService) List(ctx context.Context, from int, size int) ([]*domain.L
 			return nil, wrapLivyError(err, "error listing Livy GatewayApplications")
 		}
 
-		livyBatch := gotApp.ToLivyBatch(int32(livyApp.BatchID))
+		// Set log URLs
+		urls := GetRenderedURLs(l.urlTemplates, &gotApp.SparkApplication)
+		livyBatch := gotApp.ToLivyBatch(int32(livyApp.BatchID), urls)
 		retApps = append(retApps, livyBatch)
 	}
 
@@ -111,7 +116,10 @@ func (l *livyService) Create(ctx context.Context, createReq domain.LivyCreateBat
 		return nil, wrapLivyError(err, fmt.Sprintf("error tracking Livy application '%s' in database", gatewayApp.GatewayId))
 	}
 
-	return gatewayApp.ToLivyBatch(int32(livyApp.BatchID)), nil
+	// Set log URLs
+	urls := GetRenderedURLs(l.urlTemplates, &gatewayApp.SparkApplication)
+
+	return gatewayApp.ToLivyBatch(int32(livyApp.BatchID), urls), nil
 }
 
 func (l *livyService) Delete(ctx context.Context, batchId int) error {

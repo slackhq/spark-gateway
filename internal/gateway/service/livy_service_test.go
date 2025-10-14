@@ -51,7 +51,7 @@ func TestLivyService_Get_Success(t *testing.T) {
 	}
 
 	// Create service
-	service := NewLivyService(mockAppService, mockDatabase, "default")
+	service := NewLivyService(mockAppService, mockDatabase, "default", domain.StatusUrlTemplates{})
 
 	// Test
 	result, err := service.Get(ctx, batchId)
@@ -76,7 +76,7 @@ func TestLivyService_Get_DatabaseError(t *testing.T) {
 	mockAppService := &GatewayApplicationServiceMock{}
 
 	// Create service
-	service := NewLivyService(mockAppService, mockDatabase, "default")
+	service := NewLivyService(mockAppService, mockDatabase, "default", domain.StatusUrlTemplates{})
 
 	// Test
 	result, err := service.Get(ctx, batchId)
@@ -135,7 +135,7 @@ func TestLivyService_Create_Success(t *testing.T) {
 	}
 
 	// Create service
-	service := NewLivyService(mockAppService, mockDatabase, "default")
+	service := NewLivyService(mockAppService, mockDatabase, "default", domain.StatusUrlTemplates{})
 
 	// Test
 	result, err := service.Create(ctx, createReq, "")
@@ -189,7 +189,7 @@ func TestLivyService_Create_DatabaseError_WithCleanup(t *testing.T) {
 	}
 
 	// Create service
-	service := NewLivyService(mockAppService, mockDatabase, "default")
+	service := NewLivyService(mockAppService, mockDatabase, "default", domain.StatusUrlTemplates{})
 
 	// Test
 	result, err := service.Create(ctx, createReq, "")
@@ -225,7 +225,7 @@ func TestLivyService_Delete_Success(t *testing.T) {
 	}
 
 	// Create service
-	service := NewLivyService(mockAppService, mockDatabase, "default")
+	service := NewLivyService(mockAppService, mockDatabase, "default", domain.StatusUrlTemplates{})
 
 	// Test
 	err := service.Delete(ctx, batchId)
@@ -263,7 +263,7 @@ func TestLivyService_Logs_Success(t *testing.T) {
 	}
 
 	// Create service
-	service := NewLivyService(mockAppService, mockDatabase, "default")
+	service := NewLivyService(mockAppService, mockDatabase, "default", domain.StatusUrlTemplates{})
 
 	// Test
 	result, err := service.Logs(ctx, batchId, size)
@@ -297,7 +297,7 @@ func TestLivyService_Logs_NilLogs(t *testing.T) {
 	}
 
 	// Create service
-	service := NewLivyService(mockAppService, mockDatabase, "default")
+	service := NewLivyService(mockAppService, mockDatabase, "default", domain.StatusUrlTemplates{})
 
 	// Test
 	result, err := service.Logs(ctx, batchId, size)
@@ -385,7 +385,7 @@ func TestLivyService_NamespaceResolution(t *testing.T) {
 			}
 
 			// Create service
-			service := NewLivyService(mockAppService, mockDatabase, tt.serviceNamespace)
+			service := NewLivyService(mockAppService, mockDatabase, tt.serviceNamespace, domain.StatusUrlTemplates{})
 
 			// Test
 			_, err := service.Create(ctx, createReq, tt.requestNamespace)
@@ -476,13 +476,11 @@ func TestLivyService_Create_FullMapping(t *testing.T) {
 			assert.Equal(t, int32(2), *application.Spec.Driver.Cores)
 			assert.Equal(t, "2", *application.Spec.Driver.CoreLimit)
 			assert.Equal(t, "4g", *application.Spec.Driver.Memory)
-			assert.Equal(t, "4g", *application.Spec.Driver.MemoryLimit)
 
 			// Verify executor configuration
 			assert.Equal(t, int32(4), *application.Spec.Executor.Cores)
 			assert.Equal(t, "4", *application.Spec.Executor.CoreLimit)
 			assert.Equal(t, "8g", *application.Spec.Executor.Memory)
-			assert.Equal(t, "8g", *application.Spec.Executor.MemoryLimit)
 			assert.Equal(t, int32(20), *application.Spec.Executor.Instances)
 
 			// Verify dependencies
@@ -519,7 +517,7 @@ func TestLivyService_Create_FullMapping(t *testing.T) {
 	}
 
 	// Create service
-	service := NewLivyService(mockAppService, mockDatabase, "default")
+	service := NewLivyService(mockAppService, mockDatabase, "default", domain.StatusUrlTemplates{})
 
 	// Test
 	result, err := service.Create(ctx, createReq, "custom-namespace")

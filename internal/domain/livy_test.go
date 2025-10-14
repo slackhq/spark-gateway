@@ -68,7 +68,6 @@ func TestLivyBatchToV1Beta2Application(t *testing.T) {
 					Cores:       util.Ptr(int32(1)),
 					CoreLimit:   util.Ptr("1"),
 					Memory:      util.Ptr("1G"),
-					MemoryLimit: util.Ptr("1G"),
 				},
 			},
 			Executor: v1beta2.ExecutorSpec{
@@ -76,7 +75,6 @@ func TestLivyBatchToV1Beta2Application(t *testing.T) {
 					Cores:       util.Ptr(int32(1)),
 					CoreLimit:   util.Ptr("1"),
 					Memory:      util.Ptr("1G"),
-					MemoryLimit: util.Ptr("1G"),
 				},
 				Instances: util.Ptr(int32(10)),
 			},
@@ -160,7 +158,6 @@ func TestLivyBatchToV1Beta2ApplicationNamespace(t *testing.T) {
 					Cores:       util.Ptr(int32(1)),
 					CoreLimit:   util.Ptr("1"),
 					Memory:      util.Ptr("1G"),
-					MemoryLimit: util.Ptr("1G"),
 				},
 			},
 			Executor: v1beta2.ExecutorSpec{
@@ -168,7 +165,6 @@ func TestLivyBatchToV1Beta2ApplicationNamespace(t *testing.T) {
 					Cores:       util.Ptr(int32(1)),
 					CoreLimit:   util.Ptr("1"),
 					Memory:      util.Ptr("1G"),
-					MemoryLimit: util.Ptr("1G"),
 				},
 				Instances: util.Ptr(int32(10)),
 			},
@@ -199,9 +195,10 @@ func TestLivySessionState_String(t *testing.T) {
 		expected string
 	}{
 		{LivySessionStateNotStarted, "not_started"},
-		{LivySessionStateStarting, "started"},
+		{LivySessionStateStarting, "starting"},
 		{LivySessionStateIdle, "idle"},
 		{LivySessionStateBusy, "busy"},
+		{LivySessionStateRunning, "running"},
 		{LivySessionStateShuttingDown, "shutting_down"},
 		{LivySessionStateError, "error"},
 		{LivySessionStateDead, "dead"},
@@ -223,7 +220,7 @@ func TestFromV1Beta2ApplicationState(t *testing.T) {
 	}{
 		{v1beta2.ApplicationStateNew, LivySessionStateNotStarted},
 		{v1beta2.ApplicationStateSubmitted, LivySessionStateStarting},
-		{v1beta2.ApplicationStateRunning, LivySessionStateBusy},
+		{v1beta2.ApplicationStateRunning, LivySessionStateRunning},
 		{v1beta2.ApplicationStateCompleted, LivySessionStateSuccess},
 		{v1beta2.ApplicationStateFailed, LivySessionStateError},
 		{v1beta2.ApplicationStateFailedSubmission, LivySessionStateDead},

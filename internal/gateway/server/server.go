@@ -91,7 +91,7 @@ func NewGateway(ctx context.Context, sgConfig *config.SparkGatewayConfig, sparkM
 	var livyService service.LivyApplicationService
 	if sgConfig.LivyConfig.Enable {
 		database := database.NewDatabase(ctx, sgConfig.Database)
-		livyService = service.NewLivyService(appService, database, sgConfig.LivyConfig.DefaultNamespace)
+		livyService = service.NewLivyService(appService, database, sgConfig.LivyConfig.DefaultNamespace, sgConfig.GatewayConfig.StatusUrlTemplates)
 	}
 
 	router, err := api.NewRouter(sgConfig, appService, livyService)

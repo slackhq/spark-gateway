@@ -205,7 +205,7 @@ type GatewayApplication struct {
 }
 
 // ToLivyBatch maps a GatewayApplication to a LivyBatch object.
-func (ga *GatewayApplication) ToLivyBatch(batchId int32) *LivyBatch {
+func (ga *GatewayApplication) ToLivyBatch(batchId int32, urls SparkLogURLs) *LivyBatch {
 
 	var ttlStr string
 	ttl := ga.SparkApplication.Spec.TimeToLiveSeconds
@@ -219,8 +219,11 @@ func (ga *GatewayApplication) ToLivyBatch(batchId int32) *LivyBatch {
 		Id:    batchId,
 		AppId: ga.SparkApplication.Status.SparkApplicationID,
 		AppInfo: map[string]string{
-			"GatewayId": ga.GatewayId,
-			"Cluster":   ga.Cluster,
+			"GatewayId":       ga.GatewayId,
+			"Cluster":         ga.Cluster,
+			"driverLogUrl":    "",
+			"sparkUiUrl":      urls.SparkUI,
+			"executorLogUrls": "",
 		},
 		TTL:   ttlStr,
 		Log:   []string{},
