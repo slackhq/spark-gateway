@@ -109,7 +109,6 @@ type MiddlewareDefinition struct {
 }
 
 type GatewayConfig struct {
-	GatewayApiVersion  string                    `koanf:"gatewayApiVersion"`
 	GatewayPort        string                    `koanf:"gatewayPort"`
 	Middleware         []MiddlewareDefinition    `koanf:"middleware"`
 	StatusUrlTemplates domain.StatusUrlTemplates `koanf:"statusUrlTemplates"`
