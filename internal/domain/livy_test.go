@@ -37,7 +37,7 @@ func TestLivyBatchToV1Beta2Application(t *testing.T) {
 		},
 		Queue: "queue",
 		Name:  "name",
-		Conf: map[string]string{
+		Conf: LivyConf{
 			"conf1": "val1",
 		},
 	}
@@ -128,7 +128,7 @@ func TestLivyBatchToV1Beta2ApplicationNamespace(t *testing.T) {
 		},
 		Queue: "queue",
 		Name:  "name",
-		Conf: map[string]string{
+		Conf: LivyConf{
 			"conf1": "val1",
 		},
 	}

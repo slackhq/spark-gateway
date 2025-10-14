@@ -416,14 +416,14 @@ func TestLivyService_Create_FullMapping(t *testing.T) {
 		Archives:       []string{"s3://bucket/dependencies.zip", "hdfs://cluster/data.tar.gz"},
 		Queue:          "production",
 		Name:           "complex-spark-job",
-		Conf: map[string]string{
+		Conf: domain.LivyConf{
 			"spark.sql.adaptive.enabled":                    "true",
 			"spark.sql.adaptive.coalescePartitions.enabled": "true",
 			"spark.sql.parquet.compression.codec":           "snappy",
 			"spark.serializer":                              "org.apache.spark.serializer.KryoSerializer",
 			"spark.dynamicAllocation.enabled":               "true",
-			"spark.dynamicAllocation.minExecutors":          "5",
-			"spark.dynamicAllocation.maxExecutors":          "50",
+			"spark.dynamicAllocation.minExecutors":          5,
+			"spark.dynamicAllocation.maxExecutors":          50,
 		},
 	}
 

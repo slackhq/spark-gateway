@@ -16,6 +16,7 @@
 package domain
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 
@@ -36,6 +37,7 @@ const (
 	LivySessionStateStarting
 	LivySessionStateIdle
 	LivySessionStateBusy
+	LivySessionStateRunning
 	LivySessionStateShuttingDown
 	LivySessionStateError
 	LivySessionStateDead
@@ -45,8 +47,9 @@ const (
 
 var sessionStateName = map[LivySessionState]string{
 	LivySessionStateNotStarted:   "not_started",
-	LivySessionStateStarting:     "started",
+	LivySessionStateStarting:     "starting",
 	LivySessionStateIdle:         "idle",
+	LivySessionStateRunning:      "running",
 	LivySessionStateBusy:         "busy",
 	LivySessionStateShuttingDown: "shutting_down",
 	LivySessionStateError:        "error",
@@ -58,7 +61,7 @@ var sessionStateName = map[LivySessionState]string{
 var applicationTypeToSessionStateName = map[v1beta2.ApplicationStateType]LivySessionState{
 	v1beta2.ApplicationStateNew:              LivySessionStateNotStarted,
 	v1beta2.ApplicationStateSubmitted:        LivySessionStateStarting,
-	v1beta2.ApplicationStateRunning:          LivySessionStateBusy,
+	v1beta2.ApplicationStateRunning:          LivySessionStateRunning,
 	v1beta2.ApplicationStateCompleted:        LivySessionStateSuccess,
 	v1beta2.ApplicationStateFailed:           LivySessionStateError,
 	v1beta2.ApplicationStateFailedSubmission: LivySessionStateDead,
@@ -86,23 +89,40 @@ type LivyBatch struct {
 	State   string            `json:"state"`
 }
 
+// LivyConf holds the raw key/vals from incoming create request. We can then add
+// convert these to strings at runtime later
+type LivyConf map[string]any
+
+func (l *LivyConf) ToStrings() map[string]string {
+	retMap := map[string]string{}
+
+	for key, value := range *l {
+		strKey := fmt.Sprintf("%v", key)
+		strValue := fmt.Sprintf("%v", value)
+
+		retMap[strKey] = strValue
+	}
+
+	return retMap
+}
+
 type LivyCreateBatchRequest struct {
-	File           string            `json:"file"`
-	ProxyUser      string            `json:"proxyUser"`
-	ClassName      string            `json:"className"`
-	Args           []string          `json:"args"`
-	Jars           []string          `json:"jars"`
-	PyFiles        []string          `json:"pyFiles"`
-	Files          []string          `json:"files"`
-	DriverMemory   string            `json:"driverMemory"`
-	DriverCores    int               `json:"driverCores"`
-	ExecutorMemory string            `json:"executorMemory"`
-	ExecutorCores  int               `json:"executorCores"`
-	NumExecutors   int               `json:"numExecutors"`
-	Archives       []string          `json:"archives"`
-	Queue          string            `json:"queue"`
-	Name           string            `json:"name"`
-	Conf           map[string]string `json:"conf"`
+	File           string   `json:"file"`
+	ProxyUser      string   `json:"proxyUser"`
+	ClassName      string   `json:"className"`
+	Args           []string `json:"args"`
+	Jars           []string `json:"jars"`
+	PyFiles        []string `json:"pyFiles"`
+	Files          []string `json:"files"`
+	DriverMemory   string   `json:"driverMemory"`
+	DriverCores    int      `json:"driverCores"`
+	ExecutorMemory string   `json:"executorMemory"`
+	ExecutorCores  int      `json:"executorCores"`
+	NumExecutors   int      `json:"numExecutors"`
+	Archives       []string `json:"archives"`
+	Queue          string   `json:"queue"`
+	Name           string   `json:"name"`
+	Conf           LivyConf `json:"conf"`
 }
 
 func (c *LivyCreateBatchRequest) ToV1Beta2SparkApplication(namespace string) *v1beta2.SparkApplication {
@@ -135,21 +155,19 @@ func (c *LivyCreateBatchRequest) ToV1Beta2SparkApplication(namespace string) *v1
 			MainClass:           &c.ClassName,
 			MainApplicationFile: &c.File,
 			Arguments:           c.Args,
-			SparkConf:           c.Conf,
+			SparkConf:           c.Conf.ToStrings(),
 			Driver: v1beta2.DriverSpec{
 				SparkPodSpec: v1beta2.SparkPodSpec{
-					Cores:       &driverCores,
-					CoreLimit:   &driverCoresLimit,
-					Memory:      &c.DriverMemory,
-					MemoryLimit: &c.DriverMemory,
+					Cores:     &driverCores,
+					CoreLimit: &driverCoresLimit,
+					Memory:    &c.DriverMemory,
 				},
 			},
 			Executor: v1beta2.ExecutorSpec{
 				SparkPodSpec: v1beta2.SparkPodSpec{
-					Cores:       &executorCores,
-					CoreLimit:   &executorCoresLimit,
-					Memory:      &c.ExecutorMemory,
-					MemoryLimit: &c.ExecutorMemory,
+					Cores:     &executorCores,
+					CoreLimit: &executorCoresLimit,
+					Memory:    &c.ExecutorMemory,
 				},
 				Instances: &instances,
 			},

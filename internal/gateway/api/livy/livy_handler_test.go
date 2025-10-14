@@ -202,7 +202,7 @@ func TestLivyApplicationHandlerCreate(t *testing.T) {
 		},
 		Queue: "queue",
 		Name:  "name",
-		Conf: map[string]string{
+		Conf: domain.LivyConf{
 			"conf1": "val1",
 		},
 	}
