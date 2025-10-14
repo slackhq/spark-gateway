@@ -207,8 +207,13 @@ type GatewayApplication struct {
 // ToLivyBatch maps a GatewayApplication to a LivyBatch object.
 func (ga *GatewayApplication) ToLivyBatch(batchId int32) *LivyBatch {
 
+	var ttlStr string
 	ttl := ga.SparkApplication.Spec.TimeToLiveSeconds
-	ttlStr := strconv.FormatInt(*ttl, 10)
+	if ttl == nil {
+		ttlStr = "-1"
+	} else {
+		ttlStr = strconv.FormatInt(*ttl, 10)
+	}
 
 	return &LivyBatch{
 		Id:    batchId,
