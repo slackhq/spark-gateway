@@ -6492,6 +6492,13 @@ definitions:
     type: object
 info:
   contact: {}
+  description: REST API for managing GatewayApplication resources across multiple
+    clusters
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  title: Spark Gateway
+  version: "1.0"
 paths:
   /batches:
     get:
@@ -6796,4 +6803,7 @@ paths:
       summary: Get GatewayApplication status
       tags:
       - Applications
+securityDefinitions:
+  BasicAuth:
+    type: basic
 swagger: "2.0"
