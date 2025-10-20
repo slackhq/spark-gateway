@@ -55,7 +55,7 @@ var sessionStateName = map[LivySessionState]string{
 	LivySessionStateError:        "error",
 	LivySessionStateDead:         "dead",
 	LivySessionStateKilled:       "killed",
-	LivySessionStateSuccess:      "success",
+	LivySessionStateSuccess:      "finished",
 }
 
 var applicationTypeToSessionStateName = map[v1beta2.ApplicationStateType]LivySessionState{

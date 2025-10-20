@@ -219,11 +219,12 @@ func (ga *GatewayApplication) ToLivyBatch(batchId int32, urls SparkLogURLs) *Liv
 		Id:    batchId,
 		AppId: ga.SparkApplication.Status.SparkApplicationID,
 		AppInfo: map[string]string{
-			"GatewayId":       ga.GatewayId,
-			"Cluster":         ga.Cluster,
-			"driverLogUrl":    "",
-			"sparkUiUrl":      urls.SparkUI,
-			"executorLogUrls": "",
+			"driverLogUrl":      urls.LogsUI,
+			"sparkUiUrl":        urls.SparkUI,
+			"sparkHistoryUrl":   urls.SparkHistoryUI,
+			// Spark Gateway specific fields for backwards compatibility
+			"GatewayId": ga.GatewayId,
+			"Cluster":   ga.Cluster,
 		},
 		TTL:   ttlStr,
 		Log:   []string{},
