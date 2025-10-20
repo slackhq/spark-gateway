@@ -203,7 +203,7 @@ func TestLivySessionState_String(t *testing.T) {
 		{LivySessionStateError, "error"},
 		{LivySessionStateDead, "dead"},
 		{LivySessionStateKilled, "killed"},
-		{LivySessionStateSuccess, "success"},
+		{LivySessionStateSuccess, "finished"}, // Apache Livy uses "finished" for successful completion
 	}
 
 	for _, tt := range tests {

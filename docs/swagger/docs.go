@@ -66,7 +66,7 @@ const docTemplate = `{
                         "BasicAuth": []
                     }
                 ],
-                "description": "Submits a new Livy batch request. Proxy user can be specified via doAs query parameter, request body, or authenticated user.",
+                "description": "Submits a new Livy batch request. Proxy user can be specified via request body proxyUser field or defaults to authenticated user.",
                 "consumes": [
                     "application/json"
                 ],
@@ -78,12 +78,6 @@ const docTemplate = `{
                 ],
                 "summary": "Create a new Livy batch",
                 "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Proxy user to submit the batch as",
-                        "name": "doAs",
-                        "in": "query"
-                    },
                     {
                         "type": "string",
                         "description": "Kubernetes namespace for the batch",

@@ -52,14 +52,8 @@ func validateIntParam(c *gin.Context, paramName string, isPathParam bool, requir
 }
 
 // resolveProxyUser determines the proxy user for a Livy batch request
-// Priority order: doAs query parameter > request proxyUser field > authenticated user
+// Priority order: request proxyUser field > authenticated user
 func resolveProxyUser(c *gin.Context, req *domain.LivyCreateBatchRequest) error {
-	// Check for doAs query parameter - this takes highest priority
-	if doAs := c.Query("doAs"); doAs != "" {
-		req.ProxyUser = doAs
-		return nil
-	}
-
 	// If proxyUser is already set in the request, use it
 	if req.ProxyUser != "" {
 		return nil
@@ -149,12 +143,11 @@ func (l *LivyHandler) List(c *gin.Context) {
 
 // CreateLivyBatch godoc
 // @Summary Create a new Livy batch
-// @Description Submits a new Livy batch request. Proxy user can be specified via doAs query parameter, request body, or authenticated user.
+// @Description Submits a new Livy batch request. Proxy user can be specified via request body proxyUser field or defaults to authenticated user.
 // @Tags Livy
 // @Accept json
 // @Produce json
 // @Security BasicAuth
-// @Param doAs query string false "Proxy user to submit the batch as"
 // @Param X-Spark-Gateway-Livy-Namespace header string false "Kubernetes namespace for the batch"
 // @Param LivyCreateBatchRequest body domain.LivyCreateBatchRequest true "Livy batch request"
 // @Success 201 {object} domain.LivyBatch "Created Livy batch"

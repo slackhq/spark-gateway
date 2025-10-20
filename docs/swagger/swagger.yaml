@@ -6523,12 +6523,8 @@ paths:
       consumes:
       - application/json
       description: Submits a new Livy batch request. Proxy user can be specified via
-        doAs query parameter, request body, or authenticated user.
+        request body proxyUser field or defaults to authenticated user.
       parameters:
-      - description: Proxy user to submit the batch as
-        in: query
-        name: doAs
-        type: string
       - description: Kubernetes namespace for the batch
         in: header
         name: X-Spark-Gateway-Livy-Namespace
