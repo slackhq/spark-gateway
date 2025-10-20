@@ -1,3 +1,18 @@
+// Copyright (c) 2025, Salesforce, Inc.
+// SPDX-License-Identifier: Apache-2
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package livy
 
 import (
@@ -70,6 +85,16 @@ func NewLivyBatchApplicationHandler(livyService service.LivyApplicationService) 
 	}
 }
 
+// GetLivyBatch godoc
+// @Summary Get a Livy batch
+// @Description Retrieves a Livy batch by ID.
+// @Tags Livy
+// @Accept json
+// @Produce json
+// @Security BasicAuth
+// @Param batchId path int true "Batch ID"
+// @Success 200 {object} domain.LivyBatch "Livy batch details"
+// @Router /batches/{batchId} [get]
 func (l *LivyHandler) Get(c *gin.Context) {
 	getId, ok := validateIntParam(c, "batchId", true, true)
 	if !ok {
@@ -86,6 +111,17 @@ func (l *LivyHandler) Get(c *gin.Context) {
 
 }
 
+// ListLivyBatches godoc
+// @Summary List Livy batches
+// @Description Lists Livy batches with optional pagination.
+// @Tags Livy
+// @Accept json
+// @Produce json
+// @Security BasicAuth
+// @Param from query int false "Starting index for pagination (default: 0)"
+// @Param size query int false "Number of batches to return (default: 0 for all)"
+// @Success 200 {object} domain.LivyListBatchesResponse "List of Livy batches"
+// @Router /batches [get]
 func (l *LivyHandler) List(c *gin.Context) {
 	from, ok := validateIntParam(c, "from", false, false)
 	if !ok {
@@ -111,6 +147,18 @@ func (l *LivyHandler) List(c *gin.Context) {
 
 }
 
+// CreateLivyBatch godoc
+// @Summary Create a new Livy batch
+// @Description Submits a new Livy batch request. Proxy user can be specified via doAs query parameter, request body, or authenticated user.
+// @Tags Livy
+// @Accept json
+// @Produce json
+// @Security BasicAuth
+// @Param doAs query string false "Proxy user to submit the batch as"
+// @Param X-Spark-Gateway-Livy-Namespace header string false "Kubernetes namespace for the batch"
+// @Param LivyCreateBatchRequest body domain.LivyCreateBatchRequest true "Livy batch request"
+// @Success 201 {object} domain.LivyBatch "Created Livy batch"
+// @Router /batches [post]
 func (l *LivyHandler) Create(c *gin.Context) {
 	var createReq domain.LivyCreateBatchRequest
 	if err := c.ShouldBindJSON(&createReq); err != nil {
@@ -135,6 +183,17 @@ func (l *LivyHandler) Create(c *gin.Context) {
 
 	c.JSON(http.StatusCreated, createdBatch)
 }
+
+// DeleteLivyBatch godoc
+// @Summary Delete a Livy batch
+// @Description Deletes the specified Livy batch.
+// @Tags Livy
+// @Accept json
+// @Produce json
+// @Security BasicAuth
+// @Param batchId path int true "Batch ID"
+// @Success 200 {object} map[string]string "Batch deleted: {'msg': 'deleted'}"
+// @Router /batches/{batchId} [delete]
 func (l *LivyHandler) Delete(c *gin.Context) {
 	deleteId, ok := validateIntParam(c, "batchId", true, true)
 	if !ok {
@@ -150,6 +209,17 @@ func (l *LivyHandler) Delete(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"msg": "deleted"})
 }
 
+// GetLivyBatchLogs godoc
+// @Summary Get logs for a Livy batch
+// @Description Retrieves the driver logs for the specified Livy batch.
+// @Tags Livy
+// @Accept json
+// @Produce json
+// @Security BasicAuth
+// @Param batchId path int true "Batch ID"
+// @Param size query int false "Number of log lines to retrieve (default: 0 for all)"
+// @Success 200 {object} domain.LivyLogBatchResponse "Livy batch logs"
+// @Router /batches/{batchId}/log [get]
 func (l *LivyHandler) Logs(c *gin.Context) {
 	size, ok := validateIntParam(c, "size", false, false)
 	if !ok {
@@ -175,6 +245,16 @@ func (l *LivyHandler) Logs(c *gin.Context) {
 	})
 }
 
+// GetLivyBatchState godoc
+// @Summary Get state of a Livy batch
+// @Description Retrieves only the state field of the specified Livy batch.
+// @Tags Livy
+// @Accept json
+// @Produce json
+// @Security BasicAuth
+// @Param batchId path int true "Batch ID"
+// @Success 200 {object} domain.LivyGetBatchStateResponse "Livy batch state"
+// @Router /batches/{batchId}/state [get]
 func (l *LivyHandler) State(c *gin.Context) {
 	getId, ok := validateIntParam(c, "batchId", true, true)
 	if !ok {

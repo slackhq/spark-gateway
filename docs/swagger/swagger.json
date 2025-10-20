@@ -11,6 +11,252 @@
         "version": "1.0"
     },
     "paths": {
+        "/batches": {
+            "get": {
+                "security": [
+                    {
+                        "BasicAuth": []
+                    }
+                ],
+                "description": "Lists Livy batches with optional pagination.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Livy"
+                ],
+                "summary": "List Livy batches",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Starting index for pagination (default: 0)",
+                        "name": "from",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Number of batches to return (default: 0 for all)",
+                        "name": "size",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of Livy batches",
+                        "schema": {
+                            "$ref": "#/definitions/domain.LivyListBatchesResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BasicAuth": []
+                    }
+                ],
+                "description": "Submits a new Livy batch request. Proxy user can be specified via doAs query parameter, request body, or authenticated user.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Livy"
+                ],
+                "summary": "Create a new Livy batch",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Proxy user to submit the batch as",
+                        "name": "doAs",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Kubernetes namespace for the batch",
+                        "name": "X-Spark-Gateway-Livy-Namespace",
+                        "in": "header"
+                    },
+                    {
+                        "description": "Livy batch request",
+                        "name": "LivyCreateBatchRequest",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/domain.LivyCreateBatchRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created Livy batch",
+                        "schema": {
+                            "$ref": "#/definitions/domain.LivyBatch"
+                        }
+                    }
+                }
+            }
+        },
+        "/batches/{batchId}": {
+            "get": {
+                "security": [
+                    {
+                        "BasicAuth": []
+                    }
+                ],
+                "description": "Retrieves a Livy batch by ID.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Livy"
+                ],
+                "summary": "Get a Livy batch",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Batch ID",
+                        "name": "batchId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Livy batch details",
+                        "schema": {
+                            "$ref": "#/definitions/domain.LivyBatch"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BasicAuth": []
+                    }
+                ],
+                "description": "Deletes the specified Livy batch.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Livy"
+                ],
+                "summary": "Delete a Livy batch",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Batch ID",
+                        "name": "batchId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Batch deleted: {'msg': 'deleted'}",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/batches/{batchId}/log": {
+            "get": {
+                "security": [
+                    {
+                        "BasicAuth": []
+                    }
+                ],
+                "description": "Retrieves the driver logs for the specified Livy batch.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Livy"
+                ],
+                "summary": "Get logs for a Livy batch",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Batch ID",
+                        "name": "batchId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Number of log lines to retrieve (default: 0 for all)",
+                        "name": "size",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Livy batch logs",
+                        "schema": {
+                            "$ref": "#/definitions/domain.LivyLogBatchResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/batches/{batchId}/state": {
+            "get": {
+                "security": [
+                    {
+                        "BasicAuth": []
+                    }
+                ],
+                "description": "Retrieves only the state field of the specified Livy batch.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Livy"
+                ],
+                "summary": "Get state of a Livy batch",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Batch ID",
+                        "name": "batchId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Livy batch state",
+                        "schema": {
+                            "$ref": "#/definitions/domain.LivyGetBatchStateResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/v1/applications": {
             "get": {
                 "security": [
@@ -343,6 +589,155 @@
                 },
                 "status": {
                     "$ref": "#/definitions/v1beta2.SparkApplicationStatus"
+                }
+            }
+        },
+        "domain.LivyBatch": {
+            "type": "object",
+            "properties": {
+                "appId": {
+                    "type": "string"
+                },
+                "appInfo": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "log": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "state": {
+                    "type": "string"
+                },
+                "ttl": {
+                    "type": "string"
+                }
+            }
+        },
+        "domain.LivyConf": {
+            "type": "object",
+            "additionalProperties": {}
+        },
+        "domain.LivyCreateBatchRequest": {
+            "type": "object",
+            "properties": {
+                "archives": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "args": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "className": {
+                    "type": "string"
+                },
+                "conf": {
+                    "$ref": "#/definitions/domain.LivyConf"
+                },
+                "driverCores": {
+                    "type": "integer"
+                },
+                "driverMemory": {
+                    "type": "string"
+                },
+                "executorCores": {
+                    "type": "integer"
+                },
+                "executorMemory": {
+                    "type": "string"
+                },
+                "file": {
+                    "type": "string"
+                },
+                "files": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "jars": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "name": {
+                    "type": "string"
+                },
+                "numExecutors": {
+                    "type": "integer"
+                },
+                "proxyUser": {
+                    "type": "string"
+                },
+                "pyFiles": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "queue": {
+                    "type": "string"
+                }
+            }
+        },
+        "domain.LivyGetBatchStateResponse": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "state": {
+                    "type": "string"
+                }
+            }
+        },
+        "domain.LivyListBatchesResponse": {
+            "type": "object",
+            "properties": {
+                "from": {
+                    "type": "integer"
+                },
+                "sessions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/domain.LivyBatch"
+                    }
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
+        "domain.LivyLogBatchResponse": {
+            "type": "object",
+            "properties": {
+                "from": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "log": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "size": {
+                    "type": "integer"
                 }
             }
         },
@@ -5647,11 +6042,6 @@
                     ]
                 }
             }
-        }
-    },
-    "securityDefinitions": {
-        "BasicAuth": {
-            "type": "basic"
         }
     }
 }

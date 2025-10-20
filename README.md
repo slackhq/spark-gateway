@@ -189,7 +189,7 @@ RESTful API documentation with Swagger 2.0.
 Generate docs
 ```bash
 go install github.com/swaggo/swag/cmd/swag@latest
-swag init -d ./internal/gateway/api/api/v1/kubeflow -g application_handler.go -o ./docs/swagger --parseDependency --parseInternal
+swag init --dir ./cmd/gateway,./internal/gateway/api/v1,./internal/gateway/api/livy,./internal/domain --parseDependency --parseInternal --generalInfo main.go --output ./docs/swagger
 ```
 
 ### 🐘 Local Postgres Database

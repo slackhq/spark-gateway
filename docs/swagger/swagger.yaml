@@ -83,6 +83,104 @@ definitions:
       status:
         $ref: '#/definitions/v1beta2.SparkApplicationStatus'
     type: object
+  domain.LivyBatch:
+    properties:
+      appId:
+        type: string
+      appInfo:
+        additionalProperties:
+          type: string
+        type: object
+      id:
+        type: integer
+      log:
+        items:
+          type: string
+        type: array
+      state:
+        type: string
+      ttl:
+        type: string
+    type: object
+  domain.LivyConf:
+    additionalProperties: {}
+    type: object
+  domain.LivyCreateBatchRequest:
+    properties:
+      archives:
+        items:
+          type: string
+        type: array
+      args:
+        items:
+          type: string
+        type: array
+      className:
+        type: string
+      conf:
+        $ref: '#/definitions/domain.LivyConf'
+      driverCores:
+        type: integer
+      driverMemory:
+        type: string
+      executorCores:
+        type: integer
+      executorMemory:
+        type: string
+      file:
+        type: string
+      files:
+        items:
+          type: string
+        type: array
+      jars:
+        items:
+          type: string
+        type: array
+      name:
+        type: string
+      numExecutors:
+        type: integer
+      proxyUser:
+        type: string
+      pyFiles:
+        items:
+          type: string
+        type: array
+      queue:
+        type: string
+    type: object
+  domain.LivyGetBatchStateResponse:
+    properties:
+      id:
+        type: integer
+      state:
+        type: string
+    type: object
+  domain.LivyListBatchesResponse:
+    properties:
+      from:
+        type: integer
+      sessions:
+        items:
+          $ref: '#/definitions/domain.LivyBatch'
+        type: array
+      total:
+        type: integer
+    type: object
+  domain.LivyLogBatchResponse:
+    properties:
+      from:
+        type: integer
+      id:
+        type: integer
+      log:
+        items:
+          type: string
+        type: array
+      size:
+        type: integer
+    type: object
   domain.SparkLogURLs:
     properties:
       logsUI:
@@ -6394,14 +6492,162 @@ definitions:
     type: object
 info:
   contact: {}
-  description: REST API for managing GatewayApplication resources across multiple
-    clusters
-  license:
-    name: Apache 2.0
-    url: http://www.apache.org/licenses/LICENSE-2.0.html
-  title: Spark Gateway
-  version: "1.0"
 paths:
+  /batches:
+    get:
+      consumes:
+      - application/json
+      description: Lists Livy batches with optional pagination.
+      parameters:
+      - description: 'Starting index for pagination (default: 0)'
+        in: query
+        name: from
+        type: integer
+      - description: 'Number of batches to return (default: 0 for all)'
+        in: query
+        name: size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of Livy batches
+          schema:
+            $ref: '#/definitions/domain.LivyListBatchesResponse'
+      security:
+      - BasicAuth: []
+      summary: List Livy batches
+      tags:
+      - Livy
+    post:
+      consumes:
+      - application/json
+      description: Submits a new Livy batch request. Proxy user can be specified via
+        doAs query parameter, request body, or authenticated user.
+      parameters:
+      - description: Proxy user to submit the batch as
+        in: query
+        name: doAs
+        type: string
+      - description: Kubernetes namespace for the batch
+        in: header
+        name: X-Spark-Gateway-Livy-Namespace
+        type: string
+      - description: Livy batch request
+        in: body
+        name: LivyCreateBatchRequest
+        required: true
+        schema:
+          $ref: '#/definitions/domain.LivyCreateBatchRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created Livy batch
+          schema:
+            $ref: '#/definitions/domain.LivyBatch'
+      security:
+      - BasicAuth: []
+      summary: Create a new Livy batch
+      tags:
+      - Livy
+  /batches/{batchId}:
+    delete:
+      consumes:
+      - application/json
+      description: Deletes the specified Livy batch.
+      parameters:
+      - description: Batch ID
+        in: path
+        name: batchId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 'Batch deleted: {''msg'': ''deleted''}'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BasicAuth: []
+      summary: Delete a Livy batch
+      tags:
+      - Livy
+    get:
+      consumes:
+      - application/json
+      description: Retrieves a Livy batch by ID.
+      parameters:
+      - description: Batch ID
+        in: path
+        name: batchId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Livy batch details
+          schema:
+            $ref: '#/definitions/domain.LivyBatch'
+      security:
+      - BasicAuth: []
+      summary: Get a Livy batch
+      tags:
+      - Livy
+  /batches/{batchId}/log:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves the driver logs for the specified Livy batch.
+      parameters:
+      - description: Batch ID
+        in: path
+        name: batchId
+        required: true
+        type: integer
+      - description: 'Number of log lines to retrieve (default: 0 for all)'
+        in: query
+        name: size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Livy batch logs
+          schema:
+            $ref: '#/definitions/domain.LivyLogBatchResponse'
+      security:
+      - BasicAuth: []
+      summary: Get logs for a Livy batch
+      tags:
+      - Livy
+  /batches/{batchId}/state:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves only the state field of the specified Livy batch.
+      parameters:
+      - description: Batch ID
+        in: path
+        name: batchId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Livy batch state
+          schema:
+            $ref: '#/definitions/domain.LivyGetBatchStateResponse'
+      security:
+      - BasicAuth: []
+      summary: Get state of a Livy batch
+      tags:
+      - Livy
   /v1/applications:
     get:
       consumes:
@@ -6554,7 +6800,4 @@ paths:
       summary: Get GatewayApplication status
       tags:
       - Applications
-securityDefinitions:
-  BasicAuth:
-    type: basic
 swagger: "2.0"
