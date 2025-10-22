@@ -31,7 +31,6 @@ selectorValue: "true"
 sparkManagerPort: "8081"
 
 gateway:
-  gatewayApiVersion: v1
   gatewayPort: "8080"
 
   middleware:
@@ -39,11 +38,11 @@ gateway:
       conf:
         allow:
           - gateway-user
-#    - type: RegexBasicDenyAllowMiddleware
-#      conf:
-#        allow:
-#          - userA
-#          - userB
+  #    - type: RegexBasicDenyAllowMiddleware
+  #      conf:
+  #        allow:
+  #          - userA
+  #          - userB
 
   statusUrlTemplates:
     sparkUI: "{{.Status.DriverInfo.WebUIIngressAddress}}"
@@ -52,27 +51,30 @@ gateway:
 
   enableSwaggerUI: true
 
+# database credentials are set via databaseCredentials map
+database:
+  enable: false
+  databaseName: "postgres"
+  hostname: "localhost"
+  port: 5432
+  # DB_USERNAME env var is used if not present
+  username: "postgres"
+  # DB_PASSWORD env var is used if not present
+  # password: ""
+
 sparkManager:
   clusterAuthType: kubeconfig
-
-  # database credentials are set via databaseCredentials map
-  database:
-    enable: false
-    databaseName: "postgres"
-    hostname: "localhost"
-    port: 5432
-    # DB_USERNAME env var is used if not present
-    username: "postgres"
-    # DB_PASSWORD env var is used if not present
-    # password: ""
 
   metricsServer:
     endpoint: "/metrics"
     port: "9090"
 
+livy:
+  enable: True
+  defaultNamespace: livy-namespace
+
 # Gin logs additional debug information
 mode: debug
-
 # DebugPorts allows developers to set ports for different SparkManagers to avoid port collision. By default, all
 # SparkManagers use the same port set by sparkManagerPort config. It is useful when trying to run multiple
 # SparkManagers locally for development.

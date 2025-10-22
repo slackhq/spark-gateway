@@ -17,6 +17,7 @@ package domain
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/google/uuid"
@@ -201,6 +202,34 @@ type GatewayApplication struct {
 	Cluster          string                  `json:"cluster"`
 	User             string                  `json:"user"`
 	SparkLogURLs     SparkLogURLs            `json:"sparkLogURLs"`
+}
+
+// ToLivyBatch maps a GatewayApplication to a LivyBatch object.
+func (ga *GatewayApplication) ToLivyBatch(batchId int32, urls SparkLogURLs) *LivyBatch {
+
+	var ttlStr string
+	ttl := ga.SparkApplication.Spec.TimeToLiveSeconds
+	if ttl == nil {
+		ttlStr = "-1"
+	} else {
+		ttlStr = strconv.FormatInt(*ttl, 10)
+	}
+
+	return &LivyBatch{
+		Id:    batchId,
+		AppId: ga.SparkApplication.Status.SparkApplicationID,
+		AppInfo: map[string]string{
+			"driverLogUrl":      urls.LogsUI,
+			"sparkUiUrl":        urls.SparkUI,
+			"sparkHistoryUrl":   urls.SparkHistoryUI,
+			// Spark Gateway specific fields for backwards compatibility
+			"GatewayId": ga.GatewayId,
+			"Cluster":   ga.Cluster,
+		},
+		TTL:   ttlStr,
+		Log:   []string{},
+		State: FromV1Beta2ApplicationState(ga.SparkApplication.Status.AppState.State).String(),
+	}
 }
 
 func GatewayApplicationFromV1Beta2SparkApplication(sparkApp *v1beta2.SparkApplication) *GatewayApplication {

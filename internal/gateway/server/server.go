@@ -28,7 +28,8 @@ import (
 	"github.com/slackhq/spark-gateway/internal/gateway/clusterrouter"
 	"github.com/slackhq/spark-gateway/internal/gateway/repository"
 	"github.com/slackhq/spark-gateway/internal/gateway/service"
-	cfg "github.com/slackhq/spark-gateway/internal/shared/config"
+	"github.com/slackhq/spark-gateway/internal/shared/config"
+	"github.com/slackhq/spark-gateway/internal/shared/database"
 	"k8s.io/klog/v2"
 )
 
@@ -37,7 +38,7 @@ type GatewayServer struct {
 	ctx        context.Context
 }
 
-func NewGateway(ctx context.Context, sgConfig *cfg.SparkGatewayConfig, sparkManagerHostnameTemplate string) (*GatewayServer, error) {
+func NewGateway(ctx context.Context, sgConfig *config.SparkGatewayConfig, sparkManagerHostnameTemplate string) (*GatewayServer, error) {
 
 	//Repos
 	sparkManagerRepo, err := repository.NewSparkManagerRepository(sgConfig.KubeClusters, sparkManagerHostnameTemplate, sgConfig.SparkManagerPort, sgConfig.DebugPorts)
@@ -86,7 +87,14 @@ func NewGateway(ctx context.Context, sgConfig *cfg.SparkGatewayConfig, sparkMana
 		domain.NewId,
 	)
 
-	router, err := api.NewRouter(sgConfig, appService)
+	// Livy Setup
+	var livyService service.LivyApplicationService
+	if sgConfig.LivyConfig.Enable {
+		database := database.NewDatabase(ctx, sgConfig.Database)
+		livyService = service.NewLivyService(appService, database, sgConfig.LivyConfig.DefaultNamespace, sgConfig.GatewayConfig.StatusUrlTemplates)
+	}
+
+	router, err := api.NewRouter(sgConfig, appService, livyService)
 	if err != nil {
 		return nil, err
 	}

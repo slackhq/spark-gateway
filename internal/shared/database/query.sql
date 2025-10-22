@@ -45,3 +45,21 @@ DO UPDATE SET
     state = EXCLUDED.state,
     status = EXCLUDED.status
 RETURNING *;
+
+-- name: InsertLivyApplication :one
+INSERT INTO livy_applications (
+    gateway_id
+) VALUES (
+    @gateway_id
+)
+RETURNING *;
+
+-- name: GetByBatchId :one
+SELECT * FROM livy_applications
+WHERE "batch_id" = @batch_id;
+
+-- name: ListFrom :many
+SELECT * FROM livy_applications
+WHERE "batch_id" >= @batch_id
+ORDER BY batch_id ASC
+LIMIT @size;

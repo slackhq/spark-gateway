@@ -27,7 +27,7 @@ jobs:
           set -eu
           
           go install github.com/swaggo/swag/cmd/swag@latest
-          SWAG_INIT_CMD="swag init -d ./internal/gateway/api/v1 -g application_handler.go -o ./docs/swagger --parseDependency --parseInternal"
+          SWAG_INIT_CMD="swag init --dir ./cmd/gateway,./internal/gateway/api/v1,./internal/gateway/api/livy,./internal/domain --parseDependency --parseInternal --generalInfo main.go --output ./docs/swagger"
           eval "$SWAG_INIT_CMD"
           
           # Check diff

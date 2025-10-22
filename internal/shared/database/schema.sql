@@ -13,3 +13,8 @@ CREATE TABLE spark_applications (
     state TEXT,                             -- Updated by SparkManager Controller
     status JSONB                            -- Updated by SparkManager Controller
 );
+
+CREATE TABLE livy_applications (
+    batch_id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    gateway_id TEXT NOT NULL
+);

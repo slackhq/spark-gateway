@@ -13,7 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package repository
+package database
 
 import (
 	"context"
@@ -34,12 +34,21 @@ import (
 	"github.com/slackhq/spark-gateway/internal/shared/gatewayerrors"
 )
 
-//go:generate moq -rm -out mockdatabaserepository.go . DatabaseRepository
+//go:generate moq -rm -out mocksparkapplicationdatabase.go . SparkApplicationDatabase
 
-type DatabaseRepository interface {
+type SparkApplicationDatabase interface {
 	GetById(ctx context.Context, gatewayIdUid uuid.UUID) (*SparkApplication, error)
 	UpdateSparkApplication(ctx context.Context, gatewayIdUid uuid.UUID, updateSparkApp v1beta2.SparkApplication) error
 	InsertSparkApplication(ctx context.Context, gatewayIdUid uuid.UUID, creationTime time.Time, userSubmittedSparkApp *v1beta2.SparkApplication, clusterName string) error
+}
+
+//go:generate moq -rm -out mocklivyapplicationdatabase.go . LivyApplicationDatabase
+
+
+type LivyApplicationDatabase interface {
+	GetByBatchId(ctx context.Context, batchId int) (LivyApplication, error)
+	ListFrom(ctx context.Context, fromId int, size int) ([]LivyApplication, error)
+	InsertLivyApplication(ctx context.Context, gatewayId string) (LivyApplication, error)
 }
 
 type Database struct {
@@ -175,4 +184,46 @@ func SparkAppAuditLog(gatewayIdUid uuid.UUID, sparkApp SparkApplication) {
 		util.SafeTime(sparkApp.CreationTime),
 		util.SafeString(sparkApp.Username),
 	)
+}
+
+// Livy
+
+// GetByBatchId returns the GatewayId of the corresponding SparkApplication the batchId maps too
+func (db *Database) GetByBatchId(ctx context.Context, batchId int) (LivyApplication, error) {
+	queries := New(db.connectionPool)
+
+	gatewayId, err := queries.GetByBatchId(ctx, int64(batchId))
+	if err != nil {
+		return LivyApplication{}, gatewayerrors.NewFrom(fmt.Errorf("error getting SparkApplication with Livy BatchId '%d' from database: %w", batchId, err))
+	}
+
+	return gatewayId, nil
+}
+
+// ListFrom returns a list of GatewayIds of the corresponding SparkApplicaitions starting at "from" batchId
+// and including up to "size" applications from that id
+func (db *Database) ListFrom(ctx context.Context, from int, size int) ([]LivyApplication, error) {
+	queries := New(db.connectionPool)
+
+	livyApps, err := queries.ListFrom(ctx, ListFromParams{
+		BatchID: int64(from),
+		Size:    int32(size),
+	})
+
+	if err != nil {
+		return nil, gatewayerrors.NewFrom(fmt.Errorf("error listing SparkApplications: %w", err))
+	}
+
+	return livyApps, nil
+}
+
+func (db *Database) InsertLivyApplication(ctx context.Context, gatewayId string) (LivyApplication, error) {
+	queries := New(db.connectionPool)
+
+	livyBatch, err := queries.InsertLivyApplication(ctx, gatewayId)
+	if err != nil {
+		return LivyApplication{}, gatewayerrors.NewFrom(fmt.Errorf("erroring inserting Livy SparkApplication '%s' into database: %w", gatewayId, err))
+	}
+
+	return livyBatch, nil
 }

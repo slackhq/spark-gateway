@@ -44,7 +44,6 @@ config:
   sparkManagerPort: &sparkManagerPort "8081"
 
   gateway:
-    gatewayApiVersion: v1
     gatewayPort: &gatewayPort "8080"
 
     middleware:
@@ -63,20 +62,24 @@ config:
   sparkManager:
     clusterAuthType: serviceaccount
 
-    # database credentials are set via databaseCredentials map
-    database:
-      enable: false
-      databaseName: "postgres"
-      hostname: ""
-      port: 5432
-      # DB_USERNAME env var is used if not present
-      username: "gateway"
-      # DB_PASSWORD env var is used if not present
-      # password:
-
     metricsServer:
       endpoint: "/metrics"
       port: "9090"
+
+  # database credentials are set via databaseCredentials map
+  database:
+    enable: false
+    databaseName: "postgres"
+    hostname: ""
+    port: 5432
+    # DB_USERNAME env var is used if not present
+    username: "gateway"
+    # DB_PASSWORD env var is used if not present
+    # password:
+
+  livy:
+    enabled: false
+    defaultNamespace: livy-namespace
 
 # Install postgresql Helm chart
 postgresql:

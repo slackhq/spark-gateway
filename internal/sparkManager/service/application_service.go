@@ -23,8 +23,8 @@ import (
 	"k8s.io/klog/v2"
 
 	"github.com/slackhq/spark-gateway/internal/domain"
+	"github.com/slackhq/spark-gateway/internal/shared/database"
 	"github.com/slackhq/spark-gateway/internal/shared/gatewayerrors"
-	"github.com/slackhq/spark-gateway/internal/sparkManager/database/repository"
 )
 
 //go:generate moq -rm -out mocksparkapplicationrepository.go . SparkApplicationRepository
@@ -50,11 +50,11 @@ type SparkApplicationService interface {
 
 type ApplicationService struct {
 	sparkApplicationRepository SparkApplicationRepository
-	database                   repository.DatabaseRepository
+	database                   database.SparkApplicationDatabase
 	cluster                    domain.KubeCluster
 }
 
-func NewSparkApplicationService(sparkAppRepo SparkApplicationRepository, database repository.DatabaseRepository, cluster domain.KubeCluster) SparkApplicationService {
+func NewSparkApplicationService(sparkAppRepo SparkApplicationRepository, database database.SparkApplicationDatabase, cluster domain.KubeCluster) SparkApplicationService {
 	return &ApplicationService{sparkApplicationRepository: sparkAppRepo, database: database, cluster: cluster}
 }
 

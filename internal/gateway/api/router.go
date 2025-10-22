@@ -5,6 +5,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/slackhq/spark-gateway/internal/gateway/api/health"
+	"github.com/slackhq/spark-gateway/internal/gateway/api/livy"
 	"github.com/slackhq/spark-gateway/internal/gateway/api/middleware"
 	"github.com/slackhq/spark-gateway/internal/gateway/api/swagger"
 	v1 "github.com/slackhq/spark-gateway/internal/gateway/api/v1"
@@ -13,10 +14,9 @@ import (
 	sgMiddleware "github.com/slackhq/spark-gateway/internal/shared/middleware"
 )
 
-func NewRouter(sgConf *config.SparkGatewayConfig, appService service.GatewayApplicationService) (*gin.Engine, error) {
+func NewRouter(sgConf *config.SparkGatewayConfig, appService service.GatewayApplicationService, livyService service.LivyApplicationService) (*gin.Engine, error) {
 
 	router := gin.Default()
-	router.Use(sgMiddleware.ApplicationErrorHandler)
 
 	// Root group for unversioned routes
 	rootGroup := router.Group("")
@@ -29,11 +29,21 @@ func NewRouter(sgConf *config.SparkGatewayConfig, appService service.GatewayAppl
 
 	// Versioned routes
 	v1Group := router.Group("/api/v1")
+	v1Group.Use(sgMiddleware.ApplicationErrorHandler)
 	if err := middleware.AddMiddleware(sgConf.GatewayConfig.Middleware, v1Group); err != nil {
 		return nil, fmt.Errorf("error adding middlewares to routes: %w", err)
 	}
 
 	v1.RegisterGatewayApplicationRoutes(v1Group, sgConf, appService)
+
+	if sgConf.LivyConfig.Enable {
+		livyGroup := router.Group("/api/livy")
+		livyGroup.Use(livy.LivyErrorHandler)
+		if err := middleware.AddMiddleware(sgConf.GatewayConfig.Middleware, livyGroup); err != nil {
+			return nil, fmt.Errorf("error adding middlewares to routes: %w", err)
+		}
+		livy.RegisterLivyBatchRoutes(livyGroup, livyService)
+	}
 
 	return router, nil
 

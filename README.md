@@ -10,6 +10,7 @@ project and using native Go Kubernetes client libraries.
 
 ## Features
 - 🔌 REST API endpoints to manage [`SparkApplication`](https://github.com/kubeflow/spark-operator/blob/master/docs/api-docs.md) resources
+- 🔄 Apache Livy-compatible REST API for batch job management with persistent storage
 - 🌐 Submission to multiple Kubernetes clusters using a single client
 - 🚀 Enables zero downtime deployments and upgrades of Spark-on-k8s infrastructure
 - 📝 Enables audit logging of SparkApplication submissions
@@ -22,7 +23,8 @@ project and using native Go Kubernetes client libraries.
 
 Spark-Gateway includes a REST API documentation with Swagger 2.0 running alongside the API.
 
-* **API**: `http://127.0.0.1:8080/api/v1/applications`
+* **V1 API**: `http://127.0.0.1:8080/api/v1/applications`
+* **Livy API**: `http://127.0.0.1:8080/api/livy/batches`
 * **API Docs UI**: `http://127.0.0.1:8080/docs`
 
 ---
@@ -59,17 +61,23 @@ helm upgrade --install \
 
 ### 3. Manage SparkApplication via REST endpoints
 
-Submit a SparkApplication ([example](https://github.com/kubeflow/spark-operator/blob/master/examples/spark-pi-python.yaml)) 
+Spark Gateway provides two REST API options:
+1. **V1 API** - Direct SparkApplication resource management
+2. **Livy API** - Apache Livy-compatible batch endpoints (see [Livy API Differences](./docs/Livy.md) for implementation details)
+
+Submit a SparkApplication ([example](https://github.com/kubeflow/spark-operator/blob/master/examples/spark-pi-python.yaml))
 in json format: `yq -o=json . spark-pi-python.yaml > spark-pi-python.json`
 
-#### Create SparkApplication
+#### V1 API Examples
+
+##### Create SparkApplication
 ```bash
 curl -X POST -H "Content-Type: application/json" \
   --data-binary @spark-pi-python.json \
   "127.0.0.1:8080/api/v1/applications"
 ```
 
-#### List SparkApplications
+##### List SparkApplications
 ```bash
 # List SparkApps in the default cluster and default namespace
 curl -X GET -H "Content-Type: application/json" \
@@ -82,7 +90,7 @@ curl -X GET -H "Content-Type: application/json" \
   "127.0.0.1:8080/api/v1/applications?cluster=default"
 ```
 
-#### Get SparkApplication
+##### Get SparkApplication
 ```bash
 # Get all fields of a SparkApplication
 curl -X GET -H "Content-Type: application/json" \
@@ -95,7 +103,7 @@ curl -X GET -H "Content-Type: application/json" \
   "127.0.0.1:8080/api/v1/applications/dflt-dflt-01982d11-c2c1-7c3d-8b2f-944ae7248434/status"
 ```
 
-#### Get Driver Logs
+##### Get Driver Logs
 ```bash
 # By default returns last 100 lines of the driver logs.
 # Pass the `line=x` query parameter to get a different amount. Eg: ?lines=200
@@ -104,12 +112,65 @@ curl -X GET -H "Content-Type: application/json" \
   "127.0.0.1:8080/api/v1/applications/dflt-dflt-01982d11-c2c1-7c3d-8b2f-944ae7248434/logs"
 ```
 
-#### Delete SparkApplication
+##### Delete SparkApplication
 ```bash
 curl -X DELETE -H "Content-Type: application/json" \
   --user gateway-user:pass \
   "127.0.0.1:8080/api/v1/applications/dflt-dflt-01982d11-c2c1-7c3d-8b2f-944ae7248434"
 ```
+
+#### Livy API Examples
+
+The Livy API provides Apache Livy-compatible batch endpoints for submitting and managing Spark applications. See [Livy API Documentation](./docs/Livy.md) for differences between Spark Gateway's implementation and the official Apache Livy REST API.
+
+##### Create Batch
+```bash
+curl -X POST -H "Content-Type: application/json" \
+  --user gateway-user:pass \
+  --data '{
+    "file": "local:///opt/spark/examples/jars/spark-examples.jar",
+    "className": "org.apache.spark.examples.SparkPi",
+    "args": ["1000"]
+  }' \
+  "127.0.0.1:8080/api/livy/batches"
+```
+
+##### List Batches
+```bash
+curl -X GET -H "Content-Type: application/json" \
+  --user gateway-user:pass \
+  "127.0.0.1:8080/api/livy/batches"
+```
+
+##### Get Batch
+```bash
+curl -X GET -H "Content-Type: application/json" \
+  --user gateway-user:pass \
+  "127.0.0.1:8080/api/livy/batches/123"
+```
+
+##### Get Batch State
+```bash
+curl -X GET -H "Content-Type: application/json" \
+  --user gateway-user:pass \
+  "127.0.0.1:8080/api/livy/batches/123/state"
+```
+
+##### Get Batch Logs
+```bash
+curl -X GET -H "Content-Type: application/json" \
+  --user gateway-user:pass \
+  "127.0.0.1:8080/api/livy/batches/123/log?size=100"
+```
+
+##### Delete Batch
+```bash
+curl -X DELETE -H "Content-Type: application/json" \
+  --user gateway-user:pass \
+  "127.0.0.1:8080/api/livy/batches/123"
+```
+
+---
 
 # Architecture
 ![Spark-Gateway Architecture Diagram](.images/architecture.png)
@@ -189,7 +250,7 @@ RESTful API documentation with Swagger 2.0.
 Generate docs
 ```bash
 go install github.com/swaggo/swag/cmd/swag@latest
-swag init -d ./internal/gateway/api/api/v1/kubeflow -g application_handler.go -o ./docs/swagger --parseDependency --parseInternal
+swag init --dir ./cmd/gateway,./internal/gateway/api/v1,./internal/gateway/api/livy,./internal/domain --parseDependency --parseInternal --generalInfo main.go --output ./docs/swagger
 ```
 
 ### 🐘 Local Postgres Database

@@ -15,6 +15,13 @@
 
 package main
 
+//	@title			Spark Gateway
+//	@version		1.0
+//	@description	REST API for managing GatewayApplication resources across multiple clusters
+//	@securityDefinitions.basic	BasicAuth
+//	@license.name	Apache 2.0
+//	@license.url	http://www.apache.org/licenses/LICENSE-2.0.html
+
 import (
 	"fmt"
 	"os"
