@@ -112,10 +112,10 @@ Gateway Config Configurations
 {{- define "spark-gateway.config" -}}
 {{- if .Values.postgresql.create }}
 {{- $dbHostName := printf "%s-postgresql.%s.svc.cluster.local" (include "spark-gateway.fullname" .) .Release.Namespace }}
-{{- $_ := set .Values.config.sparkManager.database "hostname" $dbHostName }}
-{{- $_ = set .Values.config.sparkManager.database "port" 5432 }}
-{{- $_ = set .Values.config.sparkManager.database "databaseName" "postgres" }}
-{{- $_ = set .Values.config.sparkManager.database "username" "postgres" }}
+{{- $_ := set .Values.config.database "hostname" $dbHostName }}
+{{- $_ = set .Values.config.database "port" 5432 }}
+{{- $_ = set .Values.config.database "databaseName" "postgres" }}
+{{- $_ = set .Values.config.database "username" "postgres" }}
 {{- end }}
 {{- if or .Values.sparkManager.multiClusterRouting.certificateAuthority.externalSecret.create (ne .Values.sparkManager.multiClusterRouting.certificateAuthority.existingSecretName "") }}
 {{- range $_, $cluster := .Values.config.clusters }}
