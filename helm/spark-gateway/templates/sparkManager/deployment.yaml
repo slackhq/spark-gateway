@@ -69,7 +69,7 @@ spec:
             mountPath: {{ $.Values.sparkManager.multiClusterRouting.certificateAuthority.mountPath }}
             readOnly: true
         {{- end }}
-        {{ if $.Values.config.sparkManager.database.enable }}
+        {{ if $.Values.config.database.enable }}
         env:
           {{- include "spark-gateway.database.passwordEnvVars" $ | indent 10 }}
         {{- end}}
