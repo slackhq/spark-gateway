@@ -79,6 +79,10 @@ spec:
           - name: confdir
             mountPath: "/conf"
           {{- end }}
+        {{ if .Values.config.database.enable }}
+        env:
+          {{- include "spark-gateway.database.passwordEnvVars" . | indent 10 }}
+        {{- end }}
       volumes:
         - name: spark-gateway-config
           configMap:
