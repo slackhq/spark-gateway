@@ -18,8 +18,6 @@ package repository
 import (
 	"context"
 	"fmt"
-	"net/http"
-	"time"
 
 	"github.com/slackhq/spark-gateway/internal/shared/gatewayerrors"
 	"github.com/slackhq/spark-gateway/internal/shared/util"
@@ -87,29 +85,12 @@ func (s *SparkApplicationRepository) GetLogs(namespace string, name string, tail
 
 func (s *SparkApplicationRepository) Create(ctx context.Context, application *v1beta2.SparkApplication) (*v1beta2.SparkApplication, error) {
 
+	// The API server populates the server-assigned UID on the object returned
+	// by Create, so we use it directly rather than polling the (eventually
+	// consistent) informer cache, which would busy-loop while the cache caught up.
 	sparkApp, err := s.sparkClient.SparkoperatorV1beta2().SparkApplications(application.Namespace).Create(ctx, application, v1.CreateOptions{})
 	if err != nil {
 		return nil, gatewayerrors.MapK8sErrorToGatewayError(fmt.Errorf("error creating SparkApplication: %w", err))
-	}
-
-	counter := 5
-	for counter > 0 {
-		sparkApp, err = s.Get(application.Namespace, application.Name)
-		if err != nil {
-			if getErr, ok := err.(gatewayerrors.GatewayError); ok {
-				if getErr.Status == http.StatusNotFound {
-					continue
-				}
-				return nil, gatewayerrors.MapK8sErrorToGatewayError(fmt.Errorf("error getting SparkApplication after create: %w", err))
-			}
-			return nil, gatewayerrors.MapK8sErrorToGatewayError(fmt.Errorf("error getting SparkApplication after create: %w", err))
-		}
-
-		if sparkApp.ObjectMeta.UID != "" {
-			break
-		}
-		counter -= 1
-		time.Sleep(1 * time.Second)
 	}
 
 	if sparkApp.ObjectMeta.UID == "" {
