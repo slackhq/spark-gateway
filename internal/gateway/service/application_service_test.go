@@ -357,6 +357,24 @@ func TestServiceGetNotFound(t *testing.T) {
 
 }
 
+func TestServiceGetMalformedGatewayId(t *testing.T) {
+	appService := NewApplicationService(
+		&mockGatewayAppRepository_Success,
+		mockClusterRepo_Success,
+		&SuccessClusterRouter{},
+		&SuccessClusterRouter{},
+		testGatewayConfig,
+		"",
+		"",
+		GatewayIdGenerator_Success,
+	)
+
+	gatewayApp, err := appService.Get(context.Background(), "noseparators")
+
+	assert.Nil(t, gatewayApp, "returned GatewayApplication should be nil")
+	assert.Contains(t, err.Error(), "invalid gatewayId", "error should report invalid gatewayId")
+}
+
 func TestList(t *testing.T) {
 	appService := NewApplicationService(
 		&mockGatewayAppRepository_Success,
