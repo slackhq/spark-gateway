@@ -90,14 +90,20 @@ func NewApplicationService(
 }
 
 func (s *service) GetClusterNamespaceFromGatewayId(gatewayId string) (*domain.KubeCluster, string, error) {
-	clusterId := strings.Split(gatewayId, "-")[0]
+	// gatewayId format is 'clusterId-namespaceId-uuid'.
+	parts := strings.SplitN(gatewayId, "-", 3)
+	if len(parts) < 3 {
+		return nil, "", gatewayerrors.NewBadRequest(fmt.Errorf("invalid gatewayId '%s', format must be 'cluster-namespace-uuid'", gatewayId))
+	}
+
+	clusterId := parts[0]
 	kubeCluster, err := s.clusterRepository.GetById(clusterId)
 
 	if err != nil {
 		return nil, "", gatewayerrors.NewInternal(fmt.Errorf("error getting cluster parsed from gatewayId: %w", err))
 	}
 
-	namespaceId := strings.Split(gatewayId, "-")[1]
+	namespaceId := parts[1]
 	namespace, err := kubeCluster.GetNamespaceById(namespaceId)
 
 	if err != nil {
