@@ -24,6 +24,9 @@ go.work.sum
 # env file
 .env
 
+# Local config may contain secrets (e.g. DB password)
+config/local.yaml
+
 # Editor/IDE
 .idea/
 .vscode/
