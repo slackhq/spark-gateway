@@ -98,6 +98,12 @@ func (r *WeightBasedRandomRouter) GetCluster(ctx context.Context, namespace stri
 		return nil, gatewayerrors.NewFrom(fmt.Errorf("unable to find any suitable cluster for routing"))
 	}
 
+	// rand.Intn panics on a non-positive argument, which happens when every
+	// candidate's routing weight is zero.
+	if *totalWeight <= 0 {
+		return nil, gatewayerrors.NewFrom(fmt.Errorf("total routing weight is zero for namespace %s; cannot select a cluster", namespace))
+	}
+
 	randomInt := rand.Intn(int(*totalWeight))
 	chosenClusterId := chooseClusterIDRandom(weightsMap, randomInt)
 

@@ -138,29 +138,45 @@ func (r *WeightBasedRouter) GetCluster(ctx context.Context, namespace string) (*
 			metricsPort = port.MetricsPort
 		}
 
+		// A single unhealthy cluster should be excluded from routing rather
+		// than fail the entire submission, so per-cluster metric failures log
+		// and drop that cluster from the candidate set instead of returning.
 		metricFamilies, err := GetClusterMetricFamilies(ctx, c, r.sparkManagerHostnameTemplate, metricsPort, r.metricsServerConfig.Endpoint)
 		if err != nil {
-			return nil, gatewayerrors.NewFrom(fmt.Errorf("error getting metrics from SparkManager %s: %w", c.ClusterId, err))
+			klog.Warningf("excluding cluster %s from routing: error getting metrics from SparkManager: %v", c.ClusterId, err)
+			delete(metricsMap, c.ClusterId)
+			continue
 		}
 
 		metricFamily, ok := metricFamilies[r.clusterRouterConfig.PrometheusQuery.Metric]
 		if !ok {
-			return nil, gatewayerrors.NewFrom(fmt.Errorf("could not find metric %s", r.clusterRouterConfig.PrometheusQuery.Metric))
+			klog.Warningf("excluding cluster %s from routing: could not find metric %s", c.ClusterId, r.clusterRouterConfig.PrometheusQuery.Metric)
+			delete(metricsMap, c.ClusterId)
+			continue
 		}
 
 		targetLabels := GetTargetLabels(r.clusterRouterConfig, c.Name, namespace)
 		targetMetrics := GetTargetMetrics(metricFamily.GetMetric(), targetLabels)
-		switch tsLength := len(targetMetrics); {
-		case tsLength == 0:
-			return nil, gatewayerrors.NewFrom(fmt.Errorf("no timeseries exist with target labels: %v", targetMetrics))
-		case tsLength > 1:
-			return nil, gatewayerrors.NewFrom(fmt.Errorf("more than 1 timeseries exist with target labels: %v", targetMetrics))
+		if len(targetMetrics) != 1 {
+			klog.Warningf("excluding cluster %s from routing: expected exactly 1 timeseries with target labels, got %d", c.ClusterId, len(targetMetrics))
+			delete(metricsMap, c.ClusterId)
+			continue
 		}
 
-		metricVal := targetMetrics[0].Gauge.GetValue()
+		gauge := targetMetrics[0].Gauge
+		if gauge == nil {
+			klog.Warningf("excluding cluster %s from routing: metric %s is not a gauge", c.ClusterId, r.clusterRouterConfig.PrometheusQuery.Metric)
+			delete(metricsMap, c.ClusterId)
+			continue
+		}
+		metricVal := gauge.GetValue()
 
 		metricsMap[c.ClusterId].Metric = metricVal
 		totalMetric += metricVal
+	}
+
+	if len(metricsMap) == 0 {
+		return nil, gatewayerrors.NewFrom(fmt.Errorf("no healthy clusters available for routing namespace %s", namespace))
 	}
 
 	chosenClusterId := chooseClusterID(metricsMap, totalMetric)
@@ -221,10 +237,12 @@ func ReadWeightConfigs(metricsMap map[string]*metric, clusters []domain.KubeClus
 		totalWeight += m.Weight
 	}
 
-	// Add weight ratios to weightsMap
+	// Add weight ratios to weightsMap. Guard against a zero total (all weights
+	// unset/zero) which would otherwise make every ratio NaN.
 	for _, m := range metricsMap {
-		r := m.Weight / totalWeight
-		m.WeightRatio = r
+		if totalWeight > 0 {
+			m.WeightRatio = m.Weight / totalWeight
+		}
 	}
 	return metricsMap, &totalWeight
 }
