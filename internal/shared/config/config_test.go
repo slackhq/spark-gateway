@@ -21,6 +21,7 @@ import (
 	"testing"
 
 	"github.com/knadh/koanf/v2"
+	"github.com/slackhq/spark-gateway/internal/domain"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -85,4 +86,28 @@ port: 8080
 	err = ConfigUnmarshal(tmpFile.Name(), &conf)
 
 	assert.Contains(t, err.Error(), "error parsing config file:", "expected error")
+}
+
+func TestKubeClustersDefaulter(t *testing.T) {
+	conf := SparkGatewayConfig{
+		KubeClusters: []domain.KubeCluster{
+			{
+				Name: "unset-weight",
+				Namespaces: []domain.KubeNamespace{
+					{Name: "ns-unset"},
+					{Name: "ns-set", RoutingWeight: 3.0},
+				},
+			},
+			{Name: "set-weight", RoutingWeight: 5.0},
+		},
+	}
+
+	conf.KubeClustersDefaulter()
+
+	// Unset cluster/namespace weights default to 1.0...
+	assert.Equal(t, 1.0, conf.KubeClusters[0].RoutingWeight)
+	assert.Equal(t, 1.0, conf.KubeClusters[0].Namespaces[0].RoutingWeight)
+	// ...while explicitly set weights are preserved.
+	assert.Equal(t, 3.0, conf.KubeClusters[0].Namespaces[1].RoutingWeight)
+	assert.Equal(t, 5.0, conf.KubeClusters[1].RoutingWeight)
 }

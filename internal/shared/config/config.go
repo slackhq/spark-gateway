@@ -252,14 +252,14 @@ func (c *SparkGatewayConfig) ConfigDefaulter() {
 
 func (c *SparkGatewayConfig) KubeClustersDefaulter() {
 	// set default routingWeight to 1
-	for _, c := range c.KubeClusters {
-		if c.RoutingWeight == float64(0) {
-			c.RoutingWeight = 1.0
+	for i := range c.KubeClusters {
+		if c.KubeClusters[i].RoutingWeight == float64(0) {
+			c.KubeClusters[i].RoutingWeight = 1.0
 		}
 
-		for _, ns := range c.Namespaces {
-			if ns.RoutingWeight == float64(0) {
-				ns.RoutingWeight = 1.0
+		for j := range c.KubeClusters[i].Namespaces {
+			if c.KubeClusters[i].Namespaces[j].RoutingWeight == float64(0) {
+				c.KubeClusters[i].Namespaces[j].RoutingWeight = 1.0
 			}
 		}
 	}
