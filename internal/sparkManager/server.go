@@ -53,7 +53,11 @@ func NewSparkManager(ctx context.Context, sgConfig *config.SparkGatewayConfig, c
 	// Create DB Repo
 	var db database.SparkApplicationDatabase = nil
 	if sgConfig.Database.Enable {
-		db = database.NewDatabase(ctx, sgConfig.Database)
+		sparkAppDB, err := database.NewDatabase(ctx, sgConfig.Database)
+		if err != nil {
+			return nil, fmt.Errorf("error creating database: %w", err)
+		}
+		db = sparkAppDB
 	}
 
 	// Initialize Kube Clients

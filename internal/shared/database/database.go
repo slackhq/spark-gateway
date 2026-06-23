@@ -19,6 +19,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/url"
 
 	"k8s.io/klog/v2"
 
@@ -33,6 +34,10 @@ import (
 
 	"github.com/slackhq/spark-gateway/internal/shared/gatewayerrors"
 )
+
+// statementTimeout bounds how long any single query may run on the server,
+// protecting pooled connections from being held indefinitely by a wedged query.
+const statementTimeout = "30s"
 
 //go:generate moq -rm -out mocksparkapplicationdatabase.go . SparkApplicationDatabase
 
@@ -56,9 +61,22 @@ type Database struct {
 }
 
 func GetConnectionPool(ctx context.Context, connectionString string) (*pgxpool.Pool, error) {
-	dbpool, err := pgxpool.New(ctx, connectionString)
+	poolConfig, err := pgxpool.ParseConfig(connectionString)
 	if err != nil {
-		return nil, fmt.Errorf("Unable to create connection pool: %v\n", err)
+		return nil, fmt.Errorf("unable to parse database connection string: %w", err)
+	}
+
+	// Tune the pool so it does not grow unbounded and recycles connections,
+	// which keeps connections fresh against Postgres/PgBouncer.
+	poolConfig.MaxConns = 20
+	poolConfig.MinConns = 2
+	poolConfig.MaxConnLifetime = time.Hour
+	poolConfig.MaxConnIdleTime = 30 * time.Minute
+	poolConfig.HealthCheckPeriod = time.Minute
+
+	dbpool, err := pgxpool.NewWithConfig(ctx, poolConfig)
+	if err != nil {
+		return nil, fmt.Errorf("unable to create connection pool: %w", err)
 	}
 
 	return dbpool, nil
@@ -66,31 +84,33 @@ func GetConnectionPool(ctx context.Context, connectionString string) (*pgxpool.P
 
 func GetConnectionString(databaseConfig config.Database) string {
 
-	// postgres://{user}:{password}@{hostname}:{port}/{database-name}
+	// postgres://{user}:{password}@{hostname}:{port}/{database-name}?statement_timeout=...
 	klog.Infof("Database Info: %s:%s/%s\n",
 		databaseConfig.Hostname,
 		databaseConfig.Port,
 		databaseConfig.DatabaseName,
 	)
-	return fmt.Sprintf("postgres://%s:%s@%s:%s/%s",
-		databaseConfig.Username,
-		databaseConfig.Password,
-		databaseConfig.Hostname,
-		databaseConfig.Port,
-		databaseConfig.DatabaseName,
-	)
+
+	dsn := url.URL{
+		Scheme:   "postgres",
+		User:     url.UserPassword(databaseConfig.Username, databaseConfig.Password),
+		Host:     fmt.Sprintf("%s:%s", databaseConfig.Hostname, databaseConfig.Port),
+		Path:     databaseConfig.DatabaseName,
+		RawQuery: url.Values{"statement_timeout": {statementTimeout}}.Encode(),
+	}
+	return dsn.String()
 }
 
-func NewDatabase(ctx context.Context, dbConfig config.Database) *Database {
+func NewDatabase(ctx context.Context, dbConfig config.Database) (*Database, error) {
 	connectionString := GetConnectionString(dbConfig)
 	connectionPool, err := GetConnectionPool(ctx, connectionString)
 	if err != nil {
-		klog.Fatal(fmt.Errorf("could not create DatabaseRepository connection: %w", err))
+		return nil, fmt.Errorf("could not create DatabaseRepository connection: %w", err)
 	}
 
 	return &Database{
 		connectionPool: connectionPool,
-	}
+	}, nil
 }
 
 func (db *Database) GetById(ctx context.Context, gatewayIdUid uuid.UUID) (*SparkApplication, error) {

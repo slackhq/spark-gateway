@@ -90,8 +90,11 @@ func NewGateway(ctx context.Context, sgConfig *config.SparkGatewayConfig, sparkM
 	// Livy Setup
 	var livyService service.LivyApplicationService
 	if sgConfig.LivyConfig.Enable {
-		database := database.NewDatabase(ctx, sgConfig.Database)
-		livyService = service.NewLivyService(appService, database, sgConfig.LivyConfig.DefaultNamespace, sgConfig.GatewayConfig.StatusUrlTemplates)
+		livyDB, err := database.NewDatabase(ctx, sgConfig.Database)
+		if err != nil {
+			return nil, fmt.Errorf("error creating database: %w", err)
+		}
+		livyService = service.NewLivyService(appService, livyDB, sgConfig.LivyConfig.DefaultNamespace, sgConfig.GatewayConfig.StatusUrlTemplates)
 	}
 
 	router, err := api.NewRouter(sgConfig, appService, livyService)
