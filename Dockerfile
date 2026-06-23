@@ -19,14 +19,17 @@ RUN go build -o /sparkManager ./cmd/sparkManager/
 # build tests
 RUN go build -o /tests ./cmd/tests/
 
-FROM golang:1.24.2 AS runner
-RUN apt update && apt upgrade -y
+FROM alpine:3.20 AS runner
+
+# tini for proper signal handling/zombie reaping; ca-certificates for TLS.
+RUN apk add --no-cache tini ca-certificates \
+    && addgroup -S spark && adduser -S -G spark spark
 
 COPY --from=build /gateway /gateway
 COPY --from=build /sparkManager /sparkManager
 COPY --from=build /tests /tests
 
-# Add Tini
-RUN apt install -y tini
+USER spark
 
-ENTRYPOINT ["/sbin/tini", "--", "/bin/sh"]
+ENTRYPOINT ["/sbin/tini", "--"]
+CMD ["/gateway"]
