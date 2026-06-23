@@ -107,6 +107,7 @@ func (r *RegexBasicAuthAllowMiddleware) Handler(c *gin.Context) {
 			c.Set("user", authUser)
 		} else {
 			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "user is unauthorized"})
+			return
 		}
 	}
 
@@ -184,6 +185,7 @@ func (r *RegexBasicAuthDenyMiddleware) Handler(c *gin.Context) {
 
 		if denyUser := r.DenyUsername(authUser); denyUser {
 			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "user is unauthorized"})
+			return
 		}
 
 	}

@@ -16,6 +16,7 @@
 package middleware
 
 import (
+	"crypto/subtle"
 	"fmt"
 	"net/http"
 
@@ -102,11 +103,12 @@ func (s *ServiceTokenAuthMiddleware) Handler(c *gin.Context) {
 	// If user set but no token, we refuse
 	if serviceToken == "" {
 		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "X-Spark-Gateway-Token is not set"})
+		return
 	}
 
 	// Check if service is authorized
 	if gotToken, found := s.ServiceTokenMap[serviceName]; found {
-		if serviceToken == gotToken {
+		if subtle.ConstantTimeCompare([]byte(serviceToken), []byte(gotToken)) == 1 {
 			c.Set("user", serviceName)
 			c.Next()
 			return
