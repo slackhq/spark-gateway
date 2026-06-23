@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"time"
 
 	"k8s.io/klog/v2"
 
@@ -30,6 +31,20 @@ import (
 
 type HttpError struct {
 	Error string `json:"error"`
+}
+
+// DefaultClient is a shared HTTP client for internal SparkManager calls. It
+// carries an overall request timeout so a hung peer cannot pin a goroutine
+// indefinitely, and reuses connections via a pooled transport. Reuse this
+// rather than allocating a new http.Client per request, which defeats
+// keep-alive.
+var DefaultClient = &http.Client{
+	Timeout: 30 * time.Second,
+	Transport: &http.Transport{
+		MaxIdleConns:        100,
+		MaxIdleConnsPerHost: 10,
+		IdleConnTimeout:     90 * time.Second,
+	},
 }
 
 func HttpRequest(ctx context.Context, client *http.Client, req *http.Request) (*http.Response, *[]byte, error) {
