@@ -35,7 +35,7 @@ import (
 // DoHTTP runs a request, checks for errors from making the request or the request body, and returns the Response body bytes
 // if the request succeeds
 func DoHTTP(ctx context.Context, request *http.Request) (*[]byte, error) {
-	resp, respBody, err := sgHttp.HttpRequest(ctx, &http.Client{}, request)
+	resp, respBody, err := sgHttp.HttpRequest(ctx, sgHttp.DefaultClient, request)
 	if err != nil {
 		return nil, gatewayerrors.NewFrom(err)
 	}

@@ -271,7 +271,7 @@ func GetClusterMetricFamilies(
 		return nil, gatewayerrors.NewFrom(fmt.Errorf("error creating %s request: %w", "GET", err))
 	}
 
-	resp, respBody, err := sgHttp.HttpRequest(ctx, &http.Client{}, request)
+	resp, respBody, err := sgHttp.HttpRequest(ctx, sgHttp.DefaultClient, request)
 	if err != nil {
 		return nil, gatewayerrors.NewFrom(err)
 	}
