@@ -19,7 +19,7 @@ RUN go build -o /sparkManager ./cmd/sparkManager/
 # build tests
 RUN go build -o /tests ./cmd/tests/
 
-FROM alpine:3.24 AS runner
+FROM alpine:3.20 AS runner
 
 # tini for proper signal handling/zombie reaping; ca-certificates for TLS.
 # eMudhra 53119: fail the build unless ca-certificates is >= 20261020-r0.
