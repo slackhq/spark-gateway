@@ -1,4 +1,4 @@
-FROM golang:1.24.2 AS build
+FROM golang:1.26.10 AS build
 
 ENV GOOS=linux \
     GOARCH=amd64 \
